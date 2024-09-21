@@ -1,4 +1,4 @@
-const INDEX_PAGE_URL = '/html/index.html'; // 定义 index.html 的路径
+const INDEX_PAGE_URL = '../index.html'; // 定义 index.html 的路径
 
 import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from './firebase.js';
 
