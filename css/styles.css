@@ -1,0 +1,419 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #f4f4f9; /* 背景颜色 */
+  }
+  
+  h1 {
+    text-align: center;
+    color: #007BFF; /* 蓝色 */
+    margin-bottom: 1.25rem; /* 20px */
+  }
+  
+  .container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff; /* 白色背景 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+    border-radius: 10px; /* 圆角 */
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .header h1 {
+    flex: 1;
+    text-align: center;
+    margin: 0;
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+  }
+  
+  #userEmail {
+    margin-right: 10px;
+    font-size: 12px; /* 调整字体大小 */
+    color: #333;
+  }
+  
+  .logout-button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px; /* 调整内边距 */
+    cursor: pointer;
+    font-size: 12px; /* 调整字体大小 */
+  }
+  
+  .logout-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .input-container, .search-container {
+    margin-bottom: 20px;
+  }
+  textarea#noteInput {
+    width: 100%;
+    height:200px;
+    max-height: 400px; /* 设置最大高度 */
+    overflow-y: auto; /* 添加垂直滚动条 */
+    resize: vertical; /* 允许垂直调整大小 */
+    min-height: 100px; /* 设置最小高度 */
+    padding: 20px; /* 增加内边距 */
+    border: 2px solid #ccc; /* 增加边框宽度 */
+    border-radius: 8px; /* 增加圆角半径 */
+    font-size: 20px; /* 增加字体大小 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 增加阴影 */
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+    transition: background-color 0.3s, box-shadow 0.3s; /* 添加过渡效果 */
+  }
+  
+  textarea#noteInput:hover {
+    background-color: #e0f0ff;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* 增加悬停时的阴影 */
+  }
+  
+  #searchInput {
+    width: 100%;
+    padding: 15px; /* 保持原样 */
+    border: 2px solid #ccc; /* 保持原样 */
+    border-radius: 8px; /* 保持原样 */
+    font-size: 18px; /* 保持原样 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 保持原样 */
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+    transition: background-color 0.3s, box-shadow 0.3s; /* 保持原样 */
+  }
+  
+  #searchInput:hover {
+    background-color: #e0f0ff;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* 保持原样 */
+  }
+  .input-container {
+    position: relative;
+  }
+
+  #addNoteButton {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 40px; /* 更圆滑的形状 */
+    width: 80px; /* 增加宽度 */
+    height: 40px; /* 增加高度 */
+    font-size: 14px; /* 增加字体大小 */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 增加阴影 */
+    transition: background 0.3s, transform 0.2s; /* 添加过渡效果 */
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+  }
+
+  #addNoteButton::after {
+    content: '';
+  }
+
+  #addNoteButton:hover {
+    background: linear-gradient(90deg, #0056b3, #003f7f); /* 悬停时的背景颜色 */
+    transform: scale(1.05); /* 悬停时放大 */
+  }
+  
+  #addNoteButton:active {
+    transform: scale(0.95); /* 点击时缩小 */
+  }
+  
+  button:hover {
+    background-color: #0056b3; /* 深蓝色 */
+    transform: scale(1.05); /* 悬停时放大 */
+  }
+  
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  li {
+    background-color: #fff;
+    margin-bottom: 20px; /* 增加列表项之间的间距 */
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* 确保内容不会溢出 */
+    position: relative; /* 为下拉菜单定位 */
+  }
+  
+  .note-content {
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 10px;
+  }
+  
+  .note-content span {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .timestamp-dropdown-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .timestamp {
+    font-size: 0.8em;
+    color: #888;
+    margin-right: 10px; /* 增加时间戳和下拉菜单之间的间距 */
+  }
+  
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .dropdown-trigger {
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    color: #666;
+  }
+  
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: #ffffff;
+    min-width: 100px;
+    padding: 5px;
+    box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+    z-index: 1;
+    border-radius: 4px;
+    margin-top: 2px;
+  }
+  
+  .dropdown-content a {
+    color: #333;
+    padding: 4px 8px;
+    text-decoration: none;
+    display: block;
+    font-size: 10px;
+    text-align: center;
+    transition: background-color 0.2s, color 0.2s;
+  }
+  
+  .dropdown-content a:hover {
+    background-color: #f1f1f1;
+    color: #000;
+  }
+  
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+  
+  .edit-input {
+    width: 100%;
+    margin-right: 10px; /* 10px */
+    padding: 5px; /* 5px */
+    font-size: 1rem; /* 16px */
+  }
+  
+  .highlight {
+    background-color: #cce4ff; /* 高亮显示的背景颜色 */
+  }
+  
+  #addNoteButton {
+    align-self: flex-end;
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px; /* 增加顶部外边距 */
+  }
+  
+  #addNoteButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .search-container {
+    margin-bottom: 20px;
+  }
+  
+  .small-button {
+    font-family: 'Noto Sans SC', sans-serif; /* 使用思黑体 */
+    background: none;
+    color: white;
+    border: none;
+    font-size: 14px; /* 调整字体大小 */
+    cursor: pointer;
+    display: inline;
+    transition: background-color 0.3s, transform 0.2s; /* 添加过渡效果 */
+  }
+  
+  .small-button::after {
+    content: '...'; /* 使用伪元素设置内容 */
+    font-size: 14px; /* 调整字体大小 */
+    color:  #007bff; /* 设置文本颜色 */
+  }
+  
+  .small-button:hover {
+    background-color:  #007bff; /* 深蓝色 */
+    transform: scale(1.05); /* 悬停时放大 */
+  }
+  
+  .feedback-container {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #e6f3ff; /* 略微不同的背景色 */
+    border-top: 1px solid #b3d9ff; /* 不同的边框颜色 */
+    font-size: 0.9em; /* 稍微小一点的字体 */
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* 轻微的阴影 */
+  }
+  
+  .feedback-container p {
+    margin: 0;
+    color: #333;
+    font-size: 0.9em;
+  }
+  
+  .feedback-container p:first-child {
+    font-weight: bold;
+    color: #007BFF; /* 使用主题蓝色 */
+  }
+  
+  .note-item {
+    margin-bottom: 10px;
+  }
+  
+  .note-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 10px;
+  }
+  
+  .note-content {
+    flex-grow: 1;
+    margin-right: 10px;
+  }
+  
+  .note-text {
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
+  
+  .note-timestamp {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .dropdown {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .dropdown-trigger {
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    padding: 10px;
+    margin: 0;
+    color: #666;
+  }
+
+  /* 悬停效果 */
+.dropdown-trigger:hover {
+  transition: background-color 0.3s, box-shadow 0.3s; /* 添加过渡效果 */;
+}
+
+  .dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: #ffffff;
+    min-width: 120px;
+    padding: 5px;
+    box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+    z-index: 1;
+    border-radius: 4px;
+    margin-top: 2px;
+  }
+  
+  .dropdown-content a {
+    color: #333;
+    padding: 4px 8px;
+    text-decoration: none;
+    display: block;
+    font-size: 10px;
+    text-align: center;
+    transition: background-color 0.2s, color 0.2s;
+  }
+  
+  .dropdown-content a:hover {
+    background-color: #f1f1f1;
+    color: #000;
+  }
+  
+  .dropdown:hover .dropdown-content {
+    display: block;
+  }
+
+  .feedback-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%; /* 占据整个父容器的宽度 */
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #e6f3ff; /* 略微不同的背景色 */
+    border-top: 1px solid #b3d9ff; /* 不同的边框颜色 */
+    font-size: 0.9em; /* 稍微小一点的字体 */
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* 轻微的阴影 */
+  }
+  
+  .feedback {
+    display: block;
+    width: 100%; /* 占据整个父容器的宽度 */
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
+    background-color: #e6f7ff; /* 添加背景颜色 */
+    padding: 10px; /* 添加内边距 */
+    border-radius: 5px; /* 添加圆角 */
+    border: 1px solid #b3d9ff; /* 添加边框 */
+  }
+  
+  .hidden {
+    display: none;
+  }
+

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkBox</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- 添加这一行 -->
+</head>
+<body>
+    <!-- 页眉部分，包含标题和用户信息 -->
+    <div class="header">
+        <h1>ThinkBox</h1>
+        <div class="user-info">
+            <span id="userEmail"></span>
+            <button id="logoutButton" class="logout-button">Logout</button>
+        </div>
+    </div>
+    <!-- 主容器，包含应用内容 -->
+    <div class="container">
+        <div id="app">
+            <!-- 输入容器，包含笔记输入框和添加按钮 -->
+            <div class="input-container">
+                <textarea id="noteInput" placeholder="Enter your note here..."></textarea>
+                <br>
+                <button id="addNoteButton">+</button>
+            </div>
+            <br>
+            <!-- 搜索容器，包含搜索输入框 -->
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search notes...">
+            </div>
+            <!-- 笔记列表 -->
+            <ul id="noteList"></ul>
+            <div id="loadingIndicator" class="hidden">正在删除...</div>
+        </div>
+    </div>
+    <!-- 引入 JavaScript 文件 -->
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>
