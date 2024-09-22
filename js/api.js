@@ -1,8 +1,9 @@
 // 定义 API 基础 URL
 const BASE_API_URL = 'https://178.128.81.19:3001'; // 定义 API 基础 URL
-// // Hugging Face API 相关设置
-// const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models/gpt2'; // 假设的 Huggingface API URL
-// const HUGGINGFACE_API_KEY = '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'; // 你的 Huggingface API 密钥
+
+const COZE_API_URL = 'https://api.coze.cn/v3/chat'; // 更新为聊天 API 的 URL
+const COZE_API_KEY = 'pat_7ds29bjXUQ2MU6iXoKCM00yz6n9mif4UPHvsdZp2zSQN4vMQoNx1rBOEKLcb8qxX'; // 替换为你的 API 访问令牌
+
 
 import { auth } from './firebase.js';
 
@@ -89,110 +90,92 @@ const api = {
     }
     return response.json();
   },
-// //调取反馈
-//   async generateFeedback(noteId, content) {
-//     console.log('API generateFeedback called with:', noteId, content);
-//     const user = auth.currentUser;
-//     if (!user) {
-//       console.error('No user logged in');
-//       throw new Error('No user logged in');
-//     }
-//     const idToken = await user.getIdToken();
-//     console.log('User ID token obtained:', idToken);
 
-//     try {
-//       // 调用 Huggingface API 获取反馈
-//       console.log('Calling Huggingface API with content:', content);
-//       const huggingfaceResponse = await fetch(HUGGINGFACE_API_URL, {
-//         method: 'POST',
-//         headers: {
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`
-//         },
-//         body: JSON.stringify({ inputs: content }) // 确保包含 inputs 字段
-//       });
+  async generateFeedback(content) {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error('No user logged in');
+        throw new Error('No user logged in');
+    }
 
-//       if (!huggingfaceResponse.ok) {
-//         const errorText = await huggingfaceResponse.text();
-//         console.error('Huggingface API error:', errorText);
-//         throw new Error(`Failed to generate feedback from Huggingface: ${huggingfaceResponse.statusText}. ${errorText}`);
-//       }
+    try {
+        const feedbackRequest = {
+            bot_id: "7417280351762300940", // 确保这个值是有效的
+            user_id: "123",
+            stream: false,
+            auto_save_history: true,
+            additional_messages: [{
+                role: "user",
+                content: content,
+                content_type: "text"
+            }]
+        };
 
-//       const feedbackData = await huggingfaceResponse.json();
-//       console.log('Feedback data received from Huggingface:', feedbackData);
-//       const feedbackText = feedbackData[0]?.generated_text || 'No feedback generated'; // 假设 Huggingface API 返回的反馈字段名为 generated_text
+        console.log('Feedback request body:', JSON.stringify(feedbackRequest, null, 2));
 
-//       // 将反馈存储到你的服务器
-//       console.log('Storing feedback to server with noteId:', noteId, 'and feedbackText:', feedbackText);
-//       const response = await fetch(`${BASE_API_URL}/notes/feedbacks`, { // 确保路径为 /notes/feedbacks
-//         method: 'POST',
-//         headers: { 
-//           'Content-Type': 'application/json',
-//           'Authorization': `Bearer ${idToken}`
-//         },
-//         body: JSON.stringify({ noteId, feedbackText }) // 确保请求体格式一致
-//       });
+        const feedbackResponse = await fetch(`${COZE_API_URL}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${COZE_API_KEY}`
+            },
+            body: JSON.stringify(feedbackRequest)
+        });
 
-//       if (!response.ok) {
-//         const errorText = await response.text();
-//         console.error('API error while storing feedback:', errorText);
-//         throw new Error(`Failed to store feedback: ${response.statusText}. ${errorText}`);
-//       }
+        const feedbackData = await feedbackResponse.json();
+        if (feedbackData.code !== 0) {
+            throw new Error(`Feedback generation failed: ${feedbackData.msg}`);
+        }
 
-//       const storedFeedback = await response.json();
-//       console.log('Feedback successfully stored:', storedFeedback);
-//       return storedFeedback;
-//     } catch (error) {
-//       console.error('Error in generateFeedback:', error);
-//       throw error;
-//     }
-//   },
-// //存储反馈
-//   async storeFeedback(noteId, feedbackText) {
-//     console.log('API storeFeedback called with:', noteId, feedbackText);
-//     const user = auth.currentUser;
-//     if (!user) {
-//       console.error('No user logged in');
-//       throw new Error('No user logged in');
-//     }
-//     const idToken = await user.getIdToken();
-//     const response = await fetch(`${BASE_API_URL}/notes/feedbacks`, {
-//       method: 'POST',
-//       headers: { 
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${idToken}`
-//       },
-//       body: JSON.stringify({ noteId, feedbackText })
-//     });
-//     if (!response.ok) {
-//       const errorText = await response.text();
-//       console.error('API error:', errorText);
-//       throw new Error(`Failed to store feedback: ${response.statusText}. ${errorText}`);
-//     }
-//     return response.json();
-//   },
+        const chatId = feedbackData.data.id; // 获取 chat_id
+        const conversationId = feedbackData.data.conversation_id; // 获取 conversation_id
+        let status = "in_progress";
 
-//   //调取反馈
-//   async getFeedbacks() {
-//     console.log('API getFeedbacks called');
-//     const user = auth.currentUser;
-//     if (!user) {
-//       console.log('No user logged in');
-//       return [];
-//     }
-//     const idToken = await user.getIdToken();
-//     const response = await fetch(`${BASE_API_URL}/notes/feedbacks`, {
-//       headers: { 'Authorization': `Bearer ${idToken}` }
-//     });
-//     if (!response.ok) {
-//       const errorText = await response.text();
-//       console.error('API error:', errorText);
-//       throw new Error(`Failed to fetch feedbacks: ${response.statusText}`);
-//     }
-//     const feedbacks = await response.json();
-//     console.log('Feedbacks received from API:', feedbacks); // 添加日志
-//     return feedbacks;
-//   }
+        // 轮询反馈状态
+        while (status === "in_progress") {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 等待 1 秒
+            const statusResponse = await fetch(`${COZE_API_URL}/retrieve?chat_id=${chatId}&conversation_id=${conversationId}`, {
+                headers: {
+                    'Authorization': `Bearer ${COZE_API_KEY}`
+                }
+            });
+
+            const statusData = await statusResponse.json();
+            if (statusData.code !== 0) {
+                throw new Error(`Failed to retrieve feedback status: ${statusData.msg}`);
+            }
+            status = statusData.data.status; // 更新状态
+        }
+
+        // 获取最终的模型回复
+        const finalResponse = await fetch(`${COZE_API_URL}/message/list?chat_id=${chatId}&conversation_id=${conversationId}`, {
+            headers: {
+                'Authorization': `Bearer ${COZE_API_KEY}`
+            }
+        });
+
+        const finalData = await finalResponse.json();
+        console.log(finalData);
+        if (finalData.code !== 0) {
+            throw new Error(`Failed to retrieve final feedback: ${finalData.msg}`);
+        }
+
+
+// 使用第一个有效的反馈
+if (finalData.data.length > 0) {
+  const feedbackContent = finalData.data[0].content; // 选择第一个反馈内容
+  return feedbackContent; // 返回最终的反馈内容
+} else {
+  throw new Error("No feedback content found");
+}
+        
+    } catch (error) {
+        console.error('Error in generateFeedback:', error);
+        throw error;
+    }
+}
+
+
 };
 
 export default api;

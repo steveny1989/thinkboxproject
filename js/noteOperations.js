@@ -34,22 +34,6 @@ const noteOperations = {
     }
   },
 
-  // async generateFeedbackForNote(noteId, content) {
-  //   console.log('generateFeedbackForNote called with:', noteId, content);
-  //   try {
-  //     const feedbackResponse = await api.generateFeedback(noteId, content);
-  //     console.log('Feedback generated:', feedbackResponse);
-  //     if (feedbackResponse.feedbackText) {
-  //       await api.storeFeedback(noteId, feedbackResponse.feedbackText);
-  //       updateFeedback(noteId, feedbackResponse.feedbackText);
-  //     } else {
-  //       console.error('Generated feedback text is undefined');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error generating feedback:', error);
-  //   }
-  // },
-
   async deleteNote(noteId) {
     try {
       const result = await api.deleteNote(noteId);
@@ -62,28 +46,6 @@ const noteOperations = {
     }
   },
 
-  // async fetchFeedbacks() {
-  //   console.log('fetchFeedbacks called');
-  //   const user = auth.currentUser;
-  //   if (!user) {
-  //     console.log('No user logged in, skipping feedback loading');
-  //     return;
-  //   }
-  //   try {
-  //     const feedbacks = await api.getFeedbacks(); // 确保这个函数能正确获取反馈
-  //     console.log('Feedbacks loaded:', feedbacks);
-  //     feedbacks.forEach(feedback => {
-  //       if (feedback.feedbackText) {
-  //         updateFeedback(feedback.noteId, feedback.feedbackText);
-  //       } else {
-  //         console.error(`Feedback text for note ${feedback.noteId} is undefined`);
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.error('Error fetching feedbacks:', error);
-  //   }
-  // },
-
   async searchNotes(query) {
     try {
       const matchingNotes = await api.searchNotes(query);
@@ -92,7 +54,37 @@ const noteOperations = {
       console.error('Error searching notes:', error);
       updateNoteList([]);
     }
-  }
+  },
+  async generateFeedbackForNote(noteId, content) {
+    console.log('generateFeedbackForNote called with:', noteId, content);
+    try {
+        const feedbackResponse = await api.generateFeedback(content);
+        console.log('Feedback generated:', feedbackResponse);
+
+        // 输出反馈响应的完整内容
+        console.log('Full feedback response:', JSON.stringify(feedbackResponse, null, 2));
+
+        // 检查反馈响应的格式
+        if (typeof feedbackResponse === 'string' && feedbackResponse.trim() !== '') {
+            alert(` ${feedbackResponse}`);
+        } else if (Array.isArray(feedbackResponse) && feedbackResponse.length > 0) {
+            const feedbackText = feedbackResponse[0].content; // 获取第一个反馈的内容
+            if (feedbackText) {
+                alert(` ${feedbackText}`);
+            } else {
+                console.error('Generated feedback text is undefined');
+            }
+        } else {
+            console.error('Feedback response is not in the expected format or is empty', feedbackResponse);
+        }
+    } catch (error) {
+        console.error('Error generating feedback:', error);
+    }
+}
+
+
+
+
 };
 
 export default noteOperations;

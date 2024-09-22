@@ -199,6 +199,7 @@ body {
     padding: 0;
     margin: 0;
     color: #666;
+    right:0;
   }
   
   .dropdown-content {
@@ -208,6 +209,7 @@ body {
     top: 100%;
     background-color: #ffffff;
     min-width: 100px;
+    margin-top: 5px;
     padding: 5px;
     box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
     z-index: 1;
@@ -221,7 +223,7 @@ body {
     text-decoration: none;
     display: block;
     font-size: 10px;
-    text-align: center;
+    text-align: right;
     transition: background-color 0.2s, color 0.2s;
   }
   
@@ -285,27 +287,8 @@ body {
     background-color:  #007bff; /* 深蓝色 */
     transform: scale(1.05); /* 悬停时放大 */
   }
+
   
-  .feedback-container {
-    margin-top: 10px;
-    padding: 15px;
-    background-color: #e6f3ff; /* 略微不同的背景色 */
-    border-top: 1px solid #b3d9ff; /* 不同的边框颜色 */
-    font-size: 0.9em; /* 稍微小一点的字体 */
-    color: #333;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* 轻微的阴影 */
-  }
-  
-  .feedback-container p {
-    margin: 0;
-    color: #333;
-    font-size: 0.9em;
-  }
-  
-  .feedback-container p:first-child {
-    font-weight: bold;
-    color: #007BFF; /* 使用主题蓝色 */
-  }
   
   .note-item {
     margin-bottom: 10px;
@@ -346,7 +329,7 @@ body {
     font-size: 20px;
     line-height: 1;
     padding: 10px;
-    margin: 0;
+    margin-left: 20px;
     color: #666;
   }
 
@@ -388,32 +371,24 @@ body {
     display: block;
   }
 
-  .feedback-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%; /* 占据整个父容器的宽度 */
-    margin-top: 10px;
-    padding: 15px;
-    background-color: #e6f3ff; /* 略微不同的背景色 */
-    border-top: 1px solid #b3d9ff; /* 不同的边框颜色 */
-    font-size: 0.9em; /* 稍微小一点的字体 */
-    color: #333;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* 轻微的阴影 */
-  }
-  
-  .feedback {
-    display: block;
-    width: 100%; /* 占据整个父容器的宽度 */
-    margin-top: 10px;
+  .feedback-button {
+    margin-right:20px;
+    position: relative;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
     font-size: 14px;
-    color: #555;
-    background-color: #e6f7ff; /* 添加背景颜色 */
-    padding: 10px; /* 添加内边距 */
-    border-radius: 5px; /* 添加圆角 */
-    border: 1px solid #b3d9ff; /* 添加边框 */
-  }
-  
-  .hidden {
-    display: none;
-  }
+}
 
+.feedback-button::before {
+    content: '✨'; /* 这里可以替换为其他图案或字符 */
+    margin-right: 8px; /* 与文本的间距 */
+    font-size: 16px; /* 图案的大小 */
+}
+
+.hidden {
+  display: none;
+}

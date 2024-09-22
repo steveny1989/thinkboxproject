@@ -18,7 +18,7 @@ export function updateNoteList(notesToDisplay) {
   userEmailElement.textContent = auth.currentUser.email;
 
   if (!notesToDisplay || notesToDisplay.length === 0) {
-    noteList.innerHTML = '<li>No notes found. Create your first note!</li>';
+    noteList.innerHTML = '<li></li>';
     return;
   }
 
@@ -29,6 +29,7 @@ export function updateNoteList(notesToDisplay) {
           <span class="note-text">${note.content}</span>
           <span class="note-timestamp">${formatTimestamp(note.created_at)}</span>
         </div>
+        <button class="feedback-button" data-note-id="${note.note_id}" data-note-content="${note.content}">AI</button>
         <div class="dropdown">
           <span class="dropdown-trigger">...</span>
           <div class="dropdown-content">
@@ -41,6 +42,20 @@ export function updateNoteList(notesToDisplay) {
 
   // 绑定删除按钮的事件监听器
   bindDeleteButtons();
+  // 添加反馈按钮监听器
+  addFeedbackButtonListeners();
+}
+
+function addFeedbackButtonListeners() {
+  const feedbackButtons = document.querySelectorAll('.feedback-button');
+  feedbackButtons.forEach(button => {
+    button.addEventListener('click', (event) => {
+      const noteId = event.target.getAttribute('data-note-id');
+      const content = event.target.getAttribute('data-note-content');
+      noteOperations.generateFeedbackForNote(noteId, content);
+    });
+  });
+
 }
 
 function bindDeleteButtons() {
@@ -71,21 +86,6 @@ function bindDeleteButtons() {
 function formatTimestamp(timestamp) {
   return new Date(timestamp).toLocaleString();
 }
-
-// export function updateFeedback(noteId, feedbackText) {
-//   console.log(`Updating feedback for note ${noteId} with text: ${feedbackText}`);
-//   const feedbackElement = document.querySelector(`#feedback-${noteId}`);
-//   if (!feedbackElement) {
-//     console.error(`Feedback element for note ${noteId} not found`);
-//     return;
-//   }
-//   console.log(`Found feedback element:`, feedbackElement);
-//   if (feedbackText === undefined) {
-//     console.error('Feedback text is undefined');
-//     return;
-//   }
-//   feedbackElement.innerHTML = `<a href="javascript:void(0)" class="feedback-link" data-note-id="${noteId}">${feedbackText}</a>`;
-// }
 
 // 页面加载时调用 loadNotes 函数
 document.addEventListener('DOMContentLoaded', () => {
