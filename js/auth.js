@@ -1,4 +1,4 @@
-const INDEX_PAGE_URL = '../index.html'; // 定义 index.html 的路径
+const INDEX_PAGE_URL = '/index.html'; // 定义 index.html 的路径
 
 import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from './firebase.js';
 
@@ -43,7 +43,7 @@ async function registerUser() {
         }
 
         // 注册成功后跳转到主页
-        window.location.href = 'index.html';
+        window.location.href = '/index.html';
     } catch (error) {
         console.error('Registration error:', error);
         errorDiv.textContent = error.message;
