@@ -19,7 +19,7 @@ async function registerUser() {
         const idToken = await user.getIdToken();
 
         // 将用户信息同步到后端
-        const response = await fetch('https://178.128.81.19:3001/users', {
+        const response = await fetch('https://thinkboxs.com/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -62,12 +62,13 @@ async function loginUser() {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         console.log('User logged in:', user);
+        alert('注册成功！请登录。');
 
         // 获取用户的 ID 令牌
         const idToken = await user.getIdToken();
 
         // 将用户信息同步到后端
-        const response = await fetch('https://178.128.81.19:3001/users', {
+        const response = await fetch('https://thinkboxs.com/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
