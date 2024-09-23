@@ -1,5 +1,5 @@
 // 定义 API 基础 URL
-const BASE_API_URL = 'https://thinkboxs.com:3001'; // 定义 API 基础 URL
+const BASE_API_URL = 'https://octopus-app-5qchp.ondigitalocean.app:3001'; // 定义 API 基础 URL
 
 const COZE_API_URL = 'https://api.coze.cn/v3/chat'; // 更新为聊天 API 的 URL
 const COZE_API_KEY = 'pat_7ds29bjXUQ2MU6iXoKCM00yz6n9mif4UPHvsdZp2zSQN4vMQoNx1rBOEKLcb8qxX'; // 替换为你的 API 访问令牌

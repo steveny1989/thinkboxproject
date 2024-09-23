@@ -14,12 +14,13 @@ async function registerUser() {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         console.log('User registered:', user);
+        alert('注册成功！请登录。');
 
         // 获取用户的 ID 令牌
         const idToken = await user.getIdToken();
 
         // 将用户信息同步到后端
-        const response = await fetch('https://thinkboxs.com:3001/users', {
+        const response = await fetch('https://octopus-app-5qchp.ondigitalocean.app:3001/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -62,13 +63,13 @@ async function loginUser() {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         console.log('User logged in:', user);
-        alert('注册成功！请登录。');
+        alert('认证成功！请登录。');
 
         // 获取用户的 ID 令牌
         const idToken = await user.getIdToken();
 
         // 将用户信息同步到后端
-        const response = await fetch('https://thinkboxs.com:3001/users', {
+        const response = await fetch('https://octopus-app-5qchp.ondigitalocean.app:3001/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
