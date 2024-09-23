@@ -68,7 +68,7 @@ async function loginUser() {
         const idToken = await user.getIdToken();
 
         // 将用户信息同步到后端
-        const response = await fetch('https://thinkboxs.com::3001/users', {
+        const response = await fetch('https://thinkboxs.com:3001/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
