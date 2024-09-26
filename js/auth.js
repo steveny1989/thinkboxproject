@@ -121,7 +121,7 @@ export async function signOut() {
         await auth.signOut();
         console.log('User signed out');
         // 重定向到 auth.html
-        window.location.href = '../html/auth.html';
+        window.location.href = '/html/auth.html';
     } catch (error) {
         console.error('Error signing out:', error);
     }
