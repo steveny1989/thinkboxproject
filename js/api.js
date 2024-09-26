@@ -22,6 +22,8 @@ const api = {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('API error:', errorText);
+      console.log(`Fetching notes from: ${BASE_API_URL}/notes`);
+      console.log(`Response status: ${response.status}`);
       throw new Error(`Failed to fetch notes: ${response.statusText}`);
     }
     return response.json();
