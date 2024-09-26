@@ -1,4 +1,4 @@
-const AUTH_PAGE_URL = "../html/auth.html"; // 定义 auth.html 的路径
+const AUTH_PAGE_URL = "html/auth.html"; // 定义 auth.html 的路径
 
 import { auth, signOut, onAuthStateChanged } from './firebase.js';
 import noteOperations from './noteOperations.js';
