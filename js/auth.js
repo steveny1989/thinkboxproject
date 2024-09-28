@@ -1,4 +1,5 @@
 const INDEX_PAGE_URL = './index.html'; // 定义 index.html 的路径
+const BASE_API_URL = 'https://api.thinkboxs.com';
 
 import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from './firebase.js';
 
@@ -69,7 +70,7 @@ async function loginUser() {
         const idToken = await user.getIdToken();
 
         // 将用户信息同步到后端
-        const response = await fetch('https://thinkboxs.com/users', {
+        const response = await fetch(`${BASE_API_URL}/users`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -110,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         registerButton.addEventListener('click', registerUser);
     }
 
-    // 为登录按钮绑定点击事件
+    // 为录按钮绑定点击事件
     if (loginButton) {
         loginButton.addEventListener('click', loginUser);
     }
