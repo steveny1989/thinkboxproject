@@ -73,7 +73,7 @@ body {
 }
 
 .loading-indicator.hidden {
-    display: none;
+    display: none !important;
 }
 
 .spinner {

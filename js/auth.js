@@ -149,3 +149,7 @@ export async function signOut() {
 
 // 如果需要在其他文件中使用这些函数，可以导出它们
 export { showLoading, hideLoading };
+
+document.addEventListener('DOMContentLoaded', () => {
+    hideLoading();
+});
