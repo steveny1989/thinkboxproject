@@ -2,7 +2,7 @@
 import { auth, onAuthStateChanged, signOut } from './firebase.js';
 import noteOperations from './noteOperations.js';
 
-const AUTH_PAGE_URL = "/html/auth.html"; // 定义 auth.html 的路径
+const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
 
 export function updateNoteList(notesToDisplay) {
