@@ -113,6 +113,7 @@ async function loginUser() {
         window.location.href = INDEX_PAGE_URL;
     } catch (error) {
         console.error('Login error:', error);
+        alert('登录失败，请检查邮箱和密码是否正确。');
         errorDiv.textContent = error.message;
     } finally {
         hideLoading();
