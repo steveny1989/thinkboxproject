@@ -8,26 +8,25 @@
     <link rel="stylesheet" href="/css/styles.css">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/fluid-design.css">
 </head>
 <body>
     <!-- 页眉部分，包含标题和用户信息 -->
-    <div class="header">
+    <header class="header">
         <h1>ThinkBox</h1>
         <div class="user-info">
             <span id="userEmail"></span>
-            <button id="logoutButton" class="logout-button">Login/Logout</button>
+            <button id="logoutButton" class="logout-button" type="button">Login/Logout</button>
         </div>
-    </div>
+    </header>
     <!-- 主容器，包含应用内容 -->
-    <div class="container">
+    <main class="container">
         <div id="app">
             <!-- 输入容器，包含笔记输入框和添加按钮 -->
             <div class="input-container">
-                <textarea id="noteInput" placeholder="Enter your note here..."></textarea>
-                <br>
-                <button id="addNoteButton">+</button>
+                <textarea id="noteInput" placeholder="What's in your mind?" rows="6"></textarea>
+                <button id="addNoteButton" type="button">Post</button>
             </div>
-            <br>
             <!-- 搜索容器，包含搜索输入框 -->
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="Search notes...">
@@ -35,7 +34,7 @@
             <!-- 笔记列表 -->
             <ul id="noteList"></ul>
         </div>
-    </div>
+    </main>
     <!-- 引入 JavaScript 文件 -->
     <script type="module" src="/js/main.js"></script>
     <div id="loading-indicator" class="loading-indicator hidden">
