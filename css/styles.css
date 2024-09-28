@@ -125,7 +125,7 @@ body {
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 增加阴影 */
-    transition: background 0.3s, transform 0.2s; /* 添加过渡效果 */
+    transition: background-color 0.3s, transform 0.2s; /* 添加过渡效果 */
     position: absolute;
     bottom: 10px;
     right: 10px;
@@ -136,7 +136,7 @@ body {
   }
 
   #addNoteButton:hover {
-    background: linear-gradient(90deg, #0056b3, #003f7f); /* 悬停时的背景颜色 */
+    background-color: #0056b3; /* 悬停时的背景颜色 */
     transform: scale(1.05); /* 悬停时放大 */
   }
   

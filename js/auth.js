@@ -3,8 +3,18 @@ const BASE_API_URL = 'https://api.thinkboxs.com';
 
 import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from './firebase.js';
 
+// 添加这些函数
+function showLoading() {
+    document.getElementById('loading-indicator').classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loading-indicator').classList.add('hidden');
+}
+
 // 用户注册函数
 async function registerUser() {
+    showLoading();
     // 获取用户输入的邮箱和密码
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
@@ -49,11 +59,14 @@ async function registerUser() {
     } catch (error) {
         console.error('Registration error:', error);
         errorDiv.textContent = error.message;
+    } finally {
+        hideLoading();
     }
 }
 
 // 用户登录函数
 async function loginUser() {
+    showLoading();
     // 获取用户输入的邮箱和密码
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
@@ -98,6 +111,8 @@ async function loginUser() {
     } catch (error) {
         console.error('Login error:', error);
         errorDiv.textContent = error.message;
+    } finally {
+        hideLoading();
     }
 }
 
@@ -117,7 +132,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// 修改 signOut 函数
 export async function signOut() {
+    showLoading();
     try {
         await auth.signOut();
         console.log('User signed out');
@@ -125,5 +142,10 @@ export async function signOut() {
         window.location.href = './html/auth.html';
     } catch (error) {
         console.error('Error signing out:', error);
+    } finally {
+        hideLoading();
     }
 }
+
+// 如果需要在其他文件中使用这些函数，可以导出它们
+export { showLoading, hideLoading };
