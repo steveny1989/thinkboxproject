@@ -1,4 +1,4 @@
-const INDEX_PAGE_URL = './index.html'; // 定义 index.html 的路径
+const INDEX_PAGE_URL = '/index.html'; // 定义 index.html 的路径
 const BASE_API_URL = 'https://api.thinkboxs.com';
 
 import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from './firebase.js';
