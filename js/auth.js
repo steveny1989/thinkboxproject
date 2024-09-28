@@ -5,16 +5,18 @@ import { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from
 
 // 添加这些函数
 function showLoading() {
+    console.log('showLoading called');
     document.getElementById('loading-indicator').classList.remove('hidden');
 }
 
 function hideLoading() {
+    console.log('hideLoading called');
     document.getElementById('loading-indicator').classList.add('hidden');
 }
 
 // 用户注册函数
 async function registerUser() {
-    showLoading();
+
     // 获取用户输入的邮箱和密码
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
@@ -28,6 +30,7 @@ async function registerUser() {
         alert('注册成功！请登录。');
 
         // 获取用户的 ID 令牌
+        showLoading();
         const idToken = await user.getIdToken();
 
         // 将用户信息同步到后端
@@ -66,7 +69,6 @@ async function registerUser() {
 
 // 用户登录函数
 async function loginUser() {
-    showLoading();
     // 获取用户输入的邮箱和密码
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
@@ -80,6 +82,7 @@ async function loginUser() {
         alert('认证成功！请登录。');
 
         // 获取用户的 ID 令牌
+        showLoading();
         const idToken = await user.getIdToken();
 
         // 将用户信息同步到后端
