@@ -61,7 +61,19 @@ async function registerUser() {
         window.location.href = INDEX_PAGE_URL;
     } catch (error) {
         console.error('Registration error:', error);
-        errorDiv.textContent = error.message;
+        
+        // 根据错误类型显示不同的错误消息
+        let errorMessage = '注册失败，请重试。';
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = '该邮箱已被注册，请使用其他邮箱或直接登录。';
+        } else if (error.code === 'auth/weak-password') {
+            errorMessage = '密码强度不够，请使用更复杂的密码。';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = '无效的邮箱地址，请检查并重新输入。';
+        }
+
+        alert(errorMessage);
+        errorDiv.textContent = errorMessage;
     } finally {
         hideLoading();
     }
