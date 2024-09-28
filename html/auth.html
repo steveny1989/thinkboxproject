@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Authentication</title>
-    <base href="/thinkboxproject/"> <!-- 添加此行 -->
-    <link rel="stylesheet" href="css/auth.css">
+    <!-- 移除或修改 base 标签 -->
+    <!-- <base href="/thinkboxproject/"> -->
+    <!-- 使用相对路径 -->
+    <link rel="stylesheet" href="../css/auth.css">
 </head>
 <body>
     <div class="container">
@@ -25,6 +27,7 @@
             <div id="loginLoading" class="loading hidden">登录中...</div>
         </div>
     </div>
-    <script type="module" src="js/auth.js"></script>
+    <!-- 使用相对路径 -->
+    <script type="module" src="../js/auth.js"></script>
 </body>
 </html>
