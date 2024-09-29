@@ -84,4 +84,23 @@ const noteOperations = {
 
 };
 
+function setupNoteInteractions() {
+  document.querySelectorAll('.note-container').forEach(container => {
+    const actionsContainer = container.querySelector('.note-actions-container');
+    
+    container.addEventListener('mouseenter', () => {
+      actionsContainer.style.opacity = '1';
+      actionsContainer.style.transform = 'translateY(0)';
+    });
+
+    container.addEventListener('mouseleave', () => {
+      actionsContainer.style.opacity = '0';
+      actionsContainer.style.transform = 'translateY(10px)';
+    });
+  });
+}
+
+// 在生成或更新笔记列表后调用此函数
+setupNoteInteractions();
+
 export default noteOperations;

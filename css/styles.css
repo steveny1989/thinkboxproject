@@ -276,7 +276,7 @@ body {
 }
 
 .note-actions span {
-    margin: 0 150px 0 0; /* 右边距为 15px，其他为 0 */
+    margin: 0 100px 0 0; /* 右边距为 15px，其他为 0 */
     cursor: pointer; /* 鼠标悬停时显示手型光标 */
     font-size: 12px; /* 字体大小 */
     padding: 8px 12px; /* 添加内边距 */

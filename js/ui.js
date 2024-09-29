@@ -174,3 +174,21 @@ function setupNoteActions() {
 document.addEventListener('DOMContentLoaded', () => {
   noteOperations.loadNotes();
 });
+
+document.querySelectorAll('.note-container').forEach(container => {
+  const actionsContainer = container.querySelector('.note-actions-container');
+  const commentButton = container.querySelector('.comments');
+  const commentInput = container.querySelector('.comment-input-container');
+
+  commentButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    commentInput.style.display = commentInput.style.display === 'none' ? 'flex' : 'none';
+  });
+
+  // 点击笔记外部时隐藏评论输入框
+  document.addEventListener('click', (e) => {
+    if (!container.contains(e.target)) {
+      commentInput.style.display = 'none';
+    }
+  });
+});
