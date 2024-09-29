@@ -5,6 +5,7 @@ import noteOperations from './noteOperations.js';
 const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
 
+
 export function updateNoteList(notesToDisplay) {
   const noteList = document.getElementById('noteList');
   const userEmailElement = document.getElementById('userEmail');
@@ -23,11 +24,14 @@ export function updateNoteList(notesToDisplay) {
   }
 
   noteList.innerHTML = notesToDisplay.map(note => `
-    <li class="note-item">
+    <li class="note-item" data-note-id="${note.note_id}">
       <div class="note-container">
         <div class="note-content">
           <span class="note-text">${note.content}</span>
           <span class="note-timestamp">${formatTimestamp(note.created_at)}</span>
+        </div>
+        <div class="note-actions-container"> <!-- 新增容器 -->
+        <div id="tags-${note.note_id}" class="note-tags"></div>
         </div>
         <button class="feedback-button" data-note-id="${note.note_id}" data-note-content="${note.content}">AI</button>
         <div class="dropdown">
@@ -53,9 +57,6 @@ export function updateNoteList(notesToDisplay) {
         <input type="text" class="comment-input" placeholder="Any comments..." />
         <button class="submit-comment">Submit</button>
     </div>
-    <div class="comment-list"> <!-- 用于显示评论的区域 -->
-            <!-- 提交的评论将添加到这里 -->
-        </div>
 </div>
   </div>
     </li>
@@ -175,20 +176,45 @@ document.addEventListener('DOMContentLoaded', () => {
   noteOperations.loadNotes();
 });
 
-document.querySelectorAll('.note-container').forEach(container => {
-  const actionsContainer = container.querySelector('.note-actions-container');
-  const commentButton = container.querySelector('.comments');
-  const commentInput = container.querySelector('.comment-input-container');
+export function displayGeneratedTags() {
+  const generatedTagsContainer = document.getElementById('generated-tags-container');
+  if (!generatedTagsContainer) return;
 
-  commentButton.addEventListener('click', (e) => {
-    e.stopPropagation();
-    commentInput.style.display = commentInput.style.display === 'none' ? 'flex' : 'none';
-  });
+  const allGeneratedTags = noteOperations.getAllGeneratedTags();
 
-  // 点击笔记外部时隐藏评论输入框
-  document.addEventListener('click', (e) => {
-    if (!container.contains(e.target)) {
-      commentInput.style.display = 'none';
+  let tagsHtml = '<h3>Generated Tags</h3>';
+  for (const [noteId, tags] of Object.entries(allGeneratedTags)) {
+    const tagsArray = Array.isArray(tags) ? tags : [tags].filter(Boolean);
+    tagsHtml += `
+      <div>
+        <p>Note ID: ${noteId}</p>
+        <p>Generated Tags: ${tagsArray.join(', ')}</p>
+      </div>
+    `;
+  }
+
+  generatedTagsContainer.innerHTML = tagsHtml;
+}
+
+export function updateTagsDisplay(tagsMap) {
+  console.log('Updating tags display:', tagsMap);
+  for (const [noteId, tags] of tagsMap) {
+    const tagElement = document.getElementById(`tags-${noteId}`);
+    if (tagElement) {
+      tagElement.textContent = Array.isArray(tags) ? tags.join(', ') : tags;
+    } else {
+      console.warn(`Tag element for note ${noteId} not found`);
+      // 如果找不到标签元素，尝试创建一个
+      const noteElement = document.querySelector(`li[data-note-id="${noteId}"]`);
+      if (noteElement) {
+        const newTagElement = document.createElement('div');
+        newTagElement.id = `tags-${noteId}`;
+        newTagElement.className = 'note-tags';
+        newTagElement.textContent = Array.isArray(tags) ? tags.join(', ') : tags;
+        noteElement.querySelector('.note-container').appendChild(newTagElement);
+      } else {
+        console.error(`Note element for ${noteId} not found`);
+      }
     }
-  });
-});
+  }
+}
