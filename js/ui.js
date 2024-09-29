@@ -37,6 +37,27 @@ export function updateNoteList(notesToDisplay) {
           </div>
         </div>
       </div>
+  <div class="note-actions-container"> <!-- 新增容器 -->
+<div class="note-actions">
+  <span class="likes">
+    <i class="fas fa-thumbs-up"></i> 0
+  </span>
+  <span class="heart">
+    <i class="fas fa-heart"></i> 0
+  </span>
+  <span class="comments">
+    <i class="fas fa-comment"></i> 0
+  </span>
+      </div>
+    <div class="comment-input-container" style="display: none;"> <!-- 隐藏的输入框 -->
+        <input type="text" class="comment-input" placeholder="Any comments..." />
+        <button class="submit-comment">Submit</button>
+    </div>
+    <div class="comment-list"> <!-- 用于显示评论的区域 -->
+            <!-- 提交的评论将添加到这里 -->
+        </div>
+</div>
+  </div>
     </li>
   `).join('');
 
@@ -44,6 +65,9 @@ export function updateNoteList(notesToDisplay) {
   bindDeleteButtons();
   // 添加反馈按钮监听器
   addFeedbackButtonListeners();
+  
+  // 绑定笔记操作事件
+  setupNoteActions(); // 添加这一行
 }
 
 function addFeedbackButtonListeners() {
@@ -85,6 +109,65 @@ function bindDeleteButtons() {
 
 function formatTimestamp(timestamp) {
   return new Date(timestamp).toLocaleString();
+}
+
+function setupNoteActions() {
+  document.querySelectorAll('.note-actions').forEach(noteAction => {
+    const likesSpan = noteAction.querySelector('.likes');
+    const heartSpan = noteAction.querySelector('.heart');
+    const commentsSpan = noteAction.querySelector('.comments');
+    
+    // 确保正确找到 commentInputContainer
+    const commentInputContainer = noteAction.closest('.note-actions-container').querySelector('.comment-input-container');
+    const commentInput = commentInputContainer.querySelector('.comment-input');
+    const submitCommentButton = commentInputContainer.querySelector('.submit-comment');
+    
+    // 确保正确获取评论列表
+    const commentList = noteAction.closest('.note-actions-container').querySelector('.comment-list');
+
+    // 处理喜欢点击事件
+    likesSpan.addEventListener('click', () => {
+      // 使用正则表达式提取数字
+      let currentLikes = parseInt(likesSpan.textContent.match(/\d+/)[0]);
+      likesSpan.innerHTML = `<i class="fas fa-thumbs-up"></i> ${currentLikes + 1}`; // 使用图标
+    });
+
+    // 处理心形点击事件
+    heartSpan.addEventListener('click', () => {
+      // 使用正则表达式提取数字
+      let currentHearts = parseInt(heartSpan.textContent.match(/\d+/)[0]);
+      heartSpan.innerHTML = `<i class="fas fa-heart"></i> ${currentHearts + 1}`; // 使用图标
+    });
+
+    // 处理评论点击事件
+    commentsSpan.addEventListener('click', () => {
+      commentInputContainer.style.display = commentInputContainer.style.display === 'none' ? 'flex' : 'none'; // 切换输入框显示
+    });
+
+    // 处理提交评论事件
+    submitCommentButton.addEventListener('click', () => {
+      const commentText = commentInput.value.trim();
+      if (commentText) {
+          // 创建新的评论元素
+          const commentItem = document.createElement('div');
+          commentItem.classList.add('comment-item');
+          commentItem.textContent = commentText; // 设置评论文本
+
+          // 将评论添加到评论列表中
+          if (commentList) { // 确保 commentList 存在
+              commentList.appendChild(commentItem);
+          } else {
+              console.error('评论列表未找到');
+          }
+
+          // 清空输入框并隐藏输入框
+          commentInput.value = ''; // 清空输入框
+          commentInputContainer.style.display = 'none'; // 隐藏输入框
+      } else {
+          alert('请输入评论内容');
+      }
+    });
+  });
 }
 
 // 页面加载时调用 loadNotes 函数

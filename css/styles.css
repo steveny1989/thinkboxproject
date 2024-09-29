@@ -156,7 +156,7 @@ body {
   
   li {
     background-color: #fff;
-    margin-bottom: 20px; /* 增加列表项之间的间距 */
+    margin-bottom: 10px; /* 增加列表项之间的间距 */
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     overflow: hidden; /* 确保内容不会溢出 */
@@ -172,7 +172,7 @@ body {
   
   .note-content span {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 2px;
   }
   
   .timestamp-dropdown-container {
@@ -214,7 +214,6 @@ body {
     box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
     z-index: 1;
     border-radius: 4px;
-    margin-top: 2px;
   }
   
   .dropdown-content a {
@@ -235,6 +234,70 @@ body {
   .dropdown:hover .dropdown-content {
     display: block;
   }
+
+.note-actions-container {
+    display: flex; /* 使用 Flexbox 布局 */
+    flex-direction: column; /* 垂直排列子元素 */
+    margin-top: 10px; /* 与其他元素之间的间距 */
+}
+
+.note-actions {
+    display: flex; /* 使用 Flexbox 布局 */
+    align-items: center; /* 垂直居中对齐 */
+    margin-bottom: 10px; /* 与评论输入框之间的间距 */
+}
+
+.comment-input-container {
+    display: flex; /* 使用 Flexbox 布局 */
+    align-items: center; /* 垂直居中对齐 */
+    margin-top: 10px; /* 与其他元素之间的间距 */
+    width: 100%; /* 确保输入框容器占满宽度 */
+}
+
+.comment-input {
+    flex-grow: 1; /* 输入框占据剩余空间 */
+    padding: 5px; /* 内边距 */
+    border: 1px solid #ccc; /* 边框 */
+    border-radius: 4px; /* 圆角 */
+    margin-right: 10px; /* 输入框与按钮之间的间距 */
+}
+
+.submit-comment {
+    padding: 5px 10px; /* 内边距 */
+    border: none; /* 无边框 */
+    border-radius: 4px; /* 圆角 */
+    background-color: #007BFF; /* 按钮背景颜色 */
+    color: white; /* 按钮文字颜色 */
+    cursor: pointer; /* 鼠标悬停时显示手型光标 */
+}
+
+.submit-comment:hover {
+    background-color: #0056b3; /* 悬停时的背景颜色 */
+}
+
+.note-actions span {
+    margin: 0 150px 0 0; /* 右边距为 15px，其他为 0 */
+    cursor: pointer; /* 鼠标悬停时显示手型光标 */
+    font-size: 12px; /* 字体大小 */
+    padding: 8px 12px; /* 添加内边距 */
+    border-radius: 5px; /* 圆角 */
+    background-color: transparent; /* 背景透明 */
+    transition: transform 0.2s; /* 添加过渡效果 */
+    display: flex; /* 使图标和文本在同一行 */
+    align-items: center; /* 垂直居中对齐 */
+    color: rgba(128, 128, 128, 0.7); /* 图标颜色为灰色 */
+}
+
+.note-actions span:hover {
+    transform: scale(1.05); /* 悬停时放大 */
+    color: rgba(128, 128, 128, 1); /* 悬停时变为深灰色 */
+}
+
+.note-actions i {
+    margin-right: 5px; /* 图标与文本之间的间距 */
+    font-size: 12px; /* 图标大小 */
+    color: inherit; /* 继承父元素的颜色 */
+}
   
   .edit-input {
     width: 100%;
@@ -285,7 +348,7 @@ body {
   
   .small-button:hover {
     background-color:  #007bff; /* 深蓝色 */
-    transform: scale(1.05); /* 悬停时放大 */
+    transform: scale(1.05); /* 悬停时大 */
   }
 
   
@@ -301,7 +364,8 @@ body {
     background-color: #f9f9f9;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
-    padding: 10px;
+    padding: 5px;
+    margin-bottom: 5px;
   }
   
   .note-content {
@@ -311,7 +375,7 @@ body {
   
   .note-text {
     font-size: 16px;
-    margin-bottom: 5px;
+    margin-bottom: 0px;
   }
   
   .note-timestamp {
@@ -409,4 +473,41 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+.comment-input-container {
+    display: flex; /* 使用 Flexbox 布局 */
+    align-items: center; /* 垂直居中对齐 */
+    margin-top: 10px; /* 与其他元素之间的间距 */
+}
+
+.comment-input {
+    flex-grow: 1; /* 输入框占据剩余空间 */
+    padding: 5px; /* 内边距 */
+    border: 1px solid #ccc; /* 边框 */
+    border-radius: 4px; /* 圆角 */
+    margin-right: 10px; /* 输入框与按钮之间的间距 */
+}
+
+.submit-comment {
+    padding: 5px 10px; /* 内边距 */
+    border: none; /* 无边框 */
+    border-radius: 4px; /* 圆角 */
+    background-color: #007BFF; /* 按钮背景颜色 */
+    color: white; /* 按钮文字颜色 */
+    cursor: pointer; /* 鼠标悬停时显示手型光标 */
+}
+
+.submit-comment:hover {
+    background-color: #0056b3; /* 悬停时的背景颜色 */
+}
+
+.comment-list {
+    margin-top: 10px; /* 与输入框之间的间距 */
+}
+
+.comment-item {
+    padding: 5px; /* 内边距 */
+    border-bottom: 1px solid #e0e0e0; /* 底部边框 */
+    color: #333; /* 评论文本颜色 */
 }

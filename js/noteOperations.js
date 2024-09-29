@@ -82,9 +82,6 @@ const noteOperations = {
     }
 }
 
-
-
-
 };
 
 export default noteOperations;
