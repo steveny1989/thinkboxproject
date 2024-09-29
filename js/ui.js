@@ -10,7 +10,7 @@ export function updateNoteList(notesToDisplay) {
   const userEmailElement = document.getElementById('userEmail');
 
   if (!auth.currentUser) {
-    userEmailElement.textContent = 'Not logged in';
+    userEmailElement.textContent = '';
     noteList.innerHTML = '<li>Please log in to view your notes.</li>';
     return;
   }
