@@ -215,7 +215,7 @@ if (finalData.data.length > 0) {
       // 解析响应数据
       const tagsData = await tagsResponse.json();
       if (tagsData.code !== 0) {
-        // 如果响应码不为0，表示请求失败
+        // 如果响应码不为0，表示请求败
         throw new Error(`Tags generation failed: ${tagsData.msg}`);
       }
 
@@ -271,7 +271,117 @@ if (finalData.data.length > 0) {
       console.error('Error in tagsGenerator:', error);
       throw error; // 将错误继续向上抛出
     }
-  }
+  },
+
+  // 保存笔记的标签
+  async saveTags(noteId, tags) {
+    console.log(`Saving tags for note ${noteId}:`, tags); // 新增的日志
+    const user = auth.currentUser;
+    if (!user) {
+      console.error('No user logged in');
+      throw new Error('No user logged in');
+    }
+    const idToken = await user.getIdToken();
+    const response = await fetch(`${BASE_API_URL}/notes/${noteId}/tags`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`
+      },
+      body: JSON.stringify({ tags })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API error:', errorText);
+      throw new Error(`Failed to save tags: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  // 获取所有标签
+  async getAllTags() {
+    const user = auth.currentUser;
+    if (!user) {
+      console.error('No user logged in');
+      throw new Error('No user logged in');
+    }
+    const idToken = await user.getIdToken();
+    const response = await fetch(`${BASE_API_URL}/tags`, {
+      headers: { 'Authorization': `Bearer ${idToken}` }
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API error:', errorText);
+      throw new Error(`Failed to get tags: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  // 获取特定笔记的标签
+  async getNoteTags(noteId) {
+    const user = auth.currentUser;
+    if (!user) {
+      console.error('No user logged in');
+      throw new Error('No user logged in');
+    }
+    const idToken = await user.getIdToken();
+    const response = await fetch(`${BASE_API_URL}/notes/${noteId}/tags`, {
+      headers: { 'Authorization': `Bearer ${idToken}` }
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API error:', errorText);
+      throw new Error(`Failed to get note tags: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  async addTags(noteId, content) {
+    console.log('API addTags called for noteId:', noteId);
+    const user = auth.currentUser;
+    if (!user) {
+      console.error('No user logged in');
+      throw new Error('No user logged in');
+    }
+
+    try {
+      // 使用 tagsGenerator 生成标签
+      const tagsContent = await this.tagsGenerator(content);
+      
+      // 解析生成的标签内容
+      // 假设 tagsContent 是一个逗号分隔的标签字符串
+      const tags = tagsContent.split(',').map(tag => tag.trim());
+      
+      console.log('Generated tags:', tags);
+
+      // 获取用户的 ID 令牌
+      const idToken = await user.getIdToken();
+
+      // 发送请求到后端 API 来保存标签
+      const response = await fetch(`${BASE_API_URL}/tags/notes/${noteId}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ tags })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API error:', errorText);
+        throw new Error(`Failed to add tags: ${response.statusText}. ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('Tags added successfully:', result);
+      return result;
+
+    } catch (error) {
+      console.error('Error in addTags:', error);
+      throw error;
+    }
+  },
 };
 
 export default api;
