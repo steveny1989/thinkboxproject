@@ -37,7 +37,10 @@ const noteOperations = {
       notes = await api.getNotes();
       console.log('Notes loaded:', notes);
       console.log('Number of notes loaded:', notes.length);
-      
+     
+          // 按创建时间降序排序笔记
+    notes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
       // 立即更新笔记列表，不等待标签
       await this.updateNoteList(notes);
       
@@ -196,6 +199,9 @@ const noteOperations = {
       // 创建临时标签对象
       const tempTags = ['Adding...'];
       generatedTagsMap.set(tempNoteId, tempTags);
+
+          // 将新笔记添加到数组的开头
+    notes.unshift(tempNote);
 
       // 更新本地数据和 UI
       notes.push(tempNote);
