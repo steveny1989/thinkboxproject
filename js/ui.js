@@ -21,8 +21,19 @@ export function updateNoteList(notesToDisplay) {
     return;
   }
 
-  noteList.innerHTML = notesToDisplay.map(note => `
-    <li class="note-item" data-note-id="${note.note_id}">
+  // 使用文档片段来提高性能
+  const fragment = document.createDocumentFragment();
+
+  notesToDisplay.forEach(note => {
+    let noteElement = document.querySelector(`li[data-note-id="${note.note_id}"]`);
+    
+    if (!noteElement) {
+      noteElement = document.createElement('li');
+      noteElement.className = 'note-item';
+      noteElement.setAttribute('data-note-id', note.note_id);
+    }
+
+    noteElement.innerHTML = `
       <div class="note-container">
         <div class="note-content">
           <span class="note-text">${note.content}</span>
@@ -36,37 +47,33 @@ export function updateNoteList(notesToDisplay) {
           </div>
         </div>
       </div>
-<div class="note-tags-container">
-<div id="tags-${note.note_id}" class="note-tags"></div>
-</div>
-  <div class="note-actions-container">
-<div class="note-actions">
-  <span class="likes">
-    <i class="fas fa-thumbs-up"></i> 0
-  </span>
-  <span class="heart">
-    <i class="fas fa-heart"></i> 0
-  </span>
-  <span class="comments">
-    <i class="fas fa-comment"></i> 0
-  </span>
+      <div class="note-tags-container">
+        <div id="tags-${note.note_id}" class="note-tags"></div>
       </div>
-    <div class="comment-input-container" style="display: none;"> <!-- 隐藏的输入框 -->
-        <input type="text" class="comment-input" placeholder="Any comments..." />
-        <button class="submit-comment">Submit</button>
-    </div>
-</div>
-  </div>
-    </li>
-  `).join('');
+      <div class="note-actions-container">
+        <div class="note-actions">
+          <span class="likes"><i class="fas fa-thumbs-up"></i> 0</span>
+          <span class="heart"><i class="fas fa-heart"></i> 0</span>
+          <span class="comments"><i class="fas fa-comment"></i> 0</span>
+        </div>
+        <div class="comment-input-container" style="display: none;">
+          <input type="text" class="comment-input" placeholder="Any comments..." />
+          <button class="submit-comment">Submit</button>
+        </div>
+      </div>
+    `;
 
-  // 绑定删除按钮的事件监听器
+    fragment.appendChild(noteElement);
+  });
+
+  // 清空现有内容并添加新内容
+  noteList.innerHTML = '';
+  noteList.appendChild(fragment);
+
+  // 绑定事件监听器
   bindDeleteButtons();
-  // 添加反馈按钮监听器
   addFeedbackButtonListeners();
-  
-  // 绑定笔记操作事件
-  setupNoteActions(); // 添加这一行
+  setupNoteActions();
 }
 
 function addFeedbackButtonListeners() {

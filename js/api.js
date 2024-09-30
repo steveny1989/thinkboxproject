@@ -336,49 +336,25 @@ if (finalData.data.length > 0) {
     return response.json();
   },
 
-  async addTags(noteId, content) {
-    console.log('API addTags called for noteId:', noteId);
-    const user = auth.currentUser;
-    if (!user) {
-      console.error('No user logged in');
-      throw new Error('No user logged in');
-    }
-
+  async addTags(noteId, tags) {
     try {
-      // 使用 tagsGenerator 生成标签
-      const tagsContent = await this.tagsGenerator(content);
-      
-      // 解析生成的标签内容
-      // 假设 tagsContent 是一个逗号分隔的标签字符串
-      const tags = tagsContent.split(',').map(tag => tag.trim());
-      
-      console.log('Generated tags:', tags);
-
-      // 获取用户的 ID 令牌
-      const idToken = await user.getIdToken();
-
-      // 发送请求到后端 API 来保存标签
       const response = await fetch(`${BASE_API_URL}/tags/notes/${noteId}`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
+          'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
         },
         body: JSON.stringify({ tags })
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API error:', errorText);
-        throw new Error(`Failed to add tags: ${response.statusText}. ${errorText}`);
+        const errorData = await response.json();
+        throw new Error(`Failed to add tags: ${response.status}. ${JSON.stringify(errorData)}`);
       }
 
-      const result = await response.json();
-      console.log('Tags added successfully:', result);
-      return result;
-
+      return await response.json();
     } catch (error) {
-      console.error('Error in addTags:', error);
+      console.error('API error:', error);
       throw error;
     }
   },
