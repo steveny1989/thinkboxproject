@@ -166,7 +166,6 @@ body {
   .note-content {
     padding: 15px;
     background-color: #f9f9f9;
-    border-bottom: 1px solid #e0e0e0;
     margin-bottom: 10px;
   }
   
@@ -235,6 +234,27 @@ body {
     display: block;
   }
 
+  .note-tags-container {
+    padding: 10px 15px;
+    background-color: #f0f0f0;
+    border-top: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .note-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  
+  .tag {
+    background-color: #e0e0e0;
+    color: #666;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+  }
+  
 .note-actions-container {
     display: flex; /* 使用 Flexbox 布局 */
     flex-direction: column; /* 垂直排列子元素 */
@@ -510,4 +530,22 @@ body {
     padding: 5px; /* 内边距 */
     border-bottom: 1px solid #e0e0e0; /* 底部边框 */
     color: #333; /* 评论文本颜色 */
+}
+
+.note-tags-container {
+  margin-top: 5px;
+}
+
+.note-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tag {
+  background-color: #e0e0e0;
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
 }

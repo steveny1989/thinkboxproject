@@ -19,12 +19,32 @@ const noteOperations = {
       console.log('Notes loaded:', notes);
       console.log('Number of notes loaded:', notes.length);
       updateNoteList(notes);
+      
+      // 异步加载标签
+      this.loadTags(notes);
+      
       return notes;
     } catch (error) {
       console.error('Error loading notes:', error);
       notes = [];
       updateNoteList([]);
       return [];
+    }
+  },
+
+  // async loadTagsForNotes(notes) {
+  //   for (const note of notes) {
+  //     if (!note.tags) {
+  //       note.tags = await this.getTagsForNote(note);
+  //       this.updateNoteTagsInUI(note.note_id, note.tags);
+  //     }
+  //   }
+  // },
+
+  updateNoteTagsInUI(noteId, tags) {
+    const tagElement = document.getElementById(`tags-${noteId}`);
+    if (tagElement) {
+      tagElement.innerHTML = tags.map(tag => `<span class="tag">${tag}</span>`).join('');
     }
   },
 
@@ -117,23 +137,51 @@ const noteOperations = {
 
   async addNote(noteText) {
     try {
-      const newNote = await api.addNote({ content: noteText });
+      const currentTime = new Date().toISOString();
+      
+      // 1. 立即清除输入框
+      const noteInput = document.getElementById('noteInput');
+      const originalText = noteInput.value;
+      noteInput.value = '';
+
+      // 2. 创建一个临时的本地笔记对象
+      const tempNote = {
+        note_id: 'temp_' + Date.now(), // 临时ID
+        content: noteText,
+        created_at: currentTime,
+        tags: [] // 临时空标签
+      };
+
+      // 3. 立即更新 UI，添加临时笔记
+      notes.push(tempNote);
+      updateNoteList(notes);
+
+      // 4. 异步添加笔记到服务器
+      const newNote = await api.addNote({ 
+        content: noteText,
+        created_at: currentTime
+      });
+
+      // 5. 用服务器返回的数据更新本地笔记
+      const index = notes.findIndex(n => n.note_id === tempNote.note_id);
+      if (index !== -1) {
+        notes[index] = newNote;
+      }
+
       console.log('New note added:', newNote);
-      
-      // 将新笔记添加到本地数组
-      notes.push(newNote);
-      updateNoteList(notes);
-      
-      // 为新笔记生成标签
-      await this.generateTagsForNotes([newNote]);
-      
-      // 更新UI
-      updateNoteList(notes);
-      updateTagsDisplay(generatedTagsMap);
-      
+
+      // 6. 异步生成标签
+      this.generateTagsForNotes([newNote]).then(() => {
+        // 7. 更新 UI 以显示生成的标签
+        updateNoteList(notes);
+        updateTagsDisplay(generatedTagsMap);
+      });
+
       return newNote;
     } catch (error) {
       console.error('Error adding note:', error);
+      // 8. 如果出错，恢复输入框的内容
+      document.getElementById('noteInput').value = originalText;
       throw error;
     }
   },
@@ -141,17 +189,31 @@ const noteOperations = {
   async deleteNote(noteId) {
     try {
       await api.deleteNote(noteId);
+      
+      // 从本地数组中移除笔记
       notes = notes.filter(note => note.note_id !== noteId);
-      updateNoteList(notes);
       
-      // 从标签映射中删除该笔记的标签
-      generatedTagsMap.delete(noteId);
-      this.saveGeneratedTags();
+      // 从 UI 中移除笔记
+      const noteElement = document.querySelector(`li[data-note-id="${noteId}"]`);
+      if (noteElement) {
+        noteElement.remove();
+      }
       
-      // 更新UI中的标签显示
-      updateTagsDisplay(generatedTagsMap);
+      // 如果使用了单独的标签存储，也需要删除相应的标签
+      if (this.generatedTagsMap) {
+        this.generatedTagsMap.delete(noteId);
+      }
+      
+      // 更新本地存储
+      this.saveNotesToLocalStorage();
+      
+      console.log(`Note with ID: ${noteId} deleted successfully`);
+      
+      // 重新加载笔记列表以确保 UI 是最新的
+      this.loadNotes();
     } catch (error) {
-      console.error('Error deleting note:', error);
+      console.error(`Error deleting note with ID: ${noteId}`, error);
+      throw error;
     }
   },
 

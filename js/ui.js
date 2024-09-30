@@ -30,9 +30,6 @@ export function updateNoteList(notesToDisplay) {
           <span class="note-text">${note.content}</span>
           <span class="note-timestamp">${formatTimestamp(note.created_at)}</span>
         </div>
-        <div class="note-actions-container"> <!-- 新增容器 -->
-        <div id="tags-${note.note_id}" class="note-tags"></div>
-        </div>
         <button class="feedback-button" data-note-id="${note.note_id}" data-note-content="${note.content}">AI</button>
         <div class="dropdown">
           <span class="dropdown-trigger">...</span>
@@ -41,7 +38,10 @@ export function updateNoteList(notesToDisplay) {
           </div>
         </div>
       </div>
-  <div class="note-actions-container"> <!-- 新增容器 -->
+<div class="note-tags-container">
+<div id="tags-${note.note_id}" class="note-tags"></div>
+</div>
+  <div class="note-actions-container">
 <div class="note-actions">
   <span class="likes">
     <i class="fas fa-thumbs-up"></i> 0
