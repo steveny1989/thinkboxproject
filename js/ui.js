@@ -4,8 +4,6 @@ import noteOperations from './noteOperations.js';
 
 const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
-
-
 export function updateNoteList(notesToDisplay) {
   const noteList = document.getElementById('noteList');
   const userEmailElement = document.getElementById('userEmail');
@@ -197,24 +195,29 @@ export function displayGeneratedTags() {
 }
 
 export function updateTagsDisplay(tagsMap) {
-  console.log('Updating tags display:', tagsMap);
-  for (const [noteId, tags] of tagsMap) {
-    const tagElement = document.getElementById(`tags-${noteId}`);
-    if (tagElement) {
-      tagElement.textContent = Array.isArray(tags) ? tags.join(', ') : tags;
-    } else {
-      console.warn(`Tag element for note ${noteId} not found`);
-      // 如果找不到标签元素，尝试创建一个
+  requestAnimationFrame(() => {
+    for (const [noteId, tags] of tagsMap) {
       const noteElement = document.querySelector(`li[data-note-id="${noteId}"]`);
-      if (noteElement) {
-        const newTagElement = document.createElement('div');
-        newTagElement.id = `tags-${noteId}`;
-        newTagElement.className = 'note-tags';
-        newTagElement.textContent = Array.isArray(tags) ? tags.join(', ') : tags;
-        noteElement.querySelector('.note-container').appendChild(newTagElement);
-      } else {
-        console.error(`Note element for ${noteId} not found`);
+      if (!noteElement) {
+        console.log(`Note element for ${noteId} not found, skipping tag update`);
+        continue; // 如果笔记元素不存在，跳过这个笔记的标签更新
       }
+
+      let tagElement = noteElement.querySelector(`#tags-${noteId}`);
+      if (!tagElement) {
+        console.log(`Creating new tag element for note ${noteId}`);
+        tagElement = document.createElement('div');
+        tagElement.id = `tags-${noteId}`;
+        tagElement.className = 'note-tags';
+        noteElement.querySelector('.note-tags-container').appendChild(tagElement);
+      }
+
+      // 确保 tags 是一个数组
+      const tagsArray = Array.isArray(tags) ? tags : 
+                        (typeof tags === 'string' ? [tags] : 
+                        (tags ? [String(tags)] : []));
+
+      tagElement.innerHTML = tagsArray.map(tag => `<span class="tag">${tag}</span>`).join('');
     }
-  }
+  });
 }

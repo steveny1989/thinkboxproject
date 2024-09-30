@@ -32,15 +32,6 @@ const noteOperations = {
     }
   },
 
-  // async loadTagsForNotes(notes) {
-  //   for (const note of notes) {
-  //     if (!note.tags) {
-  //       note.tags = await this.getTagsForNote(note);
-  //       this.updateNoteTagsInUI(note.note_id, note.tags);
-  //     }
-  //   }
-  // },
-
   updateNoteTagsInUI(noteId, tags) {
     const tagElement = document.getElementById(`tags-${noteId}`);
     if (tagElement) {
@@ -49,7 +40,7 @@ const noteOperations = {
   },
 
   async loadTags(loadedNotes) {
-    console.log('loadTags called');
+    // console.log('loadTags called');
     if (!loadedNotes || loadedNotes.length === 0) {
       console.log('No notes to load tags for');
       return new Map();
@@ -68,7 +59,7 @@ const noteOperations = {
         await this.generateTagsForNotes(notesWithoutTags);
       }
       
-      console.log('Tags loaded:', generatedTagsMap);
+      // console.log('Tags loaded:', generatedTagsMap);
       return generatedTagsMap;
     } catch (error) {
       console.error('Error loading tags:', error);
@@ -77,19 +68,19 @@ const noteOperations = {
   },
 
   async checkAndGenerateTags() {
-    console.log('Checking notes for missing tags...');
-    console.log('Total notes:', notes.length);
+    // console.log('Checking notes for missing tags...');
+    // console.log('Total notes:', notes.length);
 
-    // 详细输出每个笔记的标签状态
-    notes.forEach((note, index) => {
-      console.log(`Note ${index + 1}:`);
-      console.log(`  ID: ${note.note_id}`);
-      console.log(`  Content: ${note.content.substring(0, 50)}...`);
-      console.log(`  Tags: ${note.tags ? JSON.stringify(note.tags) : 'No tags'}`);
-    });
+    // // 详细输出每个笔记的标签状态
+    // notes.forEach((note, index) => {
+    //   console.log(`Note ${index + 1}:`);
+    //   console.log(`  ID: ${note.note_id}`);
+    //   console.log(`  Content: ${note.content.substring(0, 50)}...`);
+    //   console.log(`  Tags: ${note.tags ? JSON.stringify(note.tags) : 'No tags'}`);
+    // });
 
     const notesWithoutTags = notes.filter(note => !note.tags || note.tags.length === 0);
-    console.log('Notes without tags:', notesWithoutTags.length);
+    // console.log('Notes without tags:', notesWithoutTags.length);
 
     if (notesWithoutTags.length > 0) {
       console.log(`Found ${notesWithoutTags.length} notes without tags. Generating tags...`);
@@ -199,7 +190,7 @@ const noteOperations = {
         noteElement.remove();
       }
       
-      // 如果使用了单独的标签存储，也需要删除相应的标签
+      // 删除相应的标签
       if (this.generatedTagsMap) {
         this.generatedTagsMap.delete(noteId);
       }
@@ -209,18 +200,23 @@ const noteOperations = {
       
       console.log(`Note with ID: ${noteId} deleted successfully`);
       
-      // 重新加载笔记列表以确保 UI 是最新的
-      this.loadNotes();
+      // 更新标签显示
+      updateTagsDisplay(this.generatedTagsMap);
+      
+      // 如果需要更新其他 UI 元素（如笔记计数），可以在这里添加
+      this.updateNoteCount();
+
+      return true; // 表示删除成功
     } catch (error) {
       console.error(`Error deleting note with ID: ${noteId}`, error);
-      throw error;
+      throw error; // 重新抛出错误，让调用者处理
     }
   },
 
   async generateTagsForNotes(notesWithoutTags) {
     for (const note of notesWithoutTags) {
       try {
-        console.log(`Generating tags for note: ${note.note_id}`);
+        // console.log(`Generating tags for note: ${note.note_id}`);
         const generatedTags = await api.tagsGenerator(note.content);
         console.log(`Generated tags for note ${note.note_id}:`, generatedTags);
         generatedTagsMap.set(note.note_id, generatedTags);

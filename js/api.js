@@ -199,8 +199,8 @@ if (finalData.data.length > 0) {
         }]
       };
 
-      // 打印请求体以便调试
-      console.log('Tags request body:', JSON.stringify(tagsRequest, null, 2));
+      // // 打印请求体以便调试
+      // console.log('Tags request body:', JSON.stringify(tagsRequest, null, 2));
 
       // 发送标签生成请求到 COZE API
       const tagsResponse = await fetch(`${COZE_API_URL}`, {
@@ -252,7 +252,7 @@ if (finalData.data.length > 0) {
 
       // 解析最终响应
       const finalData = await finalResponse.json();
-      console.log(finalData); // 打印最终数据以便调试
+      // console.log(finalData); // 打印最终数据以便调试
       if (finalData.code !== 0) {
         // 如果获取最终结果失败，抛出错误
         throw new Error(`Failed to retrieve final tags: ${finalData.msg}`);
