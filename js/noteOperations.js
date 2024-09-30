@@ -30,7 +30,7 @@ const noteOperations = {
     const user = auth.currentUser;
     if (!user) {
       console.log('No user logged in, skipping note loading');
-      this.updateNoteListAndTags();
+      await this.updateNoteList();
       return [];
     }
     try {
@@ -38,22 +38,40 @@ const noteOperations = {
       console.log('Notes loaded:', notes);
       console.log('Number of notes loaded:', notes.length);
       
-      // 加载标签
-      await this.loadTags(notes);
+      // 立即更新笔记列表，不等待标签
+      await this.updateNoteList(notes);
       
-      // 更新 UI
-      this.updateNoteListAndTags();
+      // 异步加载标签
+      this.loadTags(notes).then(() => {
+        this.updateNoteTags();
+      });
       
       return notes;
     } catch (error) {
       console.error('Error loading notes:', error);
       notes = [];
-      this.updateNoteListAndTags();
+      await this.updateNoteList();
       return [];
     }
   },
 
-  updateNoteTagsInUI(noteId, tags) {
+  async updateNoteList() {
+    console.log('Updating note list');
+    await updateNoteList(notes);
+  },
+
+  async updateNoteTags() {
+    console.log('Updating note tags');
+    for (const note of notes) {
+      const tags = generatedTagsMap.get(note.note_id);
+      if (tags) {
+        await this.updateNoteTagsInUI(note.note_id, tags);
+      }
+    }
+  },
+
+  async updateNoteTagsInUI(noteId, tags) {
+    console.log(`Updating tags for note ${noteId}:`, tags);
     const noteElement = document.querySelector(`li[data-note-id="${noteId}"]`);
     if (!noteElement) {
       console.warn(`Note element for ${noteId} not found, skipping tag update`);
@@ -81,6 +99,9 @@ const noteOperations = {
                       (tags ? [String(tags)] : []));
 
     tagElement.innerHTML = tagsArray.map(tag => `<span class="tag">${tag}</span>`).join('');
+    
+    // 如果需要，这里可以添加一个小延迟，以确保 DOM 更新
+    await new Promise(resolve => setTimeout(resolve, 0));
   },
 
   async loadTags(loadedNotes) {
@@ -217,15 +238,21 @@ const noteOperations = {
     }
   },
 
-  updateNoteListAndTags() {
-    updateNoteList(notes);
-    // 确保 generatedTagsMap 不为空
-    if (generatedTagsMap.size > 0) {
-      updateTagsDisplay(generatedTagsMap);
-    } else {
-      console.log('No tags to update');
-      // 可能需要清除所有标签显示
-      updateTagsDisplay(new Map());
+  async updateNoteListAndTags() {
+    console.log('Updating note list and tags');
+    console.log('Current notes:', notes);
+    console.log('Current generatedTagsMap:', generatedTagsMap);
+    
+    // 更新笔记列表
+    await updateNoteList(notes);
+    
+    // 更新每个笔记的标签
+    for (const note of notes) {
+      const tags = generatedTagsMap.get(note.note_id);
+      console.log(`Updating tags for note ${note.note_id}:`, tags);
+      if (tags) {
+        await this.updateNoteTagsInUI(note.note_id, tags);
+      }
     }
   },
 
