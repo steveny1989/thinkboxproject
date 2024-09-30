@@ -74,7 +74,7 @@ const noteOperations = {
   },
 
   async updateNoteTagsInUI(noteId, tags) {
-    console.log(`Updating tags for note ${noteId}:`, tags);
+    // console.log(`Updating tags for note ${noteId}:`, tags);
     const noteElement = document.querySelector(`li[data-note-id="${noteId}"]`);
     if (!noteElement) {
       console.warn(`Note element for ${noteId} not found, skipping tag update`);
