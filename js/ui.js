@@ -195,29 +195,51 @@ export function displayGeneratedTags() {
 }
 
 export function updateTagsDisplay(tagsMap) {
-  requestAnimationFrame(() => {
-    for (const [noteId, tags] of tagsMap) {
-      const noteElement = document.querySelector(`li[data-note-id="${noteId}"]`);
-      if (!noteElement) {
-        console.log(`Note element for ${noteId} not found, skipping tag update`);
-        continue; // 如果笔记元素不存在，跳过这个笔记的标签更新
-      }
+  console.log('Received tagsMap:', tagsMap); // 添加日志
 
-      let tagElement = noteElement.querySelector(`#tags-${noteId}`);
-      if (!tagElement) {
-        console.log(`Creating new tag element for note ${noteId}`);
-        tagElement = document.createElement('div');
-        tagElement.id = `tags-${noteId}`;
-        tagElement.className = 'note-tags';
-        noteElement.querySelector('.note-tags-container').appendChild(tagElement);
-      }
+  if (!tagsMap || typeof tagsMap !== 'object') {
+    console.warn('tagsMap is null, undefined, or not an object. Skipping update.');
+    return;
+  }
 
-      // 确保 tags 是一个数组
-      const tagsArray = Array.isArray(tags) ? tags : 
-                        (typeof tags === 'string' ? [tags] : 
-                        (tags ? [String(tags)] : []));
-
-      tagElement.innerHTML = tagsArray.map(tag => `<span class="tag">${tag}</span>`).join('');
+  // 如果 tagsMap 不是 Map 对象，尝试将其转换为 Map
+  if (!(tagsMap instanceof Map)) {
+    console.warn('tagsMap is not a Map. Attempting to convert.');
+    try {
+      tagsMap = new Map(Object.entries(tagsMap));
+    } catch (error) {
+      console.error('Failed to convert tagsMap to Map:', error);
+      return;
     }
-  });
+  }
+
+  for (const [noteId, tags] of tagsMap) {
+    const noteElement = document.querySelector(`li[data-note-id="${noteId}"]`);
+    if (!noteElement) {
+      console.log(`Note element for ${noteId} not found, skipping tag update`);
+      continue;
+    }
+
+    let tagElement = noteElement.querySelector(`#tags-${noteId}`);
+    if (!tagElement) {
+      console.log(`Creating new tag element for note ${noteId}`);
+      tagElement = document.createElement('div');
+      tagElement.id = `tags-${noteId}`;
+      tagElement.className = 'note-tags';
+      const tagContainer = noteElement.querySelector('.note-tags-container');
+      if (tagContainer) {
+        tagContainer.appendChild(tagElement);
+      } else {
+        console.warn(`Tag container not found for note ${noteId}`);
+        continue;
+      }
+    }
+
+    // 确保 tags 是一个数组
+    const tagsArray = Array.isArray(tags) ? tags : 
+                      (typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()) : 
+                      (tags ? [String(tags)] : []));
+
+    tagElement.innerHTML = tagsArray.map(tag => `<span class="tag">${tag}</span>`).join('');
+  }
 }
