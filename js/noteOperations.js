@@ -116,6 +116,7 @@ const noteOperations = {
   },
 
   async updateNoteTagsInUI(noteId, tags) {
+    console.log(`Updating UI for note ${noteId} with tags:`, tags);
     const noteElement = document.querySelector(`li[data-note-id="${noteId}"]`);
     if (!noteElement) {
       console.warn(`Note element for ${noteId} not found, skipping tag update`);
@@ -284,15 +285,22 @@ const noteOperations = {
       notes.unshift(newNote);
     }
 
-    const [generatedTags] = await Promise.all([
-      api.tagsGenerator(newNote.content),
-      this.saveTags(newNote.note_id, []),  // 初始化空标签
-    ]);
-
-    generatedTagsMap.set(newNote.note_id, generatedTags);
-    await this.saveTags(newNote.note_id, generatedTags);
-    await this.debouncedUpdateUI();
-  },
+    try {
+      const generatedTags = await api.tagsGenerator(newNote.content);
+      console.log(`Generated tags for new note ${newNote.note_id}:`, generatedTags);
+      
+      generatedTagsMap.set(newNote.note_id, generatedTags);
+      await this.saveTags(newNote.note_id, generatedTags);
+      
+    // 更新整个笔记列表
+    await this.updateNoteList();
+    
+    // 延迟更新标签，给 DOM 一些时间来更新
+    setTimeout(() => this.updateNoteTagsInUI(newNote.note_id, generatedTags), 100);
+  } catch (error) {
+    console.error('Error generating or saving tags:', error);
+  }
+},
 
   handleAddNoteError(error, originalText, tempNoteId) {
     console.error('Error adding note:', error);
@@ -422,17 +430,12 @@ const noteOperations = {
       const result = await api.addTags(noteId, tags);
       console.log('Tags saved successfully:', result);
       
-      // Update local state
       generatedTagsMap.set(noteId, tags);
       saveTagsToLocalStorage(generatedTagsMap);
-      
-      // Update UI
-      await this.updateNoteListAndTags();
       
       return result;
     } catch (error) {
       console.error(`Error saving tags for note ${noteId}:`, error);
-      // 返回更详细的错误信息
       return { 
         success: false, 
         error: error.message,
