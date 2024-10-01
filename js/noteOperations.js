@@ -309,12 +309,10 @@ const noteOperations = {
   async updateNoteListAndTags() {
     console.log('Updating note list and tags');
     
-    // 更新笔记列表
     await updateNoteList(notes);
     
-    // 更新每个笔记的标签
     for (const note of notes) {
-      await this.processNoteTags(note); // 重用标签处理函数
+      await this.processNoteTags.call(this, note);
     }
   },
 
