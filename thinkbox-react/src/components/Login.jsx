@@ -11,9 +11,10 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      await AuthService.login(email, password);
+      await authService.login(email, password);
       // 登录成功后的操作，例如重定向
     } catch (error) {
+      console.error('Login error:', error);
       setError('登录失败，请检查邮箱和密码是否正确。');
     }
   };

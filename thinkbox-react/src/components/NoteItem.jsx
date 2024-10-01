@@ -1,5 +1,6 @@
 // src/components/NoteItem.js
 import React from 'react';
+import { noteOperations } from '../services/noteOperations';
 
 const NoteItem = ({ note }) => {
   return (

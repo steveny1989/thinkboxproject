@@ -1,14 +1,27 @@
 // src/components/NoteList.js
-import React from 'react';
-import NoteItem from './NoteItem';
+import React, { useState, useEffect } from 'react';
+import { noteOperations } from '../services/noteOperations';
 
-const NoteList = ({ notes }) => {
+const NoteList = () => {
+  const [notes, setNotes] = useState([]);
+
+  useEffect(() => {
+    const handleNotesUpdate = (updatedNotes) => {
+      setNotes(updatedNotes);
+    };
+
+    noteOperations.addListener(handleNotesUpdate);
+    noteOperations.loadNotes();
+
+    return () => noteOperations.removeListener(handleNotesUpdate);
+  }, []);
+
   return (
-    <ul id="noteList">
+    <div className="note-list">
       {notes.map(note => (
         <NoteItem key={note.id} note={note} />
       ))}
-    </ul>
+    </div>
   );
 };
 

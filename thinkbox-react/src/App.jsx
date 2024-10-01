@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-import Login from './components/Login.jsx';
+import Login from './components/login';
 import Register from './components/Register';
 import MainContent from './components/MainContent';
 import Header from './components/Header';
