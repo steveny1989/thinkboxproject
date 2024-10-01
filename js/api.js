@@ -337,14 +337,20 @@ if (finalData.data.length > 0) {
   },
 
   async addTags(noteId, tags) {
+    console.log('Adding tags:', tags, 'to note:', noteId);
     try {
+      // 确保 tags 是一个数组，并且每个标签都是一个完整的字符串
+      const processedTags = Array.isArray(tags) 
+        ? tags.filter(tag => typeof tag === 'string' && tag.trim() !== '')
+        : [tags].filter(tag => typeof tag === 'string' && tag.trim() !== '');
+
       const response = await fetch(`${BASE_API_URL}/tags/notes/${noteId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
         },
-        body: JSON.stringify({ tags })
+        body: JSON.stringify({ tags: processedTags })
       });
 
       if (!response.ok) {
@@ -352,12 +358,54 @@ if (finalData.data.length > 0) {
         throw new Error(`Failed to add tags: ${response.status}. ${JSON.stringify(errorData)}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log('Tags added successfully:', result);
+      return result;
     } catch (error) {
       console.error('API error:', error);
       throw error;
     }
   },
+
+  async getTags(noteId) {
+    console.log(`getTags called for noteId: ${noteId}`);
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.error('No user logged in');
+        return [];
+      }
+      const idToken = await user.getIdToken();
+      const response = await fetch(`${BASE_API_URL}/tags/notes/${noteId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn(`No tags found for note ${noteId}`);
+          return []; // 返回空数组而不是抛出错误
+        }
+        const errorText = await response.text();
+        console.error('API error:', errorText);
+        throw new Error(`Failed to get tags: ${response.status} ${response.statusText}`);
+      }
+
+      const tags = await response.json();
+      console.log(`Tags retrieved for note ${noteId}:`, tags);
+      return tags;
+    } catch (error) {
+      console.error(`Error in getTags:`, error);
+      // 如果是 404 错误（标签不存在），返回空数组而不是抛出错误
+      if (error.message.includes('404')) {
+        return [];
+      }
+      throw error;
+    }
+  }
 };
 
 export default api;

@@ -26,34 +26,78 @@ function loadTagsFromLocalStorage() {
 
 const noteOperations = {
   async loadNotes() {
-    console.log('loadNotes called');
     const user = auth.currentUser;
     if (!user) {
       console.log('No user logged in, skipping note loading');
-      await this.updateNoteList();
-      return [];
+      notes = [];
+      return notes;
     }
+
     try {
-      notes = await api.getNotes();
-      console.log('Notes loaded:', notes);
-      console.log('Number of notes loaded:', notes.length);
-     
-          // 按创建时间降序排序笔记
-    notes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    
-      // 立即更新笔记列表，不等待标签
-      await this.updateNoteList(notes);
-      
-      // 更新笔记列表和标签
+      const localNotes = this.loadNotesFromLocalStorage();
+      const serverNotes = await api.getNotes();
+      notes = this.mergeNotes(localNotes, serverNotes);
+
+      for (const note of notes) {
+        await this.processNoteTags(note); // 使用新的标签处理函数
+      }
+
+      this.saveNotesToLocalStorage(notes);
+      saveTagsToLocalStorage(generatedTagsMap);
       await this.updateNoteListAndTags();
-      
+
       return notes;
     } catch (error) {
-      console.error('Error loading notes:', error);
+      this.handleError('Error loading notes:', error);
       notes = [];
-      await this.updateNoteList();
-      return [];
+      return notes;
     }
+  },
+
+  async processNoteTags(note) {
+    try {
+      let tags = this.getTagsFromLocalStorage(note.note_id);
+      if (!tags || tags.length === 0) {
+        console.log(`Fetching tags for note ${note.note_id} from server`);
+        tags = await api.getTags(note.note_id);
+      }
+
+      if (!tags || tags.length === 0) {
+        console.log(`Generating tags for note ${note.note_id}`);
+        tags = await api.tagsGenerator(note.content);
+        await this.saveTags(note.note_id, tags);
+      }
+
+      generatedTagsMap.set(note.note_id, tags);
+    } catch (tagError) {
+      this.handleError(`Error processing tags for note ${note.note_id}:`, tagError);
+    }
+  },
+
+  handleError(message, error) {
+    console.error(message, error);
+  },
+
+  // 辅助函数：从本地存储加载笔记
+  loadNotesFromLocalStorage() {
+    const savedNotes = localStorage.getItem('notes');
+    return savedNotes ? JSON.parse(savedNotes) : [];
+  },
+
+  // 辅助函数：合并本地和服务器的笔记
+  mergeNotes(localNotes, serverNotes) {
+    const mergedNotes = [...serverNotes];
+    for (const localNote of localNotes) {
+      if (!serverNotes.some(note => note.note_id === localNote.note_id)) {
+        mergedNotes.push(localNote);
+      }
+    }
+    return mergedNotes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  },
+
+  // 辅助函数：从本地存储获取特定笔记的标签
+  getTagsFromLocalStorage(noteId) {
+    return generatedTagsMap.get(noteId) || [];
   },
 
   async updateNoteList() {
@@ -179,82 +223,87 @@ const noteOperations = {
   },
 
   async addNote(noteText) {
+    if (!this.validateNoteText(noteText)) {
+      throw new Error('Invalid note text');
+    }
+
     let originalText = '';
     let tempNoteId = '';
+    const noteInput = document.getElementById('noteInput');
+
     try {
       const currentTime = new Date().toISOString();
-      
-      // 清除输入框并保存原始文本
-      const noteInput = document.getElementById('noteInput');
       originalText = noteInput.value;
       noteInput.value = '';
 
-      // 创建临时笔记对象，包括临时标签
       tempNoteId = 'temp_' + Date.now();
-      const tempNote = {
-        note_id: tempNoteId,
-        content: noteText,
-        created_at: currentTime
-      };
+      const tempNote = { note_id: tempNoteId, content: noteText, created_at: currentTime };
+      
+      await this.addTempNoteAndUpdateUI(tempNote);
 
-      // 创建临时标签对象
-      const tempTags = ['Adding...'];
-      generatedTagsMap.set(tempNoteId, tempTags);
-
-      // 将新笔记添加到数组的开头
-      notes.unshift(tempNote);
-
-      // 立即更新UI以显示临时笔记和标签
-      await this.updateNoteListAndTags();
-
-      // 异步添加笔记到服务器
-      const newNote = await api.addNote({ 
-        content: noteText,
-        created_at: currentTime
-      });
-
-      // 用服务器返回的数据替换临时笔记
-      const index = notes.findIndex(n => n.note_id === tempNoteId);
-      if (index !== -1) {
-        notes[index] = {
-          ...newNote,
-          created_at: currentTime // 使用原始的客户端时间戳
-        };
-        // 移除临时笔记ID的标签
-        generatedTagsMap.delete(tempNoteId);
-      } else {
-        // 如果找不到临时笔记，直接添加新笔记
-        notes.unshift(newNote);
-      }
-
-      // 异步生成标签
-      const generatedTags = await api.tagsGenerator(newNote.content);
-      generatedTagsMap.set(newNote.note_id, generatedTags);
-      saveTagsToLocalStorage(generatedTagsMap);
-
-      // 尝试保存生成的标签到数据库
-      try {
-        await this.saveTags(newNote.note_id, generatedTags);
-      } catch (tagError) {
-        console.warn(`Failed to save tags for note ${newNote.note_id}:`, tagError);
-        // 即使标签保存失败，我们仍然继续处理
-      }
-
-      // 更新UI以显示新笔记和标签
-      await this.updateNoteListAndTags();
-
-      console.log(`Added note ${newNote.note_id} with tags:`, generatedTags);
-
+      const newNote = await api.addNote({ content: noteText, created_at: currentTime });
+      await this.finalizeNewNote(newNote, tempNoteId, currentTime);
+      
       return newNote;
     } catch (error) {
-      console.error('Error adding note:', error);
-      noteInput.value = originalText;
-      // 如果出错，移除临时笔记和标签
-      notes = notes.filter(note => note.note_id !== tempNoteId);
-      generatedTagsMap.delete(tempNoteId);
-      await this.updateNoteListAndTags();
+      this.handleAddNoteError(error, originalText, tempNoteId);
       throw error;
     }
+  },
+
+  validateNoteText(noteText) {
+    return noteText && noteText.trim().length > 0;
+  },
+
+  async addTempNoteAndUpdateUI(tempNote) {
+    generatedTagsMap.set(tempNote.note_id, ['Adding...']);
+    notes.unshift(tempNote);
+    await this.debouncedUpdateUI();
+  },
+
+  // 使用原生 JavaScript 实现防抖
+  debouncedUpdateUI: (function() {
+    let timeout;
+    return function() {
+      clearTimeout(timeout);
+      return new Promise(resolve => {
+        timeout = setTimeout(async () => {
+          await this.updateNoteListAndTags();
+          resolve();
+        }, 300);
+      });
+    };
+  })(),
+
+  async finalizeNewNote(newNote, tempNoteId, currentTime) {
+    const index = notes.findIndex(n => n.note_id === tempNoteId);
+    if (index !== -1) {
+      notes[index] = { ...newNote, created_at: currentTime };
+      generatedTagsMap.delete(tempNoteId);
+    } else {
+      notes.unshift(newNote);
+    }
+
+    const [generatedTags] = await Promise.all([
+      api.tagsGenerator(newNote.content),
+      this.saveTags(newNote.note_id, []),  // 初始化空标签
+    ]);
+
+    generatedTagsMap.set(newNote.note_id, generatedTags);
+    await this.saveTags(newNote.note_id, generatedTags);
+    await this.debouncedUpdateUI();
+  },
+
+  handleAddNoteError(error, originalText, tempNoteId) {
+    console.error('Error adding note:', error);
+    document.getElementById('noteInput').value = originalText;
+    this.cleanupTempNote(tempNoteId);
+  },
+
+  async cleanupTempNote(tempNoteId) {
+    notes = notes.filter(note => note.note_id !== tempNoteId);
+    generatedTagsMap.delete(tempNoteId);
+    await this.debouncedUpdateUI();
   },
 
   async updateNoteListAndTags() {
@@ -265,11 +314,7 @@ const noteOperations = {
     
     // 更新每个笔记的标签
     for (const note of notes) {
-      const tags = generatedTagsMap.get(note.note_id);
-      console.log(`Updating tags for note ${note.note_id}:`, tags);
-      if (tags) {
-        await this.updateNoteTagsInUI(note.note_id, tags);
-      }
+      await this.processNoteTags(note); // 重用标签处理函数
     }
   },
 
@@ -315,7 +360,7 @@ const noteOperations = {
         // 输出反馈响应的完整内容
         console.log('Full feedback response:', JSON.stringify(feedbackResponse, null, 2));
 
-        // 检查反馈响应的格式
+        // 检反馈响应的格式
         if (typeof feedbackResponse === 'string' && feedbackResponse.trim() !== '') {
             alert(` ${feedbackResponse}`);
         } else if (Array.isArray(feedbackResponse) && feedbackResponse.length > 0) {
@@ -378,6 +423,14 @@ const noteOperations = {
     try {
       const result = await api.addTags(noteId, tags);
       console.log('Tags saved successfully:', result);
+      
+      // Update local state
+      generatedTagsMap.set(noteId, tags);
+      saveTagsToLocalStorage(generatedTagsMap);
+      
+      // Update UI
+      await this.updateNoteListAndTags();
+      
       return result;
     } catch (error) {
       console.error(`Error saving tags for note ${noteId}:`, error);
