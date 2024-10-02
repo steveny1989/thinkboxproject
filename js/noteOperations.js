@@ -35,11 +35,11 @@ const noteOperations = {
 
     try {
       const localNotes = this.loadNotesFromLocalStorage();
-      const serverNotes = await api.getNotes();
+      const serverNotes = await api.notes.getNotes();
       notes = this.mergeNotes(localNotes, serverNotes);
 
       for (const note of notes) {
-        await this.processNoteTags(note); // 使用新的标签处理函数
+        await this.processNoteTags(note);
       }
 
       this.saveNotesToLocalStorage(notes);
@@ -59,12 +59,12 @@ const noteOperations = {
       let tags = this.getTagsFromLocalStorage(note.note_id);
       if (!tags || tags.length === 0) {
         console.log(`Fetching tags for note ${note.note_id} from server`);
-        tags = await api.getTags(note.note_id);
+        tags = await api.tags.getTags(note.note_id);
       }
 
       if (!tags || tags.length === 0) {
         console.log(`Generating tags for note ${note.note_id}`);
-        tags = await api.tagsGenerator(note.content);
+        tags = await api.ai.generateTags(note.content);
         await this.saveTags(note.note_id, tags);
       }
 
@@ -202,7 +202,7 @@ const noteOperations = {
     for (const note of notesWithoutTags) {
       if (!generatedTagsMap.has(note.note_id)) {
         try {
-          const generatedTags = await api.tagsGenerator(note.content);
+          const generatedTags = await api.ai.generateTags(note.content);
           console.log(`Generated tags for note ${note.note_id}:`, generatedTags);
           
           // 确保 generatedTags 是数组
@@ -242,7 +242,7 @@ const noteOperations = {
       
       await this.addTempNoteAndUpdateUI(tempNote);
 
-      const newNote = await api.addNote({ content: noteText, created_at: currentTime });
+      const newNote = await api.notes.addNote({ content: noteText, created_at: currentTime });
       await this.finalizeNewNote(newNote, tempNoteId, currentTime);
       
       return newNote;
@@ -286,7 +286,7 @@ const noteOperations = {
     }
 
     try {
-      const generatedTags = await api.tagsGenerator(newNote.content);
+      const generatedTags = await api.ai.generateTags(newNote.content);
       console.log(`Generated tags for new note ${newNote.note_id}:`, generatedTags);
       
       generatedTagsMap.set(newNote.note_id, generatedTags);
@@ -326,7 +326,7 @@ const noteOperations = {
 
   async deleteNote(noteId) {
     try {
-      await api.deleteNote(noteId);
+      await api.notes.deleteNote(noteId);
       
       // 从本地数组中移除笔记
       notes = notes.filter(note => note.note_id !== noteId);
@@ -349,7 +349,7 @@ const noteOperations = {
 
   async searchNotes(query) {
     try {
-      const matchingNotes = await api.searchNotes(query);
+      const matchingNotes = await api.notes.searchNotes(query);
       updateNoteList(matchingNotes);
     } catch (error) {
       console.error('Error searching notes:', error);
@@ -360,27 +360,27 @@ const noteOperations = {
   async generateFeedbackForNote(noteId, content) {
     console.log('generateFeedbackForNote called with:', noteId, content);
     try {
-        const feedbackResponse = await api.generateFeedback(content);
-        console.log('Feedback generated:', feedbackResponse);
+      const feedbackResponse = await api.ai.generateFeedback(content);
+      console.log('Feedback generated:', feedbackResponse);
 
-        // 输出反馈响应的完整内容
-        console.log('Full feedback response:', JSON.stringify(feedbackResponse, null, 2));
+      // 输出反馈响应的完整内容
+      console.log('Full feedback response:', JSON.stringify(feedbackResponse, null, 2));
 
-        // 检反馈响应的格式
-        if (typeof feedbackResponse === 'string' && feedbackResponse.trim() !== '') {
-            alert(` ${feedbackResponse}`);
-        } else if (Array.isArray(feedbackResponse) && feedbackResponse.length > 0) {
-            const feedbackText = feedbackResponse[0].content; // 获取第一个反馈的内容
-            if (feedbackText) {
-                alert(` ${feedbackText}`);
-            } else {
-                console.error('Generated feedback text is undefined');
-            }
-        } else {
-            console.error('Feedback response is not in the expected format or is empty', feedbackResponse);
-        }
+      // 检反馈响应的格式
+      if (typeof feedbackResponse === 'string' && feedbackResponse.trim() !== '') {
+          alert(` ${feedbackResponse}`);
+      } else if (Array.isArray(feedbackResponse) && feedbackResponse.length > 0) {
+          const feedbackText = feedbackResponse[0].content; // 获取第一个反馈的内容
+          if (feedbackText) {
+              alert(` ${feedbackText}`);
+          } else {
+              console.error('Generated feedback text is undefined');
+          }
+      } else {
+          console.error('Feedback response is not in the expected format or is empty', feedbackResponse);
+      }
     } catch (error) {
-        console.error('Error generating feedback:', error);
+      console.error('Error generating feedback:', error);
     }
   },
  
@@ -427,7 +427,7 @@ const noteOperations = {
   async saveTags(noteId, tags) {
     console.log(`Saving tags for note ${noteId}:`, tags);
     try {
-      const result = await api.addTags(noteId, tags);
+      const result = await api.tags.addTags(noteId, tags);
       console.log('Tags saved successfully:', result);
       
       generatedTagsMap.set(noteId, tags);
