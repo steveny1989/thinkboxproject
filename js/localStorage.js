@@ -28,10 +28,22 @@ export const localStorageService = {
     }
   },
 
+  saveNote(note) {
+    try {
+      const notes = this.getNotes();
+      notes.unshift(note);
+      this.saveNotes(notes);
+    } catch (error) {
+      console.error('Error saving new note to localStorage:', error);
+    }
+  },
+
   updateNote(updatedNote) {
     try {
       const notes = this.getNotes();
-      const index = notes.findIndex(note => note.note_id === updatedNote.note_id);
+      const index = notes.findIndex(note => 
+        note.note_id === updatedNote.note_id || note.note_id === `temp-${updatedNote.note_id}`
+      );
       if (index !== -1) {
         notes[index] = updatedNote;
         this.saveNotes(notes);

@@ -1,6 +1,7 @@
 import { auth, onAuthStateChanged, signOut } from './firebase.js';
 import noteOperations from './noteOperations.js';
 import { formatTimestamp } from './noteHelper.js';
+import { localStorageService } from './localStorage.js';
 
 const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
@@ -58,7 +59,8 @@ function createNoteElement(note) {
       </div>
     </div>
     <div class="note-tags-container">
-      <div id="tags-${note.note_id}" class="note-tags">${renderTags(note.tags)}</div>
+<div id="tags-${note.note_id}" class="note-tags">${renderTags(note.tags || [])}</div>
+      </div>
     </div>
     <div class="note-actions-container">
       <div class="note-actions">
@@ -87,13 +89,35 @@ function setupNoteListeners() {
   });
 }
 
+function updateNoteTagsInUI(noteId, tags) {
+  updateTagsDisplay(noteId, tags);
+}
+
 async function handleDeleteNote(noteId) {
+  console.log(`Attempting to delete note with ID: ${noteId}`);
+  
+  // 找到笔记元素
+  const noteElement = document.querySelector(`[data-note-id="${noteId}"]`);
+  if (noteElement) {
+    // 确保我们找到的是 .note-item 元素
+    const noteItem = noteElement.closest('.note-item');
+    if (noteItem) {
+      noteItem.remove();
+      console.log(`Note ${noteId} removed from UI`);
+    } else {
+      console.warn(`Could not find .note-item for note ${noteId}`);
+    }
+  } else {
+    console.warn(`Note element with ID ${noteId} not found in the DOM`);
+  }
+
+  // 调用 noteOperations 处理数据删除
   try {
     await noteOperations.deleteNote(noteId);
-    updateNoteList(noteOperations.getNotes());
-    updateTagsDisplay(); // 这里可能是问题所在
+    console.log(`UI: Note ${noteId} deletion process completed`);
   } catch (error) {
-    console.error(`Error deleting note with ID: ${noteId}`, error);
+    console.error(`UI: Error occurred while deleting note ${noteId}:`, error);
+    // 可以在这里添加用户通知逻辑，如显示错误消息
   }
 }
 
@@ -104,44 +128,36 @@ function displayGeneratedTags(noteId, tags) {
   }
 }
 
-function updateTagsDisplay() {
-  const allTags = new Map();
-  noteOperations.getNotes().forEach(note => {
-    if (note.tags) {
-      note.tags.forEach(tag => {
-        allTags.set(tag, (allTags.get(tag) || 0) + 1);
-      });
-    }
-  });
-
-  const tagsContainer = document.getElementById('tags-container');
-  tagsContainer.innerHTML = '';
-
-  // 使用可选链操作符和空值合并操作符来避免错误
-  Array.from(allTags?.entries() ?? []).sort((a, b) => b[1] - a[1]).forEach(([tag, count]) => {
-    const tagElement = document.createElement('span');
-    tagElement.textContent = `${tag} (${count})`;
-    tagElement.classList.add('tag');
-    tagsContainer.appendChild(tagElement);
-  });
+function updateTagsDisplay(noteId, tags) {
+  console.log('Updating tags display for note:', noteId, tags);
+  const tagContainer = document.querySelector(`[data-note-id="${noteId}"] .note-tags`);
+  if (tagContainer) {
+    const renderedTags = renderTags(tags);
+    console.log('Rendered tags:', renderedTags);
+    tagContainer.innerHTML = renderedTags;
+  } else {
+    console.warn(`Tag container for note ${noteId} not found. Note may have been deleted.`);
+  }
 }
 
 function initializeUI() {
-  console.log('Initializing UI...'); // 添加日志
+  console.log('Initializing UI...');
 
   const addNoteButton = document.getElementById('addNoteButton');
   const noteInput = document.getElementById('noteInput');
   
-  console.log('addNoteButton:', addNoteButton); // 添加日志
-  console.log('noteInput:', noteInput); // 添加日志
+  console.log('addNoteButton:', addNoteButton);
+  console.log('noteInput:', noteInput);
 
   if (addNoteButton && noteInput) {
     addNoteButton.addEventListener('click', () => handleAddNote(noteInput));
-    console.log('Event listener added to addNoteButton'); // 添加日志
+    // 添加键盘事件监听
+    noteInput.addEventListener('keydown', handleNoteInputKeydown);
+    console.log('Event listeners added to addNoteButton and noteInput');
   } else {
     console.warn('Add note button or input not found');
     console.log('Document body:', document.body.innerHTML); // 输出整个 body 内容
-    console.log('All elements with id:', Array.from(document.querySelectorAll('[id]')).map(el => el.id)); // 输出所有带 id 的元素的 id
+    console.log('All elements with id:', Array.from(document.querySelectorAll('[id]')).map(el => el.id)); // 输出所有 id 的元素的 id
   }
 
   const logoutButton = document.getElementById('logoutButton');
@@ -160,15 +176,34 @@ function initializeUI() {
   console.log('Note list updated'); // 添加日志
 }
 
-// 修改 handleAddNote 函数
-async function handleAddNote(noteInput) {
+
+async function handleAddNote(event) {
+  if (event && event.preventDefault) {
+    event.preventDefault();
+  }
   const noteText = noteInput.value.trim();
   if (noteText) {
     try {
-      const newNote = await noteOperations.addNote(noteText);
+      // 创建一临时的笔记对象
+      const tempNote = {
+        note_id: 'temp-' + Date.now(), // 临时ID
+        content: noteText,
+        tags: []
+      };
+
+            // 添加到内存列表
+            noteOperations.addTempNote(tempNote);
+            
+      // 立即添加到 UI
+      const noteElement = createNoteElement(tempNote);
+      noteList.insertBefore(noteElement, noteList.firstChild);
       noteInput.value = '';
-      updateNoteList(noteOperations.getNotes());
-      console.log('New note added:', newNote);
+
+      // 异步添加笔记，传更新UI的回调函数
+      const newNote = await noteOperations.addNote(noteText, updateNoteTagsInUI);
+      
+      // 更新 DOM 中的 note_id
+      noteElement.dataset.noteId = newNote.note_id;
     } catch (error) {
       console.error('Error adding note:', error);
     }
@@ -195,10 +230,45 @@ export {
   handleLogout,
   updateTagsDisplay,
   displayGeneratedTags,
-  handleDeleteNote
+  handleDeleteNote,
+  handleNoteInputKeydown  // 新添加的函数
 };
 
 function renderTags(tags) {
-  if (!tags || tags.length === 0) return '';
-  return tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+  console.log('Rendering tags:', tags);
+  if (!tags || tags.length === 0) {
+    return '<span class="tag loading">Loading tags...</span>';
+  }
+  if (Array.isArray(tags) && tags[0] && typeof tags[0].name === 'string') {
+    return tags[0].name.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('');
+  }
+  if (typeof tags === 'string') {
+    return tags.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('');
+  }
+  if (Array.isArray(tags)) {
+    return tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+  }
+  console.error('Invalid tags data:', tags);
+  return '<span class="error-tags">Error loading tags</span>';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM fully loaded and parsed');
+  document.addEventListener('tagsGenerated', (event) => {
+    console.log('tagsGenerated event received', event.detail);
+    const { noteId, tags } = event.detail;
+    if (noteId && tags) {
+      updateTagsDisplay(noteId, tags);
+    } else {
+      console.error('Invalid data in tagsGenerated event', event.detail);
+    }
+  });
+});
+
+function handleNoteInputKeydown(event) {
+  // 检查是否按下了 Command+Enter (Mac) 或 Ctrl+Enter (Windows/Linux)
+  if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+    event.preventDefault(); // 阻止默认行为
+    handleAddNote(event.target);
+  }
 }
