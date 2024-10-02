@@ -2,27 +2,20 @@ import api from './api.js';
 import { updateNoteList, updateTagsDisplay } from './ui.js';
 import { auth } from './firebase.js';
 
+import {
+  validateNoteText,
+  saveTagsToLocalStorage,
+  loadTagsFromLocalStorage,
+  loadNotesFromLocalStorage,
+  mergeNotes,
+  getTagsFromLocalStorage,
+  cleanupGeneratedTags,
+  saveNotesToLocalStorage
+} from './noteHelper.js';
+
+
 let notes = [];
 let generatedTagsMap = new Map();
-
-// 在文件顶部添加这个函数
-function saveTagsToLocalStorage(tagsMap) {
-  localStorage.setItem('noteTags', JSON.stringify(Array.from(tagsMap.entries())));
-}
-
-function loadTagsFromLocalStorage() {
-  const savedTags = localStorage.getItem('noteTags');
-  if (savedTags) {
-    try {
-      const parsedTags = JSON.parse(savedTags);
-      return new Map(parsedTags.map(([key, value]) => [key, Array.isArray(value) ? value : [value]]));
-    } catch (error) {
-      console.error('Error parsing saved tags:', error);
-      return new Map();
-    }
-  }
-  return new Map();
-}
 
 const noteOperations = {
   async loadNotes() {
@@ -34,15 +27,17 @@ const noteOperations = {
     }
 
     try {
-      const localNotes = this.loadNotesFromLocalStorage();
+      const localNotes = loadNotesFromLocalStorage();  // 直接使用导入的函数
       const serverNotes = await api.notes.getNotes();
-      notes = this.mergeNotes(localNotes, serverNotes);
+      notes = mergeNotes(localNotes, serverNotes);
+
+      generatedTagsMap = loadTagsFromLocalStorage();
 
       for (const note of notes) {
         await this.processNoteTags(note);
       }
 
-      this.saveNotesToLocalStorage(notes);
+      saveNotesToLocalStorage(notes);
       saveTagsToLocalStorage(generatedTagsMap);
       await this.updateNoteListAndTags();
 
@@ -56,7 +51,7 @@ const noteOperations = {
 
   async processNoteTags(note) {
     try {
-      let tags = this.getTagsFromLocalStorage(note.note_id);
+      let tags = getTagsFromLocalStorage(note.note_id, generatedTagsMap);
       if (!tags || tags.length === 0) {
         console.log(`Fetching tags for note ${note.note_id} from server`);
         tags = await api.tags.getTags(note.note_id);
@@ -78,28 +73,6 @@ const noteOperations = {
     console.error(message, error);
   },
 
-  // 辅助函数：从本地存储加载笔记
-  loadNotesFromLocalStorage() {
-    const savedNotes = localStorage.getItem('notes');
-    return savedNotes ? JSON.parse(savedNotes) : [];
-  },
-
-  // 辅助函数：合并本地和服务器的笔记
-  mergeNotes(localNotes, serverNotes) {
-    const mergedNotes = [...serverNotes];
-    for (const localNote of localNotes) {
-      if (!serverNotes.some(note => note.note_id === localNote.note_id)) {
-        mergedNotes.push(localNote);
-      }
-    }
-    return mergedNotes.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  },
-
-  // 辅助函数：从本地存储获取特定笔记的标签
-  getTagsFromLocalStorage(noteId) {
-    return generatedTagsMap.get(noteId) || [];
-  },
-
   async updateNoteList() {
     console.log('Updating note list');
     await updateNoteList(notes);
@@ -117,25 +90,31 @@ const noteOperations = {
 
   async updateNoteTagsInUI(noteId, tags) {
     console.log(`Updating UI for note ${noteId} with tags:`, tags);
-    const noteElement = document.querySelector(`li[data-note-id="${noteId}"]`);
+    
+    // 使用更通用的选择器
+    const noteElement = document.querySelector(`[data-note-id="${noteId}"]`);
     if (!noteElement) {
-      console.warn(`Note element for ${noteId} not found, skipping tag update`);
+      console.error(`Note element for ${noteId} not found, cannot update tags`);
       return;
     }
 
+    // 确保有一个标签容器
+    let tagContainer = noteElement.querySelector('.note-tags-container');
+    if (!tagContainer) {
+      console.log(`Creating new tag container for note ${noteId}`);
+      tagContainer = document.createElement('div');
+      tagContainer.className = 'note-tags-container';
+      noteElement.appendChild(tagContainer);
+    }
+
+    // 获取或创建标签元素
     let tagElement = noteElement.querySelector(`#tags-${noteId}`);
     if (!tagElement) {
       console.log(`Creating new tag element for note ${noteId}`);
       tagElement = document.createElement('div');
       tagElement.id = `tags-${noteId}`;
       tagElement.className = 'note-tags';
-      const tagContainer = noteElement.querySelector('.note-tags-container');
-      if (tagContainer) {
-        tagContainer.appendChild(tagElement);
-      } else {
-        console.warn(`Tag container not found for note ${noteId}`);
-        return;
-      }
+      tagContainer.appendChild(tagElement);
     }
 
     // 确保 tags 是一个数组
@@ -143,14 +122,17 @@ const noteOperations = {
                       (typeof tags === 'string' ? tags.split(',').map(tag => tag.trim()) : 
                       (tags ? [String(tags)] : []));
 
+    // 更新标签内容
     tagElement.innerHTML = tagsArray.map(tag => `<span class="tag">${tag}</span>`).join('');
     
-    // 如果需要，这里可以添加一个小延迟，以确保 DOM 更新
+    // 添加一个小延迟，确保 DOM 更新
     await new Promise(resolve => setTimeout(resolve, 0));
+
+    console.log(`Tags updated for note ${noteId}`);
   },
 
   async loadTags(loadedNotes) {
-    if (!loadedNotes || loadedNotes.length === 0) {
+    if (!Array.isArray(loadedNotes) || loadedNotes.length === 0) {
       console.log('No notes to load tags for');
       return new Map();
     }
@@ -160,7 +142,11 @@ const noteOperations = {
       
       // 清理不存在的笔记的标签
       const currentNoteIds = loadedNotes.map(note => note.note_id);
-      this.cleanupGeneratedTags(currentNoteIds);
+      if (Array.isArray(currentNoteIds) && currentNoteIds.length > 0) {
+        cleanupGeneratedTags(generatedTagsMap, currentNoteIds);
+      } else {
+        console.warn('No valid note IDs found for cleanup');
+      }
       
       // 检查是否有新的笔记需要生成标签
       const notesWithoutTags = loadedNotes.filter(note => !generatedTagsMap.has(note.note_id));
@@ -224,7 +210,7 @@ const noteOperations = {
   },
 
   async addNote(noteText) {
-    if (!this.validateNoteText(noteText)) {
+    if (!validateNoteText(noteText)) {
       throw new Error('Invalid note text');
     }
 
@@ -252,10 +238,6 @@ const noteOperations = {
     }
   },
 
-  validateNoteText(noteText) {
-    return noteText && noteText.trim().length > 0;
-  },
-
   async addTempNoteAndUpdateUI(tempNote) {
     generatedTagsMap.set(tempNote.note_id, ['Adding...']);
     notes.unshift(tempNote);
@@ -280,7 +262,6 @@ const noteOperations = {
     const index = notes.findIndex(n => n.note_id === tempNoteId);
     if (index !== -1) {
       notes[index] = { ...newNote, created_at: currentTime };
-      generatedTagsMap.delete(tempNoteId);
     } else {
       notes.unshift(newNote);
     }
@@ -289,18 +270,17 @@ const noteOperations = {
       const generatedTags = await api.ai.generateTags(newNote.content);
       console.log(`Generated tags for new note ${newNote.note_id}:`, generatedTags);
       
-      generatedTagsMap.set(newNote.note_id, generatedTags);
-      await this.saveTags(newNote.note_id, generatedTags);
+      await api.tags.addTags(newNote.note_id, generatedTags);
       
-    // 更新整个笔记列表
-    await this.updateNoteList();
+      // 更新整个笔记列表
+      await this.updateNoteList();
     
-    // 延迟更新标签，给 DOM 一些时间来更新
-    setTimeout(() => this.updateNoteTagsInUI(newNote.note_id, generatedTags), 100);
-  } catch (error) {
-    console.error('Error generating or saving tags:', error);
-  }
-},
+      // 延迟更新标签，给 DOM 一些时间来更新
+      setTimeout(() => this.updateNoteTagsInUI(newNote.note_id, generatedTags), 100);
+    } catch (error) {
+      console.error('Error generating or saving tags:', error);
+    }
+  },
 
   handleAddNoteError(error, originalText, tempNoteId) {
     console.error('Error adding note:', error);
@@ -333,7 +313,7 @@ const noteOperations = {
       generatedTagsMap.delete(noteId);
       
       // 更新本地存储
-      this.saveNotesToLocalStorage();
+      saveNotesToLocalStorage(notes);
       saveTagsToLocalStorage(generatedTagsMap);
 
       // 更新 UI
@@ -383,19 +363,6 @@ const noteOperations = {
       console.error('Error generating feedback:', error);
     }
   },
- 
-  cleanupGeneratedTags(currentNoteIds) {
-    for (const noteId of generatedTagsMap.keys()) {
-      if (!currentNoteIds.includes(noteId)) {
-        generatedTagsMap.delete(noteId);
-      }
-    }
-    saveTagsToLocalStorage(generatedTagsMap);
-  },
-
-  saveNotesToLocalStorage() {
-    localStorage.setItem('notes', JSON.stringify(notes));
-  },
 
   async clearAllCachedData() {
     generatedTagsMap.clear();
@@ -438,9 +405,45 @@ const noteOperations = {
       console.error(`Error saving tags for note ${noteId}:`, error);
       return { 
         success: false, 
-        error: error.message,
+        error: error.message, 
         details: error.response ? error.response.data : 'No additional details'
       };
+    }
+  },
+
+  async addTempNoteAndUpdateUI(tempNote) {
+    notes.unshift(tempNote);
+    generatedTagsMap.set(tempNote.note_id, ['Adding...']);
+    await this.updateNoteList();
+  },
+
+  async updateNewNoteWithServerData(newNote, tempNoteId) {
+    const index = notes.findIndex(note => note.note_id === tempNoteId);
+    if (index !== -1) {
+      notes[index] = newNote;
+      generatedTagsMap.delete(tempNoteId);
+      await this.updateNoteList();
+    }
+  },
+
+  async generateAndSaveTagsForNote(note) {
+    try {
+      const tags = await api.ai.generateTags(note.content);
+      await this.saveTags(note.note_id, tags);
+      await this.updateNoteTagsInUI(note.note_id, tags);
+    } catch (error) {
+      console.error('Error generating or saving tags:', error);
+      await this.updateNoteTagsInUI(note.note_id, ['Error generating tags']);
+    }
+  },
+
+  handleAddNoteError(error, originalText, tempNoteId) {
+    console.error('Error adding note:', error);
+    document.getElementById('noteInput').value = originalText;
+    const index = notes.findIndex(note => note.note_id === tempNoteId);
+    if (index !== -1) {
+      notes.splice(index, 1);
+      this.updateNoteList();
     }
   },
 };
