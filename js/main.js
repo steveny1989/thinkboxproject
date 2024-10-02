@@ -1,36 +1,39 @@
 const AUTH_PAGE_URL = "html/auth.html"; // 定义 auth.html 的路径
 
-import { auth, signOut, onAuthStateChanged } from './firebase.js';
+import { auth } from './firebase.js';
 import noteOperations from './noteOperations.js';
-import { updateNoteList, updateTagsDisplay } from './ui.js'; // 确保这里是正确的导入
+import { initializeUI, handleLogout, updateNoteList } from './ui.js';
 
-import './events.js';
-
-// 在应用启动时清理缓存数据
-noteOperations.clearAllCachedData();
-
-async function initializeApp(user) {
+async function handleAuthStateChange(user) {
   if (user) {
+    console.log('User authenticated:', user.email);
     try {
-      await noteOperations.clearAllCachedData();
-      const loadedNotes = await noteOperations.loadNotes();
-      if (loadedNotes.length > 0) {
-        const loadedTags = await noteOperations.loadTags(loadedNotes);
-        updateNoteList(loadedNotes);
-        updateTagsDisplay(loadedTags);
-      }
+      await noteOperations.loadNotes();
+      console.log('Notes loaded, initializing UI...');
+      initializeUI();
     } catch (error) {
-      console.error('Error initializing app:', error);
+      console.error('Error in handleAuthStateChange:', error);
     }
   } else {
-    updateNoteList([]);
+    console.log('User not authenticated. Redirecting to login page...');
+    handleLogout();
   }
 }
 
-// 在应用启动时调用
-initializeApp();
+auth.onAuthStateChanged(handleAuthStateChange);
 
-onAuthStateChanged(auth, (user) => {
-  console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
-  initializeApp(user);
+// 确保在 DOM 加载完成后初始化 UI
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM fully loaded and parsed');
+  if (auth.currentUser) {
+    initializeUI();
+  }
+});
+
+// 添加一个 load 事件监听器
+window.addEventListener('load', () => {
+  console.log('Window fully loaded');
+  if (auth.currentUser) {
+    initializeUI();
+  }
 });

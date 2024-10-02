@@ -53,5 +53,15 @@ export function validateNoteText(noteText) {
   export function saveNotesToLocalStorage(notes) {
     localStorage.setItem('notes', JSON.stringify(notes));
   }
+
+  export function formatTimestamp(timestamp) {
+    return new Date(timestamp).toLocaleString();
+  }
+
+  export function clearAllCachedData() {
+    localStorage.removeItem('notes');
+    localStorage.removeItem('generatedTags');
+    console.log('All cached data cleared');
+  }
   
   // 如果有其他辅助函数，也可以添加到这里
