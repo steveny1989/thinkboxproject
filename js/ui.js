@@ -454,21 +454,31 @@ async function handleFeedback(noteId, noteContent) {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: white;
-    color: black;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    background-color: #fff;
+    color: #333333;
+    padding: 24px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1000;
-    max-width: 80%;
-    max-height: 80%;
+    max-width: 90%;
+    width: 400px;
+    max-height: 80vh;
     overflow-y: auto;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.3s ease;
   `;
   document.body.appendChild(messageElement);
 
   try {
     // 显示"正在思考"的消息
-    messageElement.innerHTML = '<p>AI is thinking...</p>';
+    messageElement.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; height: 100px;">
+        <div class="spinner"></div>
+      </div>
+      <p style="text-align: center; margin-top: 16px; color: #007BFF;">AI is thinking...</p>
+    `;
 
     // 调用 AI API 生成反馈
     const feedback = await noteOperations.generateFeedbackForNote(noteId, noteContent);
@@ -476,26 +486,28 @@ async function handleFeedback(noteId, noteContent) {
 
     // 显示生成的反馈
     messageElement.innerHTML = `
-      <h3>AI Feedback</h3>
-      <p>${feedback}</p>
-      <button id="closeFeedback" style="margin-top: 10px;">Close</button>
+      <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 18px; font-weight: 600; color: #007BFF;">AI Feedback</h3>
+      <p style="margin-bottom: 24px; line-height: 1.5;">${feedback}</p>
+      <button id="closeFeedback" class="feedback-button" style="align-self: flex-end;">Close</button>
     `;
 
     // 添加关闭按钮的事件监听器
     document.getElementById('closeFeedback').addEventListener('click', () => {
-      document.body.removeChild(messageElement);
+      messageElement.style.opacity = '0';
+      setTimeout(() => document.body.removeChild(messageElement), 300);
     });
 
   } catch (error) {
     console.error('Error in handleFeedback:', error);
     messageElement.innerHTML = `
-      <p>Failed to generate feedback. Please try again.</p>
-      <button id="closeFeedback" style="margin-top: 10px;">Close</button>
+      <p style="margin-bottom: 24px; color: #e74c3c;">Failed to generate feedback. Please try again.</p>
+      <button id="closeFeedback" class="feedback-button" style="align-self: flex-end;">Close</button>
     `;
 
     // 添加关闭按钮的事件监听器
     document.getElementById('closeFeedback').addEventListener('click', () => {
-      document.body.removeChild(messageElement);
+      messageElement.style.opacity = '0';
+      setTimeout(() => document.body.removeChild(messageElement), 300);
     });
   }
 }
