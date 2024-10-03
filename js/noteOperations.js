@@ -163,6 +163,17 @@ class NoteOperations {
     }
   }
 
+  async generateFeedbackForNote(noteId, noteContent) {
+    try {
+      console.log('Entering generateFeedbackForNote', { noteId, noteContent });
+      const feedbackContent = await this.api.ai.generateFeedback(noteContent);
+      return feedbackContent;
+    } catch (error) {
+      console.error('Error generating feedback:', error);
+      throw error;
+    }
+  }
+
   getRandomName() {
     return this.randomNames[Math.floor(Math.random() * this.randomNames.length)];
   }

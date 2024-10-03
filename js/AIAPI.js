@@ -6,6 +6,7 @@ const COZE_API_KEY = 'pat_7ds29bjXUQ2MU6iXoKCM00yz6n9mif4UPHvsdZp2zSQN4vMQoNx1rB
 class AIAPI {
 
     async generateFeedback(content) {
+        console.log('Entering AIAPI.generateFeedback', { content });
         const user = auth.currentUser;
         if (!user) {
             console.error('No user logged in');

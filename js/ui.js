@@ -52,6 +52,7 @@ function createNoteElement(note) {
         <span class="note-timestamp">${formattedTimestamp}</span>
       </div>
       <button class="feedback-button" data-note-id="${note.note_id}" data-note-content="${note.content}">AI</button>
+      <div class="feedback-container"></div>
       <div class="dropdown">
         <span class="dropdown-trigger">...</span>
         <div class="dropdown-content">
@@ -77,11 +78,12 @@ function createNoteElement(note) {
           </button>
           <span class="count">${note.hearts || 0}</span>
         </span>
-        <span class="act-wrap">
-          <button class="act-btn comment" data-note-id="${note.note_id}">
-            <i class="fas fa-comment"></i>
+        <span class="action-wrapper">
+          <button class="act-btn comment" data-note-id="${note.note_id}" title="Generate AI comment" tabindex="0" role="button" aria-label="Generate AI comment">
+            <i class="fas fa-robot" aria-hidden="true"></i>
+            <i class="fas fa-spinner fa-spin" style="display: none;" aria-hidden="true"></i>
           </button>
-          <span class="count">${note.comments?.length || 0}</span>
+          <span class="count ${note.comments?.length > 0 ? 'has-comments' : ''}" aria-label="${note.comments?.length || 0} comments">${note.comments?.length || 0}</span>
         </span>
       </div>
       <div class="comments-container" id="comments-${note.note_id}">
@@ -149,6 +151,13 @@ function setupNoteListeners() {
     if (deleteButton) {
       const noteId = deleteButton.dataset.noteId;
       await handleDeleteNote(noteId);
+    }
+
+    const feedbackButton = event.target.closest('.feedback-button');
+    if (feedbackButton) {
+      const noteId = feedbackButton.dataset.noteId;
+      const noteContent = feedbackButton.dataset.noteContent;
+      await handleFeedback(noteId, noteContent);
     }
   });
 }
@@ -372,7 +381,7 @@ function handleLike(noteId, button) {
   }
   
   countSpan.textContent = count;
-  // 这里可以添加与后端通信的代码，更新服务器上的点赞数
+  // 这里可以添加与后端通信的更新服务器上的点赞数
   // noteOperations.updateLikes(noteId, count);
 }
 
@@ -387,7 +396,7 @@ function handleHeart(noteId, button) {
   }
   
   countSpan.textContent = count;
-  // 这里可以添加与后端通信的代码，更新服务器上的心形数
+  // 这里可以添加与后端通信的代码，更新服务器上心形
   // noteOperations.updateHearts(noteId, count);
 }
 
@@ -432,5 +441,61 @@ async function handleGenerateComments(noteId) {
     const errorMessage = document.createElement('p');
     errorMessage.textContent = 'Failed to generate comments';
     commentsContainer.appendChild(errorMessage);
+  }
+}
+
+async function handleFeedback(noteId, noteContent) {
+  console.log('Entering handleFeedback');
+  
+  // 创建一个临时的提示元素
+  const messageElement = document.createElement('div');
+  messageElement.style.cssText = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    color: black;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    max-width: 80%;
+    max-height: 80%;
+    overflow-y: auto;
+  `;
+  document.body.appendChild(messageElement);
+
+  try {
+    // 显示"正在思考"的消息
+    messageElement.innerHTML = '<p>AI is thinking...</p>';
+
+    // 调用 AI API 生成反馈
+    const feedback = await noteOperations.generateFeedbackForNote(noteId, noteContent);
+    console.log('Received feedback:', feedback);
+
+    // 显示生成的反馈
+    messageElement.innerHTML = `
+      <h3>AI Feedback</h3>
+      <p>${feedback}</p>
+      <button id="closeFeedback" style="margin-top: 10px;">Close</button>
+    `;
+
+    // 添加关闭按钮的事件监听器
+    document.getElementById('closeFeedback').addEventListener('click', () => {
+      document.body.removeChild(messageElement);
+    });
+
+  } catch (error) {
+    console.error('Error in handleFeedback:', error);
+    messageElement.innerHTML = `
+      <p>Failed to generate feedback. Please try again.</p>
+      <button id="closeFeedback" style="margin-top: 10px;">Close</button>
+    `;
+
+    // 添加关闭按钮的事件监听器
+    document.getElementById('closeFeedback').addEventListener('click', () => {
+      document.body.removeChild(messageElement);
+    });
   }
 }
