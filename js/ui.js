@@ -7,13 +7,14 @@ const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
 
 function updateNoteList(notesToDisplay) {
+  console.log('Updating note list with', notesToDisplay.length, 'notes');
   const noteList = document.getElementById('noteList');
   const userEmailElement = document.getElementById('userEmail');
 
   updateUserInfo(userEmailElement);
   
   if (!notesToDisplay || notesToDisplay.length === 0) {
-    noteList.innerHTML = '<li>No notes to display.</li>';
+    noteList.innerHTML = '<li class="no-notes">No notes to display.</li>';
     return;
   }
 
@@ -140,6 +141,21 @@ function updateTagsDisplay(noteId, tags) {
   }
 }
 
+
+function handleSearchNotes(event) {
+  console.log('Search event triggered');
+  const searchTerm = event.target.value.toLowerCase().trim();
+  console.log('Search term:', searchTerm);
+  const allNotes = noteOperations.getNotes();
+  console.log('Total notes:', allNotes.length);
+  const filteredNotes = allNotes.filter(note => 
+    note.content.toLowerCase().includes(searchTerm) ||
+    (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+  );
+  console.log('Filtered notes:', filteredNotes.length);
+  updateNoteList(filteredNotes);
+}
+
 function initializeUI() {
   console.log('Initializing UI...');
 
@@ -174,6 +190,15 @@ function initializeUI() {
   // 更新笔记列表
   updateNoteList(noteOperations.getNotes());
   console.log('Note list updated'); // 添加日志
+
+  // 搜索笔记
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', handleSearchNotes);
+    console.log('Event listener added to searchInput');
+  } else {
+    console.warn('Search input not found');
+  }
 }
 
 
@@ -199,7 +224,7 @@ async function handleAddNote(event) {
       noteList.insertBefore(noteElement, noteList.firstChild);
       noteInput.value = '';
 
-      // 异步添加笔记，传更新UI的回调函数
+      // 异��添加笔记，传更新UI的回调函数
       const newNote = await noteOperations.addNote(noteText, updateNoteTagsInUI);
       
       // 更新 DOM 中的 note_id
@@ -266,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function handleNoteInputKeydown(event) {
-  // 检查是否按下了 Command+Enter (Mac) 或 Ctrl+Enter (Windows/Linux)
+  // 检查是按下了 Command+Enter (Mac) 或 Ctrl+Enter (Windows/Linux)
   if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
     event.preventDefault(); // 阻止默认行为
     handleAddNote(event.target);

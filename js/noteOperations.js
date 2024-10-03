@@ -57,39 +57,30 @@ class NoteOperations {
   }
 
   async deleteNote(noteId) {
-    console.log(`Attempting to delete note with ID: ${noteId}`);
-    console.log('Current notes in memory:', this.notes);
-
-    const noteToDelete = this.notes.find(note => note.note_id === noteId);
-    if (!noteToDelete) {
-      console.warn(`Note with ID ${noteId} not found in memory. It may have been already deleted.`);
-      return true; // 返回 true，因为笔记已经不在内存中
-    }
+    console.log(`NoteOperations: Attempting to delete note with ID: ${noteId}`);
 
     // 从内存中移除笔记
     this.notes = this.notes.filter(note => note.note_id !== noteId);
-    console.log(`Note ${noteId} removed from memory`);
 
-    // 如果不是临时笔记，尝试从服务器删除
+    // 如果不是临时笔记，从服务器删除
     if (!noteId.startsWith('temp-')) {
       try {
         await this.api.notes.deleteNote(noteId);
-        console.log(`Note ${noteId} deleted from server`);
+        console.log(`NoteOperations: Note ${noteId} deleted from server`);
       } catch (error) {
-        console.error(`Error deleting note ${noteId} from server:`, error);
-        // 即使服务器删除失败，我们也保持本地删除
+        console.error(`NoteOperations: Error deleting note ${noteId} from server:`, error);
+        throw error; // 将错误抛出，让 UI 层处理
       }
     }
 
     // 更新本地存储
     localStorageService.saveNotes(this.notes);
-    console.log('Local storage updated');
 
     // 从生成的标签映射中删除
     this.generatedTagsMap.delete(noteId);
     localStorageService.saveTags(Array.from(this.generatedTagsMap.entries()));
-    console.log(`Tags removed for note ${noteId}`);
 
+    console.log(`NoteOperations: Note ${noteId} deletion completed`);
     return true;
   }
 
@@ -114,6 +105,7 @@ class NoteOperations {
   }
 
   getNotes() {
+    console.log('Getting notes, total:', this.notes.length);
     return this.notes;
   }
 
