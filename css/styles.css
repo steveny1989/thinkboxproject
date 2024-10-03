@@ -262,9 +262,49 @@ body {
 }
 
 .note-actions {
-    display: flex; /* 使用 Flexbox 布局 */
-    align-items: center; /* 垂直居中对齐 */
-    margin-bottom: 10px; /* 与评论输入框之间的间距 */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.act-wrap {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.act-btn {
+    all: unset;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666; /* 默认灰色 */
+    transition: color 0.2s;
+    padding: 2px;
+    background: none;
+    border: none;
+}
+
+.act-btn:hover,
+.act-btn:focus,
+.act-btn:active,
+.act-btn.active {
+    color: #007bff; /* 悬停、焦点、激活和选中状态为蓝色 */
+    background: none; /* 确保没有背景 */
+    border: none; /* 确保没有边框 */
+    outline: none; /* 移除焦点轮廓 */
+}
+
+.count {
+    font-size: 12px;
+    color: #666;
+}
+
+.comments {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 14px;
+    color: #333;
 }
 
 .comment-input-container {
@@ -310,7 +350,7 @@ body {
 
 .note-actions span:hover {
     transform: scale(1.05); /* 悬停时放大 */
-    color: rgba(128, 128, 128, 1); /* 悬停时变为深灰色 */
+    color: rgba(128, 128, 128, 1); /* 悬停时变为灰色 */
 }
 
 .note-actions i {

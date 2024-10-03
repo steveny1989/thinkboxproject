@@ -14,7 +14,7 @@ function updateNoteList(notesToDisplay) {
   updateUserInfo(userEmailElement);
   
   if (!notesToDisplay || notesToDisplay.length === 0) {
-    noteList.innerHTML = '<li class="no-notes">No notes to display.</li>';
+    noteList.innerHTML = ''; // 清空列表，但不显示任何消息
     return;
   }
 
@@ -65,9 +65,22 @@ function createNoteElement(note) {
     </div>
     <div class="note-actions-container">
       <div class="note-actions">
-        <span class="likes"><i class="fas fa-thumbs-up"></i> 0</span>
-        <span class="heart"><i class="fas fa-heart"></i> 0</span>
-        <span class="comments"><i class="fas fa-comment"></i> 0</span>
+        <span class="act-wrap">
+          <button class="act-btn likes" data-note-id="${note.note_id}">
+            <i class="fas fa-thumbs-up"></i>
+          </button>
+          <span class="count">${note.likes || 0}</span>
+        </span>
+        <span class="act-wrap">
+          <button class="act-btn heart" data-note-id="${note.note_id}">
+            <i class="fas fa-heart"></i>
+          </button>
+          <span class="count">${note.hearts || 0}</span>
+        </span>
+        <span class="comments">
+          <i class="fas fa-comment"></i>
+          <span class="count">${note.comments?.length || 0}</span>
+        </span>
       </div>
       <div class="comment-input-container" style="display: none;">
         <input type="text" class="comment-input" placeholder="Any comments..." />
@@ -81,12 +94,24 @@ function createNoteElement(note) {
 function setupNoteListeners() {
   const noteList = document.getElementById('noteList');
   noteList.addEventListener('click', async (event) => {
+    const actionBtn = event.target.closest('.act-btn');
+    if (actionBtn) {
+      const noteId = actionBtn.dataset.noteId;
+      const isLike = actionBtn.classList.contains('likes');
+      const isHeart = actionBtn.classList.contains('heart');
+      
+      if (isLike) {
+        handleLike(noteId, actionBtn);
+      } else if (isHeart) {
+        handleHeart(noteId, actionBtn);
+      }
+    }
+
     const deleteButton = event.target.closest('.delete-note');
     if (deleteButton) {
       const noteId = deleteButton.dataset.noteId;
       await handleDeleteNote(noteId);
     }
-    // ... 其他事件处理 ...
   });
 }
 
@@ -118,7 +143,7 @@ async function handleDeleteNote(noteId) {
     console.log(`UI: Note ${noteId} deletion process completed`);
   } catch (error) {
     console.error(`UI: Error occurred while deleting note ${noteId}:`, error);
-    // 可以在这里添加用户通知逻辑，如显示错误消息
+    // 可以在这里添加用户通知逻辑，如显示错误息
   }
 }
 
@@ -224,7 +249,7 @@ async function handleAddNote(event) {
       noteList.insertBefore(noteElement, noteList.firstChild);
       noteInput.value = '';
 
-      // 异��添加笔记，传更新UI的回调函数
+      // 异添加笔记，传更新UI的回调函数
       const newNote = await noteOperations.addNote(noteText, updateNoteTagsInUI);
       
       // 更新 DOM 中的 note_id
@@ -296,4 +321,34 @@ function handleNoteInputKeydown(event) {
     event.preventDefault(); // 阻止默认行为
     handleAddNote(event.target);
   }
+}
+
+function handleLike(noteId, button) {
+  const countSpan = button.parentElement.querySelector('.count');
+  let count = parseInt(countSpan.textContent);
+  
+  if (button.classList.toggle('active')) {
+    count++;
+  } else {
+    count--;
+  }
+  
+  countSpan.textContent = count;
+  // 这里可以添加与后端通信的代码，更新服务器上的点赞数
+  // noteOperations.updateLikes(noteId, count);
+}
+
+function handleHeart(noteId, button) {
+  const countSpan = button.parentElement.querySelector('.count');
+  let count = parseInt(countSpan.textContent);
+  
+  if (button.classList.toggle('active')) {
+    count++;
+  } else {
+    count--;
+  }
+  
+  countSpan.textContent = count;
+  // 这里可以添加与后端通信的代码，更新服务器上的心形数
+  // noteOperations.updateHearts(noteId, count);
 }
