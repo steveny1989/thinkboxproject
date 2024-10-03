@@ -79,6 +79,24 @@ class NoteAPI {
       handleApiError(error, 'Error generating feedback');
     }
   }
+
+  async addComments(noteId, comments) {
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+      const response = await fetch(`${BASE_API_URL}/notes/${noteId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ comments })
+      });
+      if (!response.ok) throw new Error('Failed to add comments');
+      return response.json(); // 这应该返回带有服务器分配 ID 的评论数组
+    } catch (error) {
+      handleApiError(error, 'Error adding comments');
+    }
+  }
 }
 
 export default new NoteAPI();

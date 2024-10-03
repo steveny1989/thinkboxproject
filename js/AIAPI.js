@@ -185,6 +185,97 @@ class AIAPI {
         }
       }
 
+      async generateComments(content) {
+        // 检查当前用户是否已登录
+        const user = auth.currentUser;
+        if (!user) {
+          console.error('No user logged in');
+          throw new Error('No user logged in');
+        }
+      
+        try {
+          // 构建评论生成请求对象
+          const commentsRequest = {
+            bot_id: "7421237310903828490", // 指定用于生成评论的机器人ID
+            user_id: "123", // 用户ID，这里使用固定值，可能需要根据实际情况修改
+            stream: false, // 不使用流式响应
+            auto_save_history: true, // 自动保存对话历史
+            additional_messages: [{
+              role: "user", // 设置消息角色为用户
+              content: `Generate one comment for the following content: ${content}`, // 构建请求评论生成的提示信息
+              content_type: "text" // 指定内容类型为文本
+            }]
+          };
+      
+          // 发送评论生成请求到 COZE API
+          const commentsResponse = await fetch(`${COZE_API_URL}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${COZE_API_KEY}` // 使用 API 密钥进行认证
+            },
+            body: JSON.stringify(commentsRequest)
+          });
+      
+          // 解析响应数据
+          const commentsData = await commentsResponse.json();
+          if (commentsData.code !== 0) {
+            // 如果响应码不为0，表示请求失败
+            throw new Error(`Comments generation failed: ${commentsData.msg}`);
+          }
+      
+          // 从响应中提取对话ID和会话ID
+          const chatId = commentsData.data.id;
+          const conversationId = commentsData.data.conversation_id;
+          let status = "in_progress"; // 初始化状态为进行中
+      
+          // 轮询检查评论生成状态
+          while (status === "in_progress") {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 等待1秒后再次检查
+            // 发送状态检查请求
+            const statusResponse = await fetch(`${COZE_API_URL}/retrieve?chat_id=${chatId}&conversation_id=${conversationId}`, {
+              headers: {
+                'Authorization': `Bearer ${COZE_API_KEY}`
+              }
+            });
+      
+            // 解析状态响应
+            const statusData = await statusResponse.json();
+            if (statusData.code !== 0) {
+              // 如果状态检查失败，抛出错误
+              throw new Error(`Failed to retrieve comments status: ${statusData.msg}`);
+            }
+            status = statusData.data.status; // 更新状态
+          }
+      
+          // 获取最终的评论生成结果
+          const finalResponse = await fetch(`${COZE_API_URL}/message/list?chat_id=${chatId}&conversation_id=${conversationId}`, {
+            headers: {
+              'Authorization': `Bearer ${COZE_API_KEY}`
+            }
+          });
+      
+          // 解析最终响应
+          const finalData = await finalResponse.json();
+          if (finalData.code !== 0) {
+            // 如果获取最终结果失败，抛出错误
+            throw new Error(`Failed to retrieve final comments: ${finalData.msg}`);
+          }
+      
+          // 检查是否有返回的数据
+          if (finalData.data.length > 0) {
+            const commentsContent = finalData.data[0].content; // 获取第一条消息的内容作为评论
+            return commentsContent; // 返回生成的评论内容
+          } else {
+            // 如果没有找到评论内容，抛出错误
+            throw new Error("No comments content found");
+          }
+        } catch (error) {
+          // 捕获并记录任何在过程中发生的错误
+          console.error('Error in commentsGenerator:', error);
+          throw error; // 将错误继续向上抛出
+        }
+      }
 }
 
 export default new AIAPI();

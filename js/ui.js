@@ -77,18 +77,51 @@ function createNoteElement(note) {
           </button>
           <span class="count">${note.hearts || 0}</span>
         </span>
-        <span class="comments">
-          <i class="fas fa-comment"></i>
+        <span class="act-wrap">
+          <button class="act-btn comment" data-note-id="${note.note_id}">
+            <i class="fas fa-comment"></i>
+          </button>
           <span class="count">${note.comments?.length || 0}</span>
         </span>
       </div>
-      <div class="comment-input-container" style="display: none;">
-        <input type="text" class="comment-input" placeholder="Any comments..." />
-        <button class="submit-comment">Submit</button>
+      <div class="comments-container" id="comments-${note.note_id}">
+        ${note.comments && note.comments.length > 0 ? renderComments(note.comments) : ''}
       </div>
     </div>
   `;
   return noteElement;
+}
+
+function renderComments(comments) {
+  console.log('Rendering comments:', comments); // 添加这行日志
+
+  if (!comments) {
+    console.log('No comments to render');
+    return '';
+  }
+
+  const commentsArray = Array.isArray(comments) ? comments : [comments];
+
+  return commentsArray.map(comment => {
+    console.log('Rendering comment:', comment); // 添加这行日志
+    const author = comment.author || 'Anonymous';
+    const avatarLetter = (author.charAt(0) || 'A').toUpperCase();
+    const timestamp = comment.timestamp ? new Date(comment.timestamp).toLocaleString() : 'Unknown time';
+    const content = comment.content || 'No content';
+
+    return `
+      <div class="comment-card">
+        <div class="comment-avatar">${avatarLetter}</div>
+        <div class="comment-body">
+          <div class="comment-header">
+            <span class="comment-author">${author}</span>
+            <span class="comment-timestamp">${timestamp}</span>
+          </div>
+          <div class="comment-content">${content}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function setupNoteListeners() {
@@ -99,11 +132,16 @@ function setupNoteListeners() {
       const noteId = actionBtn.dataset.noteId;
       const isLike = actionBtn.classList.contains('likes');
       const isHeart = actionBtn.classList.contains('heart');
+      const isComment = actionBtn.classList.contains('comment');
       
       if (isLike) {
         handleLike(noteId, actionBtn);
       } else if (isHeart) {
         handleHeart(noteId, actionBtn);
+      } else if (isComment) {
+        console.log('Generate comments button clicked');
+        console.log('Note ID:', noteId);
+        await handleGenerateComments(noteId);
       }
     }
 
@@ -351,4 +389,48 @@ function handleHeart(noteId, button) {
   countSpan.textContent = count;
   // 这里可以添加与后端通信的代码，更新服务器上的心形数
   // noteOperations.updateHearts(noteId, count);
+}
+
+async function handleGenerateComments(noteId) {
+  const commentsContainer = document.getElementById(`comments-${noteId}`);
+  if (!commentsContainer) {
+    console.error(`Comments container not found for note ${noteId}`);
+    return;
+  }
+
+  try {
+    const loadingMessage = document.createElement('p');
+    loadingMessage.textContent = 'Thinking...';
+    commentsContainer.appendChild(loadingMessage);
+
+    const newComments = await noteOperations.generateCommentsForNote(noteId);
+    console.log('Received new comments:', newComments);
+
+    loadingMessage.remove();
+
+    if (Array.isArray(newComments) && newComments.length > 0) {
+      const renderedComments = renderComments(newComments);
+      console.log('Rendered comments HTML:', renderedComments);
+      
+      // 直接将渲染后的 HTML 插入到评论容器中
+      commentsContainer.insertAdjacentHTML('beforeend', renderedComments);
+
+      // 更新评论计数
+      const commentCountElement = document.querySelector(`.act-btn.comment[data-note-id="${noteId}"] + .count`);
+      if (commentCountElement) {
+        const currentCount = parseInt(commentCountElement.textContent) || 0;
+        commentCountElement.textContent = currentCount + newComments.length;
+      }
+    } else {
+      console.error('New comments are empty or invalid:', newComments);
+      const noCommentMessage = document.createElement('p');
+      noCommentMessage.textContent = 'Failed to generate comments.';
+      commentsContainer.appendChild(noCommentMessage);
+    }
+  } catch (error) {
+    console.error('Error generating comments:', error);
+    const errorMessage = document.createElement('p');
+    errorMessage.textContent = 'Failed to generate comments';
+    commentsContainer.appendChild(errorMessage);
+  }
 }

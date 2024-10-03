@@ -104,6 +104,59 @@ class NoteOperations {
     }
   }
 
+  async generateCommentsForNote(noteId) {
+    try {
+      const note = this.notes.find(n => n.note_id === noteId);
+      if (!note) {
+        throw new Error('Note not found');
+      }
+
+      // 直接调用 AI API 生成评论
+      const commentContent = await this.api.ai.generateComments(note.content);
+      
+      // 创建一个新的评论对象
+      const newComment = {
+        id: 'temp-' + Math.random().toString(36).substr(2, 9),
+        content: commentContent,
+        author: 'AI',
+        timestamp: new Date().toISOString()
+      };
+
+      // 更新笔记对象，添加新生成的评论
+      note.comments = note.comments || [];
+      note.comments.push(newComment);
+
+      // 更新本地存储
+      localStorageService.saveNotes(this.notes);
+
+      //异步保存到数据库
+      //this.api.comments.addComments(noteId, [newComment]);
+      
+      return [newComment]; // 返回包含新评论的数组
+    } catch (error) {
+      console.error('Error generating comment:', error);
+      throw error;
+    }
+  }
+
+  // async saveCommentsToServer(noteId, comments) {
+  //   try {
+  //     const savedComments = await this.api.comments.addComments(noteId, comments);
+  //     // 更新本地笔记中的评论，替换临时 ID 为服务器返回的 ID
+  //     const note = this.notes.find(n => n.note_id === noteId);
+  //     if (note) {
+  //       note.comments = note.comments.map(comment => {
+  //         const savedComment = savedComments.find(sc => sc.content === comment.content);
+  //         return savedComment || comment;
+  //       });
+  //       localStorageService.saveNotes(this.notes);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error saving comments to server:', error);
+  //     // 这里可以添加重试逻辑或通知用户
+  //   }
+  // }
+
   getNotes() {
     console.log('Getting notes, total:', this.notes.length);
     return this.notes;

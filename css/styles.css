@@ -542,7 +542,7 @@ body {
 }
 
 .comment-input {
-    flex-grow: 1; /* 输入框占据剩余空间 */
+    flex-grow: 1; /* 输入���占据剩余空间 */
     padding: 5px; /* 内边距 */
     border: 1px solid #ccc; /* 边框 */
     border-radius: 4px; /* 圆角 */
@@ -588,4 +588,95 @@ body {
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 0.8em;
+}
+
+/* 评论容器样式 */
+.comments-container {
+  margin-top: 10px;
+  background-color: #f7f9f9;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+/* 单个评论卡片样式 */
+.comment-card {
+  display: flex;
+  padding: 10px;
+  border-bottom: 1px solid #e1e8ed;
+  margin-bottom: 10px;
+}
+
+.comment-card:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* 评论头像样式 */
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #1da1f2;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+/* 评论主体样式 */
+.comment-body {
+  flex: 1;
+}
+
+/* 评论头部样式 */
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+
+.comment-author {
+  font-weight: bold;
+  color: #14171a;
+}
+
+.comment-timestamp {
+  font-size: 0.85em;
+  color: #657786;
+}
+
+/* 评论内容样式 */
+.comment-content {
+  color: #14171a;
+  line-height: 1.4;
+}
+
+/* 生成评论时的加载提示样式 */
+.comments-container p {
+  text-align: center;
+  color: #657786;
+  padding: 10px;
+}
+
+/* 评论按钮样式（如果需要） */
+.act-btn.comment {
+  background: none;
+  border: none;
+  color: #657786;
+  cursor: pointer;
+}
+
+.act-btn.comment:hover {
+  color: #1da1f2;
+}
+
+/* 评论数量样式 */
+.act-wrap .count {
+  font-size: 0.9em;
+  color: #657786;
+  margin-left: 5px;
 }
