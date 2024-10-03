@@ -8,6 +8,12 @@ class NoteOperations {
     this.generatedTagsMap = new Map(localStorageService.getTags());
     this.api = api;
     this.helper = helper;
+    this.randomNames = [
+      "Alex", "Blake", "Casey", "Dana", "Eden", 
+      "Fran", "Gray", "Harper", "Indigo", "Jamie", 
+      "Kelly", "Logan", "Morgan", "Noel", "Oakley", 
+      "Parker", "Quinn", "Riley", "Sage", "Taylor"
+    ];
   }
 
   async loadNotes() {
@@ -111,16 +117,34 @@ class NoteOperations {
         throw new Error('Note not found');
       }
 
-      // 直接调用 AI API 生成评论
-      const commentContent = await this.api.ai.generateComments(note.content);
+      // 准备现有评论的上下文
+      const existingComments = note.comments || [];
+      const existingCommentsContext = existingComments.map(c => `${c.author}: ${c.content}`).join('\n');
+
+      // 准备发送给 AI 的内容，包括笔记内容和现有评论
+      const contextForAI = `
+        Note: ${note.content}
+        
+        Existing comments:
+        ${existingCommentsContext}
+        
+        Please generate a new comment based on the note and existing comments:
+      `;
+
+      // 调用 AI API 生成评论
+      const commentContent = await this.api.ai.generateComments(contextForAI);
       
-      // 创建一个新的评论对象
+      const randomName = this.getRandomName();
+      console.log('Generated random name:', randomName); // 添加这行日志
+
       const newComment = {
         id: 'temp-' + Math.random().toString(36).substr(2, 9),
         content: commentContent,
-        author: 'AI',
+        author: randomName, // 使用生成的随机名字
         timestamp: new Date().toISOString()
       };
+
+      console.log('New comment:', newComment); // 添加这行日志
 
       // 更新笔记对象，添加新生成的评论
       note.comments = note.comments || [];
@@ -137,6 +161,10 @@ class NoteOperations {
       console.error('Error generating comment:', error);
       throw error;
     }
+  }
+
+  getRandomName() {
+    return this.randomNames[Math.floor(Math.random() * this.randomNames.length)];
   }
 
   // async saveCommentsToServer(noteId, comments) {
