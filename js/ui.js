@@ -622,38 +622,66 @@ async function handleGenerateComments(noteId) {
 async function handleFeedback(noteId, noteContent) {
   console.log('Entering handleFeedback');
   
-  // 创建一个临时的提示元素
-  const messageElement = document.createElement('div');
-  messageElement.style.cssText = `
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #fff;
-    color: #333333;
-    padding: 24px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    max-width: 90%;
-    width: 400px;
-    max-height: 80vh;
-    overflow-y: auto;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    transition: opacity 0.3s ease;
-  `;
-  document.body.appendChild(messageElement);
+  // 检查是否已存在反馈元素
+  let messageElement = document.querySelector(`.feedback-message[data-note-id="${noteId}"]`);
+  let isExisting = !!messageElement;
 
+  if (!messageElement) {
+    messageElement = document.createElement('div');
+    messageElement.className = 'feedback-message';
+    messageElement.setAttribute('data-note-id', noteId);
+    messageElement.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      color: #333333;
+      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      max-width: 90%;
+      width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      transition: opacity 0.3s ease;
+      opacity: 0;
+    `;
+    document.body.appendChild(messageElement);
+  }
+
+  if (isExisting) {
+    // 如果反馈已经存在，切换其显示状态
+    if (messageElement.style.display === 'none' || messageElement.style.opacity === '0') {
+      // 如果当前是隐藏状态，则显示
+      messageElement.style.display = 'block';
+      setTimeout(() => {
+        messageElement.style.opacity = '1';
+      }, 10);
+    } else {
+      // 如果当前是显示状态，则隐藏
+      closeFeedback(messageElement);
+    }
+    return; // 直接返回，不再继续执行生成新反馈的逻辑
+  }
+
+  // 显示或重新显示反馈
   try {
-    // 显示"正在思考"的消
+    // 显示"正在思考"的消息
     messageElement.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: center; height: 100px;">
         <div class="spinner"></div>
       </div>
       <p style="text-align: center; margin-top: 16px; color: #007BFF;">AI is thinking...</p>
     `;
+    messageElement.style.display = 'block';
+    setTimeout(() => {
+      messageElement.style.opacity = '1';
+    }, 10);
 
     // 调用 AI API 生成反馈
     const feedback = await noteOperations.generateFeedbackForNote(noteId, noteContent);
@@ -663,28 +691,35 @@ async function handleFeedback(noteId, noteContent) {
     messageElement.innerHTML = `
       <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 18px; font-weight: 600; color: #007BFF;">AI Feedback</h3>
       <p style="margin-bottom: 24px; line-height: 1.5;">${feedback}</p>
-      <button id="closeFeedback" class="feedback-button" style="align-self: flex-end;">Close</button>
+      <button id="closeFeedback-${noteId}" class="feedback-button" style="align-self: flex-end;">Close</button>
     `;
 
     // 添加关闭按钮的事件监听器
-    document.getElementById('closeFeedback').addEventListener('click', () => {
-      messageElement.style.opacity = '0';
-      setTimeout(() => document.body.removeChild(messageElement), 300);
+    document.getElementById(`closeFeedback-${noteId}`).addEventListener('click', (event) => {
+      event.stopPropagation(); // 阻止事件冒泡
+      closeFeedback(messageElement);
     });
-
   } catch (error) {
     console.error('Error in handleFeedback:', error);
     messageElement.innerHTML = `
       <p style="margin-bottom: 24px; color: #e74c3c;">Failed to generate feedback. Please try again.</p>
-      <button id="closeFeedback" class="feedback-button" style="align-self: flex-end;">Close</button>
+      <button id="closeFeedback-${noteId}" class="feedback-button" style="align-self: flex-end;">Close</button>
     `;
 
     // 添加关闭按钮的事件监听器
-    document.getElementById('closeFeedback').addEventListener('click', () => {
-      messageElement.style.opacity = '0';
-      setTimeout(() => document.body.removeChild(messageElement), 300);
+    document.getElementById(`closeFeedback-${noteId}`).addEventListener('click', (event) => {
+      event.stopPropagation(); // 阻止事件冒泡
+      closeFeedback(messageElement);
     });
   }
+}
+
+function closeFeedback(element) {
+  element.style.opacity = '0';
+  setTimeout(() => {
+    element.style.display = 'none';
+    element.innerHTML = ''; // 清空内容
+  }, 300);
 }
 
 function renderSingleComment(comment) {
