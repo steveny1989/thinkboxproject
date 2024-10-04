@@ -228,7 +228,7 @@ class NoteOperations {
     }
   }
   
-  async getPaginatedNotes(lastNoteId = null, limitCount = 20) {
+  async getPaginatedNotes(lastNoteId = null, limitCount = 24) {
     try {
       console.log(`Fetching paginated notes. lastNoteId: ${lastNoteId}, limit: ${limitCount}`);
       const paginatedNotes = await this.api.notes.getPaginatedNotes(lastNoteId, limitCount);
@@ -267,6 +267,28 @@ class NoteOperations {
     this.notes = [];  // 清空现有的笔记
     return this.getPaginatedNotes();  // 加载第一页笔记
   }
+
+  async searchNotes(searchTerm) {
+    try {
+      const searchResults = await this.api.notes.searchNotes(searchTerm);
+      
+      // 获取搜索结果中每个笔记的标签
+      const tagsPromises = searchResults.map(note => this.api.tags.getTags(note.note_id));
+      const tagsResults = await Promise.all(tagsPromises);
+      
+      // 将标签添加到相应的笔记中
+      searchResults.forEach((note, index) => {
+        note.tags = tagsResults[index];
+      });
+
+      return searchResults;
+    } catch (error) {
+      console.error('Error searching notes:', error);
+      throw error;
+    }
+  }
 }
 
-export default new NoteOperations();
+const noteOperations = new NoteOperations();
+console.log('Exporting noteOperations:', noteOperations); // 添加这行日志
+export default noteOperations;

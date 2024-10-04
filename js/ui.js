@@ -2,12 +2,15 @@ import { auth, onAuthStateChanged, signOut } from './firebase.js';
 import noteOperations from './noteOperations.js';
 import { formatTimestamp } from './noteHelper.js';
 import { localStorageService } from './localStorage.js';
+import { debounce } from './utils.js';
 
 const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
 let lastLoadedNoteId = null;
 let isLoading = false;
 let allNotesLoaded = false;
+let originalNotes = [];
+let isShowingSearchResults = false;
 
 function showLoadingIndicator() {
   document.getElementById('loading-indicator').classList.remove('hidden');
@@ -178,7 +181,7 @@ function updateNoteTagsInUI(noteId, tags) {
 async function handleDeleteNote(noteId) {
   console.log(`Attempting to delete note with ID: ${noteId}`);
   
-  // 找到笔记元素
+  // 找到笔记元
   const noteElement = document.querySelector(`[data-note-id="${noteId}"]`);
   if (noteElement) {
     // 确保我们找到的是 .note-item 元素
@@ -222,28 +225,68 @@ function updateTagsDisplay(noteId, tags) {
   }
 }
 
+async function handleSearch(event) {
+  const searchTerm = event.target.value.trim();
+  console.log('Searching for:', searchTerm);
 
-async function handleSearchNotes(event) {
-  console.log('Search event triggered');
-  const searchTerm = event.target.value.toLowerCase().trim();
-  console.log('Search term:', searchTerm);
-  
-  showLoadingIndicator();
-
-  try {
-    const allNotes = await noteOperations.getNotes();
-    console.log('Total notes:', allNotes.length);
-    const filteredNotes = allNotes.filter(note => 
-      note.content.toLowerCase().includes(searchTerm) ||
-      (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
-    );
-    console.log('Filtered notes:', filteredNotes.length);
-    updateNoteList(filteredNotes);
-  } catch (error) {
-    console.error('Error searching notes:', error);
-  } finally {
-    hideLoadingIndicator();
+  if (searchTerm.length === 0) {
+    isShowingSearchResults = false;
+    updateNoteList(originalNotes);
+    hideSearchResultsInfo();
+  } else {
+    try {
+      const searchResults = await noteOperations.searchNotes(searchTerm);
+      isShowingSearchResults = true;
+      updateNoteList(searchResults);
+      showSearchResultsInfo(searchResults.length, searchTerm);
+    } catch (error) {
+      console.error('Error searching notes:', error);
+      showErrorMessage('An error occurred while searching. Please try again.');
+    }
   }
+}
+
+function showSearchResultsInfo(resultCount, searchTerm) {
+  let infoElement = document.getElementById('searchResultsInfo');
+  if (!infoElement) {
+    const noteList = document.getElementById('noteList');
+    infoElement = document.createElement('div');
+    infoElement.id = 'searchResultsInfo';
+    infoElement.className = 'search-results-info';
+    if (noteList && noteList.parentNode) {
+      noteList.parentNode.insertBefore(infoElement, noteList);
+    } else {
+      console.error('Could not find noteList or its parent');
+      return;
+    }
+  }
+  infoElement.innerHTML = `
+    <span>Showing ${resultCount} result(s) for "${searchTerm}"</span>
+    <button id="clearSearch" class="clear-search-button">
+      <span>Clear Search</span>
+    </button>
+  `;
+  document.getElementById('clearSearch').addEventListener('click', clearSearch);
+}
+
+function hideSearchResultsInfo() {
+  const infoElement = document.getElementById('searchResultsInfo');
+  if (infoElement && infoElement.parentNode) {
+    infoElement.parentNode.removeChild(infoElement);
+  }
+}
+
+function clearSearch() {
+  const searchInput = document.getElementById('searchInput');
+  searchInput.value = '';
+  isShowingSearchResults = false;
+  updateNoteList(originalNotes);
+  hideSearchResultsInfo();
+}
+
+function showErrorMessage(message) {
+  // 实现一个显示错误消息的函数
+  alert(message); // 这只是一个简单的实现，你可能想要一个更优雅的解决方案
 }
 
 async function initializeUI() {
@@ -266,14 +309,22 @@ async function initializeUI() {
     }
 
     setupEventListeners();
+    originalNotes = await noteOperations.getNotes();
+    updateNoteList(originalNotes);
   } catch (error) {
     console.error('Error initializing UI:', error);
+    showErrorMessage('An error occurred while loading notes. Please refresh the page and try again.');
   } finally {
     hideLoadingIndicator();
   }
 }
 
 async function loadMoreNotes() {
+  if (isShowingSearchResults) {
+    console.log('Showing search results, not loading more notes');
+    return;
+  }
+
   if (isLoading || allNotesLoaded) return;
 
   isLoading = true;
@@ -364,12 +415,64 @@ function hideLoadMoreButton() {
 function setupEventListeners() {
   // ... 保持原有的事件监听器设置 ...
 
+    // 添加笔记的事件监听器
+    const addNoteButton = document.getElementById('addNoteButton');
+    if (addNoteButton) {
+      addNoteButton.addEventListener('click', handleAddNote);
+    }
+  
+    // 注销按钮的事件监听器
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+      logoutButton.addEventListener('click', handleLogout);
+    }
+
   // 添加滚动事件监听器，实现无限滚动
   window.addEventListener('scroll', _.throttle(() => {
-    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+    if (!isShowingSearchResults && 
+        (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
       loadMoreNotes();
     }
   }, 200));
+
+  // 添加搜索功能
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', debounce(handleSearch, 300));
+  }
+    // Command + Enter（或 Ctrl + Enter）快捷键监听器
+
+    const noteInput = document.getElementById('noteInput');
+  if (noteInput) {
+    noteInput.addEventListener('keydown', handleNoteInputKeydown);
+  }
+
+  document.addEventListener('tagsGenerated', (event) => {
+    console.log('tagsGenerated event received', event.detail);
+    const { noteId, tags } = event.detail;
+    if (noteId && tags) {
+      updateTagsDisplay(noteId, tags);
+    } else {
+      console.error('Invalid data in tagsGenerated event', event.detail);
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('.act-btn.likes')) {
+      const noteId = event.target.closest('.act-btn.likes').dataset.noteId;
+      handleLike(noteId, event.target.closest('.act-btn.likes'));
+    } else if (event.target.closest('.act-btn.heart')) {
+      const noteId = event.target.closest('.act-btn.heart').dataset.noteId;
+      handleHeart(noteId, event.target.closest('.act-btn.heart'));
+    } else if (event.target.closest('.act-btn.comment')) {
+      const noteId = event.target.closest('.act-btn.comment').dataset.noteId;
+      handleGenerateComments(noteId);
+    } else if (event.target.closest('.feedback-button')) {
+      const noteId = event.target.closest('.feedback-button').dataset.noteId;
+      const noteContent = event.target.closest('.feedback-button').dataset.noteContent;
+      handleFeedback(noteId, noteContent);
+    }
+  });
 }
 
 // 确保导出 handleAddNote 函数
@@ -383,7 +486,8 @@ export {
   handleDeleteNote,
   handleNoteInputKeydown,  // 新添加的函数
   showLoadingIndicator,
-  hideLoadingIndicator
+  hideLoadingIndicator,
+  handleSearch
 };
 
 function renderTags(tags) {
@@ -456,28 +560,57 @@ function handleHeart(noteId, button) {
 }
 
 async function handleGenerateComments(noteId) {
+  console.log(`Generating comments for note ${noteId}`);
   const commentsContainer = document.getElementById(`comments-${noteId}`);
   if (!commentsContainer) {
     console.error(`Comments container not found for note ${noteId}`);
     return;
   }
 
-  try {
-    const loadingMessage = document.createElement('p');
-    loadingMessage.textContent = 'Thinking...';
-    commentsContainer.appendChild(loadingMessage);
+  // 检查是否已经有评论
+  if (commentsContainer.querySelector('.comment-card')) {
+    console.log('Comments already exist for this note');
+    return;
+  }
 
+  // 禁用评论按钮，防止重复点击
+  const commentButton = document.querySelector(`.act-btn.comment[data-note-id="${noteId}"]`);
+  if (commentButton) {
+    commentButton.disabled = true;
+  }
+
+  try {
+    // 创建并显示加载指示器
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.innerHTML = `
+      <div class="spinner"></div>
+      <p>AI is thinking...</p>
+    `;
+    commentsContainer.appendChild(loadingIndicator);
+
+    // 生成评论
     const newComments = await noteOperations.generateCommentsForNote(noteId);
     console.log('Received new comments:', newComments);
 
-    loadingMessage.remove();
+    // 移除加载指示器
+    loadingIndicator.remove();
 
     if (Array.isArray(newComments) && newComments.length > 0) {
       const renderedComments = renderComments(newComments);
       console.log('Rendered comments HTML:', renderedComments);
       
-      // 直接将渲染后的 HTML 插入到评论容器中
-      commentsContainer.insertAdjacentHTML('beforeend', renderedComments);
+      // 使用淡入效果显示新评论
+      const newCommentElement = document.createElement('div');
+      newCommentElement.innerHTML = renderedComments;
+      newCommentElement.style.opacity = '0';
+      commentsContainer.appendChild(newCommentElement);
+
+      // 触发重排后淡入显示
+      setTimeout(() => {
+        newCommentElement.style.transition = 'opacity 0.5s ease-in';
+        newCommentElement.style.opacity = '1';
+      }, 10);
 
       // 更新评论计数
       const commentCountElement = document.querySelector(`.act-btn.comment[data-note-id="${noteId}"] + .count`);
@@ -496,6 +629,11 @@ async function handleGenerateComments(noteId) {
     const errorMessage = document.createElement('p');
     errorMessage.textContent = 'Failed to generate comments';
     commentsContainer.appendChild(errorMessage);
+  } finally {
+    // 重新启用评论按钮
+    if (commentButton) {
+      commentButton.disabled = false;
+    }
   }
 }
 

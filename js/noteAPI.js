@@ -98,7 +98,7 @@ class NoteAPI {
     }
   }
 
-  async getPaginatedNotes(lastNoteId = null, limit = 20) {
+  async getPaginatedNotes(lastNoteId = null, limit = 24) {
     try {
       const idToken = await auth.currentUser.getIdToken();
       let url = `${BASE_API_URL}/notes?limit=${limit}`;
