@@ -80,6 +80,13 @@ function createNoteElement(note) {
     </div>
     <div class="note-actions-container">
       <div class="note-actions">
+              <span class="action-wrapper">
+          <button class="act-btn comment" data-note-id="${note.note_id}" title="Generate AI comment" tabindex="0" role="button" aria-label="Generate AI comment">
+            <i class="fas fa-robot" aria-hidden="true"></i>
+            <i class="fas fa-spinner fa-spin" style="display: none;" aria-hidden="true"></i>
+          </button>
+          <span class="count ${note.comments?.length > 0 ? 'has-comments' : ''}" aria-label="${note.comments?.length || 0} comments">${note.comments?.length || 0}</span>
+        </span>
         <span class="act-wrap">
           <button class="act-btn likes" data-note-id="${note.note_id}">
             <i class="fas fa-thumbs-up"></i>
@@ -92,13 +99,7 @@ function createNoteElement(note) {
           </button>
           <span class="count">${note.hearts || 0}</span>
         </span>
-        <span class="action-wrapper">
-          <button class="act-btn comment" data-note-id="${note.note_id}" title="Generate AI comment" tabindex="0" role="button" aria-label="Generate AI comment">
-            <i class="fas fa-robot" aria-hidden="true"></i>
-            <i class="fas fa-spinner fa-spin" style="display: none;" aria-hidden="true"></i>
-          </button>
-          <span class="count ${note.comments?.length > 0 ? 'has-comments' : ''}" aria-label="${note.comments?.length || 0} comments">${note.comments?.length || 0}</span>
-        </span>
+
       </div>
       <div class="comments-container" id="comments-${note.note_id}">
         ${note.comments && note.comments.length > 0 ? renderHelpers.renderComments(note.comments) : ''}
