@@ -8,8 +8,8 @@ async function handleAuthStateChange(user) {
   if (user) {
     console.log('User authenticated:', user.email);
     try {
-      await noteOperations.loadNotes();
-      console.log('Notes loaded, initializing UI...');
+      await noteOperations.initializePaginatedNotes();
+      console.log('Notes initialized, initializing UI...');
       initializeUI();
     } catch (error) {
       console.error('Error in handleAuthStateChange:', error);

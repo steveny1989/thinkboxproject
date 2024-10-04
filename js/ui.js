@@ -5,6 +5,10 @@ import { localStorageService } from './localStorage.js';
 
 const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
+let lastLoadedNoteId = null;
+let isLoading = false;
+let allNotesLoaded = false;
+
 function showLoadingIndicator() {
   document.getElementById('loading-indicator').classList.remove('hidden');
 }
@@ -13,16 +17,15 @@ function hideLoadingIndicator() {
   document.getElementById('loading-indicator').classList.add('hidden');
 }
 
-function updateNoteList(notesToDisplay) {
+function updateNoteList(notesToDisplay, append = false) {
   console.log('Updating note list with', notesToDisplay.length, 'notes');
   const noteList = document.getElementById('noteList');
   const userEmailElement = document.getElementById('userEmail');
 
   updateUserInfo(userEmailElement);
   
-  if (!notesToDisplay || notesToDisplay.length === 0) {
-    noteList.innerHTML = ''; // 清空列表，但不显示任何消息
-    return;
+  if (!append) {
+    noteList.innerHTML = '';
   }
 
   const fragment = document.createDocumentFragment();
@@ -31,7 +34,6 @@ function updateNoteList(notesToDisplay) {
     fragment.appendChild(noteElement);
   });
 
-  noteList.innerHTML = '';
   noteList.appendChild(fragment);
 
   setupNoteListeners();
@@ -250,34 +252,20 @@ async function initializeUI() {
   showLoadingIndicator();
 
   try {
-    // 获取笔记
-    const notes = await noteOperations.getNotes();
-    console.log(`Notes loaded, total: ${notes.length}`);
-
-    // 更新笔记列表
-    updateNoteList(notes);
-
-    // 设置事件监听器
-    const addNoteButton = document.getElementById('addNoteButton');
-    const noteInput = document.getElementById('noteInput');
-    if (addNoteButton && noteInput) {
-      addNoteButton.addEventListener('click', () => handleAddNote(noteInput));
-      noteInput.addEventListener('keydown', handleNoteInputKeydown);
-      console.log('Event listeners added to addNoteButton and noteInput');
+    console.log('Fetching initial notes...');
+    const initialNotes = await noteOperations.getPaginatedNotes();
+    console.log(`Received ${initialNotes.length} initial notes`);
+    updateNoteList(initialNotes);
+    
+    if (initialNotes.length > 0) {
+      lastLoadedNoteId = initialNotes[initialNotes.length - 1].note_id;
+      showLoadMoreButton();
+    } else {
+      hideLoadMoreButton();
+      allNotesLoaded = true;
     }
 
-    const logoutButton = document.getElementById('logoutButton');
-    if (logoutButton) {
-      logoutButton.addEventListener('click', handleLogout);
-      console.log('Event listener added to logoutButton');
-    }
-
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-      searchInput.addEventListener('input', _.debounce(handleSearchNotes, 300));
-      console.log('Event listener added to searchInput');
-    }
-
+    setupEventListeners();
   } catch (error) {
     console.error('Error initializing UI:', error);
   } finally {
@@ -285,6 +273,29 @@ async function initializeUI() {
   }
 }
 
+async function loadMoreNotes() {
+  if (isLoading || allNotesLoaded) return;
+
+  isLoading = true;
+  showLoadingIndicator();
+
+  try {
+    const notes = await noteOperations.getPaginatedNotes(lastLoadedNoteId);
+    if (notes.length === 0) {
+      allNotesLoaded = true;
+      hideLoadMoreButton();
+    } else {
+      updateNoteList(notes, true); // true means append, not replace
+      lastLoadedNoteId = notes[notes.length - 1].note_id;
+      showLoadMoreButton();
+    }
+  } catch (error) {
+    console.error('Error loading more notes:', error);
+  } finally {
+    isLoading = false;
+    hideLoadingIndicator();
+  }
+}
 
 async function handleAddNote(event) {
   if (event && event.preventDefault) {
@@ -331,6 +342,36 @@ async function handleLogout() {
     });
 }
 
+function showLoadMoreButton() {
+  let loadMoreButton = document.getElementById('loadMoreButton');
+  if (!loadMoreButton) {
+    loadMoreButton = document.createElement('button');
+    loadMoreButton.id = 'loadMoreButton';
+    loadMoreButton.textContent = 'Load More';
+    loadMoreButton.addEventListener('click', loadMoreNotes);
+    document.getElementById('app').appendChild(loadMoreButton);
+  }
+  loadMoreButton.style.display = 'block';
+}
+
+function hideLoadMoreButton() {
+  const loadMoreButton = document.getElementById('loadMoreButton');
+  if (loadMoreButton) {
+    loadMoreButton.style.display = 'none';
+  }
+}
+
+function setupEventListeners() {
+  // ... 保持原有的事件监听器设置 ...
+
+  // 添加滚动事件监听器，实现无限滚动
+  window.addEventListener('scroll', _.throttle(() => {
+    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
+      loadMoreNotes();
+    }
+  }, 200));
+}
+
 // 确保导出 handleAddNote 函数
 export {
   initializeUI,
@@ -340,7 +381,9 @@ export {
   updateTagsDisplay,
   displayGeneratedTags,
   handleDeleteNote,
-  handleNoteInputKeydown  // 新添加的函数
+  handleNoteInputKeydown,  // 新添加的函数
+  showLoadingIndicator,
+  hideLoadingIndicator
 };
 
 function renderTags(tags) {

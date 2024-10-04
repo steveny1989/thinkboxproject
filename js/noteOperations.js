@@ -4,7 +4,7 @@ import { localStorageService } from './localStorage.js';
 
 class NoteOperations {
   constructor() {
-    this.notes = localStorageService.getNotes();
+    this.notes = [];  // 初始化为空数组
     this.generatedTagsMap = new Map(localStorageService.getTags());
     this.api = api;
     this.helper = helper;
@@ -197,8 +197,7 @@ class NoteOperations {
   // }
 
   getNotes() {
-    console.log('Getting notes, total:', this.notes.length);
-    return this.notes;
+    return this.notes;  // 返回当前加载的笔记
   }
 
   getTagsForNote(noteId) {
@@ -229,6 +228,45 @@ class NoteOperations {
     }
   }
   
+  async getPaginatedNotes(lastNoteId = null, limitCount = 20) {
+    try {
+      console.log(`Fetching paginated notes. lastNoteId: ${lastNoteId}, limit: ${limitCount}`);
+      const paginatedNotes = await this.api.notes.getPaginatedNotes(lastNoteId, limitCount);
+      console.log(`Received ${paginatedNotes.length} notes from API`);
+      
+      if (lastNoteId === null) {
+        console.log('First page, replacing local cache');
+        this.notes = paginatedNotes;
+      } else {
+        console.log('Not first page, appending to local cache');
+        this.notes = [...this.notes, ...paginatedNotes];
+      }
+      
+      console.log(`Total notes in local cache after update: ${this.notes.length}`);
+      
+      // 更新本地存储
+      localStorageService.saveNotes(this.notes);
+      
+      // 获取新加载笔记的标签
+      const tagsPromises = paginatedNotes.map(note => this.api.tags.getTags(note.note_id));
+      const tagsResults = await Promise.all(tagsPromises);
+      
+      // 将标签添加到相应的笔记中
+      paginatedNotes.forEach((note, index) => {
+        note.tags = tagsResults[index];
+      });
+      
+      return paginatedNotes;
+    } catch (error) {
+      console.error('Error getting paginated notes:', error);
+      throw error;
+    }
+  }
+
+  async initializePaginatedNotes() {
+    this.notes = [];  // 清空现有的笔记
+    return this.getPaginatedNotes();  // 加载第一页笔记
+  }
 }
 
 export default new NoteOperations();

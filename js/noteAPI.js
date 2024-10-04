@@ -97,6 +97,23 @@ class NoteAPI {
       handleApiError(error, 'Error adding comments');
     }
   }
+
+  async getPaginatedNotes(lastNoteId = null, limit = 20) {
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+      let url = `${BASE_API_URL}/notes?limit=${limit}`;
+      if (lastNoteId) {
+        url += `&lastNoteId=${lastNoteId}`;
+      }
+      const response = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${idToken}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch paginated notes');
+      return response.json();
+    } catch (error) {
+      handleApiError(error, 'Error fetching paginated notes');
+    }
+  }
 }
 
 export default new NoteAPI();
