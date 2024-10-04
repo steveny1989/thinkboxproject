@@ -263,14 +263,15 @@ body {
 
 .note-actions {
     display: flex;
+    justify-content: flex-start;
     align-items: center;
-    gap: 8px;
+    gap: 10px; /* 减小按钮之间的间距 */
 }
 
 .act-wrap {
     display: flex;
     align-items: center;
-    gap: 2px;
+    margin-right: 5px; /* 减小右侧边距 */
 }
 
 .act-btn {
@@ -279,7 +280,7 @@ body {
     font-size: 14px;
     color: #666; /* 默认灰色 */
     transition: color 0.2s;
-    padding: 2px;
+    padding: 5px; /* 减小内边距 */
     background: none;
     border: none;
 }
@@ -297,6 +298,7 @@ body {
 .count {
     font-size: 12px;
     color: #666;
+    margin-left: 2px; /* 减小计数器和按钮之间的距离 */
 }
 
 .comments {
@@ -783,4 +785,20 @@ body {
 .search-results-info span {
   font-size: 14px;
   color: #495057;
+}
+
+/* 为移动设备进行进一步优化 */
+@media (max-width: 768px) {
+  .note-actions {
+    gap: 5px; /* 在移动设备上进一步减小间距 */
+  }
+
+  .act-btn {
+    padding: 3px; /* 在移动设备上进一步减小内边距 */
+    font-size: 12px; /* 在移动设备上减小图标大小 */
+  }
+
+  .count {
+    font-size: 10px; /* 在移动设备上减小计数器字体大小 */
+  }
 }

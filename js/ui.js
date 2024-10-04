@@ -3,6 +3,8 @@ import noteOperations from './noteOperations.js';
 import { formatTimestamp } from './noteHelper.js';
 import { localStorageService } from './localStorage.js';
 import { debounce } from './utils.js';
+import renderHelpers from './renderHelpers.js';
+
 
 const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
@@ -74,8 +76,7 @@ function createNoteElement(note) {
       </div>
     </div>
     <div class="note-tags-container">
-<div id="tags-${note.note_id}" class="note-tags">${renderTags(note.tags || [])}</div>
-      </div>
+      <div id="tags-${note.note_id}" class="note-tags">${renderHelpers.renderTags(note.tags || [])}</div>
     </div>
     <div class="note-actions-container">
       <div class="note-actions">
@@ -100,43 +101,11 @@ function createNoteElement(note) {
         </span>
       </div>
       <div class="comments-container" id="comments-${note.note_id}">
-        ${note.comments && note.comments.length > 0 ? renderComments(note.comments) : ''}
+        ${note.comments && note.comments.length > 0 ? renderHelpers.renderComments(note.comments) : ''}
       </div>
     </div>
   `;
   return noteElement;
-}
-
-function renderComments(comments) {
-  console.log('Rendering comments:', comments); // 添加这行日志
-
-  if (!comments) {
-    console.log('No comments to render');
-    return '';
-  }
-
-  const commentsArray = Array.isArray(comments) ? comments : [comments];
-
-  return commentsArray.map(comment => {
-    console.log('Rendering comment:', comment); // 添加这行日志
-    const author = comment.author || 'Anonymous';
-    const avatarLetter = (author.charAt(0) || 'A').toUpperCase();
-    const timestamp = comment.timestamp ? new Date(comment.timestamp).toLocaleString() : 'Unknown time';
-    const content = comment.content || 'No content';
-
-    return `
-      <div class="comment-card">
-        <div class="comment-avatar">${avatarLetter}</div>
-        <div class="comment-body">
-          <div class="comment-header">
-            <span class="comment-author">${author}</span>
-            <span class="comment-timestamp">${timestamp}</span>
-          </div>
-          <div class="comment-content">${content}</div>
-        </div>
-      </div>
-    `;
-  }).join('');
 }
 
 function setupNoteListeners() {
@@ -234,7 +203,7 @@ function updateTagsDisplay(noteId, tags) {
   console.log('Updating tags display for note:', noteId, tags);
   const tagContainer = document.querySelector(`[data-note-id="${noteId}"] .note-tags`);
   if (tagContainer) {
-    const renderedTags = renderTags(tags);
+    const renderedTags = renderHelpers.renderTags(tags);
     console.log('Rendered tags:', renderedTags);
     tagContainer.innerHTML = renderedTags;
   } else {
@@ -430,9 +399,9 @@ function hideLoadMoreButton() {
 }
 
 function setupEventListeners() {
-  // ... 保持原有的事件监听器设置 ...
+  // ... 保持原有的事件监听设置 ...
 
-    // 添加笔记的事件监听器
+    // 添笔记的事件监听器
     const addNoteButton = document.getElementById('addNoteButton');
     if (addNoteButton) {
       addNoteButton.addEventListener('click', handleAddNote);
@@ -475,18 +444,28 @@ function setupEventListeners() {
   });
 
   document.addEventListener('click', (event) => {
-    if (event.target.closest('.act-btn.likes')) {
-      const noteId = event.target.closest('.act-btn.likes').dataset.noteId;
-      handleLike(noteId, event.target.closest('.act-btn.likes'));
-    } else if (event.target.closest('.act-btn.heart')) {
-      const noteId = event.target.closest('.act-btn.heart').dataset.noteId;
-      handleHeart(noteId, event.target.closest('.act-btn.heart'));
-    } else if (event.target.closest('.act-btn.comment')) {
-      const noteId = event.target.closest('.act-btn.comment').dataset.noteId;
+    const likeButton = event.target.closest('.act-btn.likes');
+    if (likeButton) {
+      const noteId = likeButton.dataset.noteId;
+      handleLike(noteId, likeButton);
+    }
+
+    const heartButton = event.target.closest('.act-btn.heart');
+    if (heartButton) {
+      const noteId = heartButton.dataset.noteId;
+      handleHeart(noteId, heartButton);
+    }
+
+    const commentButton = event.target.closest('.act-btn.comment');
+    if (commentButton) {
+      const noteId = commentButton.dataset.noteId;
       handleGenerateComments(noteId);
-    } else if (event.target.closest('.feedback-button')) {
-      const noteId = event.target.closest('.feedback-button').dataset.noteId;
-      const noteContent = event.target.closest('.feedback-button').dataset.noteContent;
+    }
+
+    const feedbackButton = event.target.closest('.feedback-button');
+    if (feedbackButton) {
+      const noteId = feedbackButton.dataset.noteId;
+      const noteContent = feedbackButton.dataset.noteContent;
       handleFeedback(noteId, noteContent);
     }
   });
@@ -506,24 +485,6 @@ export {
   hideLoadingIndicator,
   handleSearch
 };
-
-function renderTags(tags) {
-  console.log('Rendering tags:', tags);
-  if (!tags || tags.length === 0) {
-    return '<span class="tag loading">Loading tags...</span>';
-  }
-  if (Array.isArray(tags) && tags[0] && typeof tags[0].name === 'string') {
-    return tags[0].name.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('');
-  }
-  if (typeof tags === 'string') {
-    return tags.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('');
-  }
-  if (Array.isArray(tags)) {
-    return tags.map(tag => `<span class="tag">${tag}</span>`).join('');
-  }
-  console.error('Invalid tags data:', tags);
-  return '<span class="error-tags">Error loading tags</span>';
-}
 
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
@@ -547,33 +508,35 @@ function handleNoteInputKeydown(event) {
 }
 
 function handleLike(noteId, button) {
-  const countSpan = button.parentElement.querySelector('.count');
-  let count = parseInt(countSpan.textContent);
+  const countSpan = button.nextElementSibling;
+  let count = parseInt(countSpan.textContent) || 0;
   
   if (button.classList.toggle('active')) {
     count++;
   } else {
-    count--;
+    count = Math.max(0, count - 1);
   }
-  
+
   countSpan.textContent = count;
-  // 这里可以添加与后端通信的更新服务器上的点赞数
-  // noteOperations.updateLikes(noteId, count);
+  countSpan.style.color = button.classList.contains('active') ? 'red' : '';
+
+  console.log(`Like for note ${noteId}: ${count}`);
 }
 
 function handleHeart(noteId, button) {
-  const countSpan = button.parentElement.querySelector('.count');
-  let count = parseInt(countSpan.textContent);
+  const countSpan = button.nextElementSibling;
+  let count = parseInt(countSpan.textContent) || 0;
   
   if (button.classList.toggle('active')) {
     count++;
   } else {
-    count--;
+    count = Math.max(0, count - 1);
   }
-  
+
   countSpan.textContent = count;
-  // 这里可以添加与后端通信的代码，更新服务器上心形
-  // noteOperations.updateHearts(noteId, count);
+  countSpan.style.color = button.classList.contains('active') ? 'red' : '';
+
+  console.log(`Heart for note ${noteId}: ${count}`);
 }
 
 async function handleGenerateComments(noteId) {
