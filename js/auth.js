@@ -15,8 +15,9 @@ function hideLoading() {
 }
 
 // 用户注册函数
-async function registerUser() {
-
+async function registerUser(event) {
+    event.preventDefault(); // 防止表单默认提交行为
+    showLoading(); // 立即显示加载指示器
     // 获取用户输入的邮箱和密码
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
@@ -30,7 +31,7 @@ async function registerUser() {
         alert('注册成功！请登录。');
 
         // 获取用户的 ID 令牌
-        showLoading();
+
         const idToken = await user.getIdToken();
 
         // 将用户信息同步到后端
@@ -80,14 +81,17 @@ async function registerUser() {
 }
 
 // 用户登录函数
-async function loginUser() {
+async function loginUser(event) {
+    event.preventDefault(); // 防止表单默认提交行为
+    showLoading(); // 立即显示加载指示器
+    
     // 获取用户输入的邮箱和密码
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const errorDiv = document.getElementById('loginError');
 
     try {
-        // 使用 Firebase 认证登录用户
+        console.log('Starting user login...');
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         console.log('User logged in:', user);
@@ -132,21 +136,30 @@ async function loginUser() {
     }
 }
 
-// 绑定事件处理程序
-document.addEventListener('DOMContentLoaded', function() {
-    const registerButton = document.getElementById('registerButton');
-    const loginButton = document.getElementById('loginButton');
+// 使用立即执行函数来确保 DOM 加载完成后绑定事件
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded');
+        const registerButton = document.getElementById('registerButton');
+        const loginButton = document.getElementById('loginButton');
 
-    // 为注册按钮绑定点击事件
-    if (registerButton) {
-        registerButton.addEventListener('click', registerUser);
-    }
+        if (registerButton) {
+            console.log('Register button found, adding event listener');
+            registerButton.addEventListener('click', registerUser);
+        } else {
+            console.error('Register button not found');
+        }
 
-    // 为录按钮绑定点击事件
-    if (loginButton) {
-        loginButton.addEventListener('click', loginUser);
-    }
-});
+        if (loginButton) {
+            console.log('Login button found, adding event listener');
+            loginButton.addEventListener('click', loginUser);
+        } else {
+            console.error('Login button not found');
+        }
+
+        hideLoading(); // 确保初始状态下加载指示器是隐藏的
+    });
+})();
 
 // 修改 signOut 函数
 export async function signOut() {

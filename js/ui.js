@@ -5,6 +5,13 @@ import { localStorageService } from './localStorage.js';
 
 const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
+function showLoadingIndicator() {
+  document.getElementById('loading-indicator').classList.remove('hidden');
+}
+
+function hideLoadingIndicator() {
+  document.getElementById('loading-indicator').classList.add('hidden');
+}
 
 function updateNoteList(notesToDisplay) {
   console.log('Updating note list with', notesToDisplay.length, 'notes');
@@ -214,62 +221,67 @@ function updateTagsDisplay(noteId, tags) {
 }
 
 
-function handleSearchNotes(event) {
+async function handleSearchNotes(event) {
   console.log('Search event triggered');
   const searchTerm = event.target.value.toLowerCase().trim();
   console.log('Search term:', searchTerm);
-  const allNotes = noteOperations.getNotes();
-  console.log('Total notes:', allNotes.length);
-  const filteredNotes = allNotes.filter(note => 
-    note.content.toLowerCase().includes(searchTerm) ||
-    (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
-  );
-  console.log('Filtered notes:', filteredNotes.length);
-  updateNoteList(filteredNotes);
+  
+  showLoadingIndicator();
+
+  try {
+    const allNotes = await noteOperations.getNotes();
+    console.log('Total notes:', allNotes.length);
+    const filteredNotes = allNotes.filter(note => 
+      note.content.toLowerCase().includes(searchTerm) ||
+      (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+    );
+    console.log('Filtered notes:', filteredNotes.length);
+    updateNoteList(filteredNotes);
+  } catch (error) {
+    console.error('Error searching notes:', error);
+  } finally {
+    hideLoadingIndicator();
+  }
 }
 
-function initializeUI() {
+async function initializeUI() {
   console.log('Initializing UI...');
-
-  const addNoteButton = document.getElementById('addNoteButton');
-  const noteInput = document.getElementById('noteInput');
   
-  console.log('addNoteButton:', addNoteButton);
-  console.log('noteInput:', noteInput);
+  showLoadingIndicator();
 
-  if (addNoteButton && noteInput) {
-    addNoteButton.addEventListener('click', () => handleAddNote(noteInput));
-    // 添加键盘事件监听
-    noteInput.addEventListener('keydown', handleNoteInputKeydown);
-    console.log('Event listeners added to addNoteButton and noteInput');
-  } else {
-    console.warn('Add note button or input not found');
-    console.log('Document body:', document.body.innerHTML); // 输出整个 body 内容
-    console.log('All elements with id:', Array.from(document.querySelectorAll('[id]')).map(el => el.id)); // 输出所有 id 的元素的 id
-  }
+  try {
+    // 获取笔记
+    const notes = await noteOperations.getNotes();
+    console.log(`Notes loaded, total: ${notes.length}`);
 
-  const logoutButton = document.getElementById('logoutButton');
-  
-  console.log('logoutButton:', logoutButton); // 添加日志
+    // 更新笔记列表
+    updateNoteList(notes);
 
-  if (logoutButton) {
-    logoutButton.addEventListener('click', handleLogout);
-    console.log('Event listener added to logoutButton'); // 添加日志
-  } else {
-    console.warn('Logout button not found');
-  }
+    // 设置事件监听器
+    const addNoteButton = document.getElementById('addNoteButton');
+    const noteInput = document.getElementById('noteInput');
+    if (addNoteButton && noteInput) {
+      addNoteButton.addEventListener('click', () => handleAddNote(noteInput));
+      noteInput.addEventListener('keydown', handleNoteInputKeydown);
+      console.log('Event listeners added to addNoteButton and noteInput');
+    }
 
-  // 更新笔记列表
-  updateNoteList(noteOperations.getNotes());
-  console.log('Note list updated'); // 添加日志
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+      logoutButton.addEventListener('click', handleLogout);
+      console.log('Event listener added to logoutButton');
+    }
 
-  // 搜索笔记
-  const searchInput = document.getElementById('searchInput');
-  if (searchInput) {
-    searchInput.addEventListener('input', handleSearchNotes);
-    console.log('Event listener added to searchInput');
-  } else {
-    console.warn('Search input not found');
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', _.debounce(handleSearchNotes, 300));
+      console.log('Event listener added to searchInput');
+    }
+
+  } catch (error) {
+    console.error('Error initializing UI:', error);
+  } finally {
+    hideLoadingIndicator();
   }
 }
 
@@ -472,7 +484,7 @@ async function handleFeedback(noteId, noteContent) {
   document.body.appendChild(messageElement);
 
   try {
-    // 显示"正在思考"的消息
+    // 显示"正在思考"的消
     messageElement.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: center; height: 100px;">
         <div class="spinner"></div>
