@@ -146,9 +146,9 @@ class NoteOperations {
 
       console.log('New comment:', newComment); // 添加这行日志
 
-      // 更新笔记对象，添加新生成的评论
-      note.comments = note.comments || [];
-      note.comments.push(newComment);
+      // // 更新笔记对象，添加新生成的评论
+      // note.comments = note.comments || [];
+      // note.comments.push(newComment);
 
       // 更新本地存储
       localStorageService.saveNotes(this.notes);
@@ -156,7 +156,7 @@ class NoteOperations {
       //异步保存到数据库
       //this.api.comments.addComments(noteId, [newComment]);
       
-      return [newComment]; // 返回包含新评论的数组
+      return newComment; // 
     } catch (error) {
       console.error('Error generating comment:', error);
       throw error;

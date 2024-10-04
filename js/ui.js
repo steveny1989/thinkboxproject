@@ -11,6 +11,7 @@ let isLoading = false;
 let allNotesLoaded = false;
 let originalNotes = [];
 let isShowingSearchResults = false;
+let isGeneratingComment = false;
 
 function showLoadingIndicator() {
   document.getElementById('loading-indicator').classList.remove('hidden');
@@ -140,38 +141,54 @@ function renderComments(comments) {
 
 function setupNoteListeners() {
   const noteList = document.getElementById('noteList');
-  noteList.addEventListener('click', async (event) => {
-    const actionBtn = event.target.closest('.act-btn');
-    if (actionBtn) {
-      const noteId = actionBtn.dataset.noteId;
-      const isLike = actionBtn.classList.contains('likes');
-      const isHeart = actionBtn.classList.contains('heart');
-      const isComment = actionBtn.classList.contains('comment');
-      
-      if (isLike) {
-        handleLike(noteId, actionBtn);
-      } else if (isHeart) {
-        handleHeart(noteId, actionBtn);
-      } else if (isComment) {
-        console.log('Generate comments button clicked');
-        console.log('Note ID:', noteId);
+  
+  // 移除现有的事件监听器（如果有的话）
+  noteList.removeEventListener('click', handleNoteListClick);
+  
+  // 添加新的事件监听器
+  noteList.addEventListener('click', handleNoteListClick);
+}
+
+async function handleNoteListClick(event) {
+  const actionBtn = event.target.closest('.act-btn');
+  if (actionBtn) {
+    const noteId = actionBtn.dataset.noteId;
+    const isLike = actionBtn.classList.contains('likes');
+    const isHeart = actionBtn.classList.contains('heart');
+    const isComment = actionBtn.classList.contains('comment');
+    
+    if (isLike) {
+      handleLike(noteId, actionBtn);
+    } else if (isHeart) {
+      handleHeart(noteId, actionBtn);
+    } else if (isComment) {
+      if (isGeneratingComment) {
+        console.log('Comment generation already in progress');
+        return;
+      }
+      console.log('Generate comments button clicked');
+      console.log('Note ID:', noteId);
+      isGeneratingComment = true;
+      try {
         await handleGenerateComments(noteId);
+      } finally {
+        isGeneratingComment = false;
       }
     }
+  }
 
-    const deleteButton = event.target.closest('.delete-note');
-    if (deleteButton) {
-      const noteId = deleteButton.dataset.noteId;
-      await handleDeleteNote(noteId);
-    }
+  const deleteButton = event.target.closest('.delete-note');
+  if (deleteButton) {
+    const noteId = deleteButton.dataset.noteId;
+    await handleDeleteNote(noteId);
+  }
 
-    const feedbackButton = event.target.closest('.feedback-button');
-    if (feedbackButton) {
-      const noteId = feedbackButton.dataset.noteId;
-      const noteContent = feedbackButton.dataset.noteContent;
-      await handleFeedback(noteId, noteContent);
-    }
-  });
+  const feedbackButton = event.target.closest('.feedback-button');
+  if (feedbackButton) {
+    const noteId = feedbackButton.dataset.noteId;
+    const noteContent = feedbackButton.dataset.noteContent;
+    await handleFeedback(noteId, noteContent);
+  }
 }
 
 function updateNoteTagsInUI(noteId, tags) {
@@ -560,16 +577,17 @@ function handleHeart(noteId, button) {
 }
 
 async function handleGenerateComments(noteId) {
-  console.log(`Generating comments for note ${noteId}`);
-  const commentsContainer = document.getElementById(`comments-${noteId}`);
-  if (!commentsContainer) {
-    console.error(`Comments container not found for note ${noteId}`);
+  if (isGeneratingComment) {
+    console.log('Comment generation already in progress');
     return;
   }
 
-  // 检查是否已经有评论
-  if (commentsContainer.querySelector('.comment-card')) {
-    console.log('Comments already exist for this note');
+  isGeneratingComment = true;
+  console.log(`Generating comment for note ${noteId}`);
+  const commentsContainer = document.getElementById(`comments-${noteId}`);
+  if (!commentsContainer) {
+    console.error(`Comments container not found for note ${noteId}`);
+    isGeneratingComment = false;
     return;
   }
 
@@ -589,20 +607,20 @@ async function handleGenerateComments(noteId) {
     `;
     commentsContainer.appendChild(loadingIndicator);
 
-    // 生成评论
-    const newComments = await noteOperations.generateCommentsForNote(noteId);
-    console.log('Received new comments:', newComments);
+    // 生成单个评论
+    const newComment = await noteOperations.generateCommentsForNote(noteId);
+    console.log('Received new comment:', newComment);
 
     // 移除加载指示器
     loadingIndicator.remove();
 
-    if (Array.isArray(newComments) && newComments.length > 0) {
-      const renderedComments = renderComments(newComments);
-      console.log('Rendered comments HTML:', renderedComments);
+    if (newComment && newComment.content) {
+      const renderedComment = renderSingleComment(newComment);
+      console.log('Rendered comment HTML:', renderedComment);
       
       // 使用淡入效果显示新评论
       const newCommentElement = document.createElement('div');
-      newCommentElement.innerHTML = renderedComments;
+      newCommentElement.innerHTML = renderedComment;
       newCommentElement.style.opacity = '0';
       commentsContainer.appendChild(newCommentElement);
 
@@ -616,24 +634,25 @@ async function handleGenerateComments(noteId) {
       const commentCountElement = document.querySelector(`.act-btn.comment[data-note-id="${noteId}"] + .count`);
       if (commentCountElement) {
         const currentCount = parseInt(commentCountElement.textContent) || 0;
-        commentCountElement.textContent = currentCount + newComments.length;
+        commentCountElement.textContent = currentCount + 1;
       }
     } else {
-      console.error('New comments are empty or invalid:', newComments);
+      console.error('New comment is empty or invalid:', newComment);
       const noCommentMessage = document.createElement('p');
-      noCommentMessage.textContent = 'Failed to generate comments.';
+      noCommentMessage.textContent = 'Failed to generate comment.';
       commentsContainer.appendChild(noCommentMessage);
     }
   } catch (error) {
-    console.error('Error generating comments:', error);
+    console.error('Error generating comment:', error);
     const errorMessage = document.createElement('p');
-    errorMessage.textContent = 'Failed to generate comments';
+    errorMessage.textContent = 'Failed to generate comment';
     commentsContainer.appendChild(errorMessage);
   } finally {
     // 重新启用评论按钮
     if (commentButton) {
       commentButton.disabled = false;
     }
+    isGeneratingComment = false;
   }
 }
 
@@ -703,4 +722,24 @@ async function handleFeedback(noteId, noteContent) {
       setTimeout(() => document.body.removeChild(messageElement), 300);
     });
   }
+}
+
+function renderSingleComment(comment) {
+  console.log('Rendering comment:', comment);
+  const author = comment.author || 'Anonymous';
+  const avatarLetter = (author.charAt(0) || 'A').toUpperCase();
+  const timestamp = comment.timestamp ? new Date(comment.timestamp).toLocaleString() : 'Unknown time';
+
+  return `
+    <div class="comment-card">
+      <div class="comment-avatar">${avatarLetter}</div>
+      <div class="comment-body">
+        <div class="comment-header">
+          <span class="comment-author">${author}</span>
+          <span class="comment-timestamp">${timestamp}</span>
+        </div>
+        <div class="comment-content">${comment.content}</div>
+      </div>
+    </div>
+  `;
 }
