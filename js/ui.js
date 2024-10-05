@@ -27,8 +27,32 @@ function showLoadingIndicator() {
 }
 
 function hideLoadingIndicator() {
-  document.getElementById('loading-indicator').classList.add('hidden');
-  clearTimeout(loadingTimeout);
+  console.log('Hiding loading indicator');
+  const indicator = document.getElementById('loading-indicator');
+  if (indicator) {
+    indicator.classList.add('hidden');
+    console.log('Added hidden class to loading indicator');
+  } else {
+    console.warn('Loading indicator element not found');
+  }
+  if (loadingTimeout) {
+    clearTimeout(loadingTimeout);
+    console.log('Cleared loading timeout');
+  } else {
+    console.log('No loading timeout to clear');
+  }
+}
+
+// 添加 showAllNotesLoadedMessage 函数
+function showAllNotesLoadedMessage() {
+  document.getElementById('allNotesLoaded').classList.remove('hidden');
+}
+
+function showErrorMessage(message) {
+  console.error(message);
+  // 可以添加一个 toast 或者 alert 来显示错误消息
+  // 例如：
+  // alert(message);
 }
 
 function updateNoteList(notesToDisplay, append = false) {
@@ -279,11 +303,6 @@ function clearSearch() {
   hideSearchResultsInfo();
 }
 
-function showErrorMessage(message) {
-  // 实现一个显示错误消息的函数
-  alert(message); // 这只是一个简单的实现，你可能想要一个更优雅的解决方案
-}
-
 async function initializeUI() {
   console.log('Initializing UI...');
   
@@ -297,10 +316,9 @@ async function initializeUI() {
     
     if (initialNotes.length > 0) {
       lastLoadedNoteId = initialNotes[initialNotes.length - 1].note_id;
-      showLoadMoreButton();
     } else {
-      hideLoadMoreButton();
       allNotesLoaded = true;
+      showAllNotesLoadedMessage();
     }
 
     setupEventListeners();
@@ -331,14 +349,14 @@ async function loadMoreNotes() {
     const notes = await noteOperations.getPaginatedNotes(lastLoadedNoteId);
     if (notes.length === 0) {
       allNotesLoaded = true;
-      hideLoadMoreButton();
+      showAllNotesLoadedMessage();
     } else {
       updateNoteList(notes, true); // true means append, not replace
       lastLoadedNoteId = notes[notes.length - 1].note_id;
-      showLoadMoreButton();
     }
   } catch (error) {
     console.error('Error loading more notes:', error);
+    showErrorMessage('An error occurred while loading more notes. Please try again.');
   } finally {
     isLoading = false;
     hideLoadingIndicator();
@@ -388,25 +406,6 @@ async function handleLogout() {
     .catch((error) => {
       console.error('Error signing out:', error);
     });
-}
-
-function showLoadMoreButton() {
-  let loadMoreButton = document.getElementById('loadMoreButton');
-  if (!loadMoreButton) {
-    loadMoreButton = document.createElement('button');
-    loadMoreButton.id = 'loadMoreButton';
-    loadMoreButton.textContent = 'Load More';
-    loadMoreButton.addEventListener('click', loadMoreNotes);
-    document.getElementById('app').appendChild(loadMoreButton);
-  }
-  loadMoreButton.style.display = 'block';
-}
-
-function hideLoadMoreButton() {
-  const loadMoreButton = document.getElementById('loadMoreButton');
-  if (loadMoreButton) {
-    loadMoreButton.style.display = 'none';
-  }
 }
 
 function setupEventListeners() {

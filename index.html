@@ -28,20 +28,19 @@
                 <textarea id="noteInput" placeholder="What's in your mind?" rows="6"></textarea>
                 <button id="addNoteButton" type="button">Post</button>
             </div>
-            <!-- <div class="note-actions">
-                <span class="likes">👍 0</span>
-                <span class="heart">❤️ 0</span>
-                <span class="comments">💬 0 Comments</span>
-            </div> -->
-
             <!-- 搜索容器，包含搜索输入框 -->
             <div class="search-container">
                 <input type="text" id="searchInput" placeholder="Search notes...">
             </div>
             <!-- 笔记列表 -->
             <ul id="noteList"></ul>
-            <!-- 在 <ul id="noteList"></ul> 后面添加 -->
-            <button id="loadMoreButton" style="display: none;"></button>
+            <div id="loadingIndicator" class="loading-indicator hidden">
+                <div class="spinner"></div>
+                <span>加载更多笔记...</span>
+            </div>
+            <div id="allNotesLoaded" class="all-notes-loaded hidden">
+                所有笔记已加载完毕
+            </div>
         </div>
         <div id="generated-tags-container"></div>
     </main>

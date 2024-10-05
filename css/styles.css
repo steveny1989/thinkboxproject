@@ -516,7 +516,7 @@ body {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 #loading {
@@ -723,19 +723,35 @@ body {
 
 .loading-indicator {
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 10px;
+  align-items: center;
+  padding: 20px;
+  color: #666;
 }
 
+.loading-indicator .spinner {
+  margin-right: 10px;
+}
+
+.all-notes-loaded {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.hidden {
+  display: none;
+}
+
+/* 优化 spinner 样式 */
 .spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3498db;
   border-radius: 50%;
   width: 20px;
   height: 20px;
   animation: spin 1s linear infinite;
-  margin-right: 10px;
 }
 
 @keyframes spin {
@@ -801,4 +817,11 @@ body {
   .count {
     font-size: 10px; /* 在移动设备上减小计数器字体大小 */
   }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
 }
