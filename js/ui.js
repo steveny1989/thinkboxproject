@@ -411,6 +411,35 @@ async function handleLogout() {
     });
 }
 
+async function initializeTrendingTags() {
+  function updateTopTagsList(tags) {
+    console.log('Updating top tags list with:', tags); // 添加这行日志
+    const topTagsList = document.getElementById('topTagsList');
+    if (topTagsList) {
+      topTagsList.innerHTML = tags.map(tag => {
+        console.log('Processing tag:', tag); // 添加这行日志
+        return `
+          <li class="trending-tag-item">
+            <span class="tag-name">#${tag.name || 'Unknown'}</span>
+          </li>
+        `;
+      }).join('');
+    }
+  }
+
+  async function fetchAndUpdateTrendingTags() {
+    const trendingTags = await noteOperations.getTrendingTags();
+    console.log('Fetched trending tags:', trendingTags); // 添加这行日志
+    updateTopTagsList(trendingTags);
+  }
+
+  // 初始加载
+  await fetchAndUpdateTrendingTags();
+
+  // 每30分钟更新一次
+  setInterval(fetchAndUpdateTrendingTags, 30 * 60 * 1000);
+}
+
 function setupEventListeners() {
   // ... 保持原有的事件监听设置 ...
 
@@ -433,6 +462,9 @@ function setupEventListeners() {
       loadMoreNotes();
     }
   }, 200));
+
+    // 添加趋势标签功能
+    initializeTrendingTags();
 
   // 添加搜索功能
   const searchInput = document.getElementById('searchInput');
@@ -686,10 +718,10 @@ async function handleFeedback(noteId, noteContent) {
   try {
     // 显示"正在思考"的消息
     messageElement.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; height: 100px;">
+      <div class="ai-thinking-container">
         <div class="spinner"></div>
       </div>
-      <p style="text-align: center; margin-top: 16px; color: #007BFF;">AI is thinking...</p>
+      <p class="ai-thinking-text">AI is thinking...</p>
     `;
     messageElement.style.display = 'block';
     setTimeout(() => {

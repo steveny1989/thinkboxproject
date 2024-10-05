@@ -3,7 +3,9 @@ body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background-color: #f4f4f9; /* 背景颜色 */
+    background-color: #f0f2f5; /* 背景颜色 */
+    display: flex;
+    min-height: 100vh;
   }
   
   h1 {
@@ -64,6 +66,12 @@ body {
   
   .logout-button:hover {
     background-color: #0056b3;
+  }
+  
+  .main-content {
+    max-width: 800px; /* 或者您认为合适的宽度 */
+    margin: 0 auto; /* 居中内容 */
+    padding: 0 20px; /* 添加一些左右内边距 */
   }
   
   .input-container, .search-container {
@@ -236,7 +244,7 @@ body {
 
   .note-tags-container {
     padding: 10px 15px;
-    background-color: #f0f0f0;
+    background-color: #f0f2f5;
     border-top: 1px solid #e0e0e0;
     border-bottom: 1px solid #e0e0e0;
   }
@@ -830,4 +838,196 @@ mark {
   background-color: yellow;
   padding: 2px;
   border-radius: 2px;
+}
+
+.ai-thinking-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+}
+
+.ai-thinking-text {
+  text-align: center;
+  margin-top: 16px;
+  color: #333333;
+}
+
+.layout-container {
+  display: flex;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.left-sidebar {
+  width: 275px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-right: 1px solid #e6ecf0;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  max-width: calc(100% - 600px); /* 调整主内容区的最大宽度 */
+}
+
+.right-sidebar {
+  width: 290px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-left: 1px solid #e6ecf0;
+}
+
+.container {
+  width: 100%;
+  max-width: none; /* 移除最大宽度限制 */
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 1280px) {
+  .right-sidebar {
+    display: none;
+  }
+  .main-content {
+    max-width: calc(100% - 275px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .left-sidebar {
+    width: 88px; /* 收缩左侧栏 */
+  }
+  .main-content {
+    max-width: calc(100% - 88px);
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
+  .left-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e6ecf0;
+  }
+  .main-content {
+    max-width: 100%;
+  }
+}
+.clear-search-button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.clear-search-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 调整搜索结果信息容器的样式 */
+.search-results-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f8f9fa;
+  border-radius: 25px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-results-info span {
+  font-size: 14px;
+  color: #495057;
+}
+
+/* 为移动设备进行进一步优化 */
+@media (max-width: 768px) {
+  .note-actions {
+    gap: 5px; /* 在移动设备上进一步减小间距 */
+  }
+
+  .act-btn {
+    padding: 3px; /* 在移动设备上进一步减小内边距 */
+    font-size: 12px; /* 在移动设备上减小图标大小 */
+  }
+
+  .count {
+    font-size: 10px; /* 在移动设备上减小计数器字体大小 */
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
+mark {
+  background-color: yellow;
+  padding: 2px;
+  border-radius: 2px;
+}
+
+.ai-thinking-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+}
+
+.ai-thinking-text {
+  text-align: center;
+  margin-top: 16px;
+  color: #333333;
+}
+
+.trending-tags {
+  background-color: #f7f9fa;
+  border-radius: 15px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.trending-tags h2 {
+  font-size: 20px;
+  color: #14171a;
+  margin-bottom: 15px;
+}
+
+#topTagsList {
+  list-style-type: none;
+  padding: 0;
+}
+
+.trending-tag-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e6ecf0;
+}
+
+.trending-tag-item:last-child {
+  border-bottom: none;
+}
+
+.tag-name {
+  font-weight: bold;
+  color: #1da1f2;
+}
+
+.tag-count {
+  font-size: 14px;
+  color: #657786;
 }

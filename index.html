@@ -12,38 +12,47 @@
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 </head>
 <body>
-    <!-- 页眉部分，包含标题和用户信息 -->
-    <header class="header">
-        <h1>ThinkBox</h1>
-        <div class="user-info">
-            <span id="userEmail">user@example.com</span>
-            <button id="logoutButton" class="logout-button" type="button">Login/Logout</button>
-        </div>
-    </header>
-    <!-- 主容器，包含应用内容 -->
-    <main class="container">
-        <div id="app">
-            <!-- 输入容器，包含笔记输入框和添加按钮 -->
-            <div class="input-container">
-                <textarea id="noteInput" placeholder="What's in your mind?" rows="6"></textarea>
-                <button id="addNoteButton" type="button">Post</button>
+    <div class="layout-container">
+        <!-- <aside class="left-sidebar">
+        </aside> -->
+        <main class="main-content">
+            <!-- 原有的 header 部分移动到这里 -->
+            <header class="header">
+                <h1>ThinkBox</h1>
+                <div class="user-info">
+                    <span id="userEmail">user@example.com</span>
+                    <button id="logoutButton" class="logout-button" type="button">Login/Logout</button>
+                </div>
+            </header>
+
+            <!-- 笔记部分 -->
+            <div id="notesSection" class="content-section">
+                <div class="input-container">
+                    <textarea id="noteInput" placeholder="What's in your mind?" rows="6"></textarea>
+                    <button id="addNoteButton" type="button">Post</button>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search notes...">
+                </div>
+                <ul id="noteList"></ul>
+                <div id="loadingIndicator" class="loading-indicator hidden">
+                    <div class="spinner"></div>
+                    <span>Loading more notes...</span>
+                </div>
+                <div id="allNotesLoaded" class="all-notes-loaded hidden">
+                    You've reached the end of your notes.
+                </div>
+                <div id="generated-tags-container"></div>
             </div>
-            <!-- 搜索容器，包含搜索输入框 -->
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search notes...">
+        </main>
+        <aside class="right-sidebar">
+            <div class="trending-tags">
+                <h2>Trending Tags</h2>
+                <ul id="topTagsList"></ul>
             </div>
-            <!-- 笔记列表 -->
-            <ul id="noteList"></ul>
-            <div id="loadingIndicator" class="loading-indicator hidden">
-                <div class="spinner"></div>
-                <span>Loading more notes...</span>
-            </div>
-            <div id="allNotesLoaded" class="all-notes-loaded hidden">
-                You've reached the end of your notes.
-            </div>
-        </div>
-        <div id="generated-tags-container"></div>
-    </main>
+        </aside>
+    </div>
+
     <!-- 引入 JavaScript 文件 -->
     <script type="module" src="/js/main.js"></script>
     <div id="loading-indicator" class="loading-indicator hidden">

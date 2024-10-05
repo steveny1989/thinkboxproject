@@ -106,7 +106,7 @@ class NoteOperations {
       }
     }
 
-    // 从生成的标签映射中删除
+    // 从生成的��签映射中删除
     this.generatedTagsMap.delete(noteId);
     await localStorageService.saveTags(Array.from(this.generatedTagsMap.entries()));
     await localStorageService.saveTempToServerNoteMap(this.tempToServerNoteMap);
@@ -222,7 +222,7 @@ class NoteOperations {
   // }
 
   getNotes() {
-    return this.notes;  // 返回当前加载的笔记
+    return this.notes;  // 返笔记
   }
 
   getTagsForNote(noteId) {
@@ -312,6 +312,47 @@ class NoteOperations {
       throw error;
     }
   }
+
+  async getTrendingTags(limit = 10) {
+    try {
+      const allTags = await api.tags.getAllTags();
+      console.log('All tags received:', allTags);
+
+      if (!Array.isArray(allTags)) {
+        console.error('Unexpected data structure for tags:', allTags);
+        return [];
+      }
+
+      // 提取和处理标签
+      const tagCounts = {};
+      allTags.forEach(tagString => {
+        if (typeof tagString === 'string') {
+          // 使用正则表达式匹配所有 '#' 开头的标签
+          const tags = tagString.match(/#[^\s#,]+/g);
+          if (tags) {
+            tags.forEach(tag => {
+              const cleanTag = tag.slice(1).trim(); // 移除 '#' 符号并修剪空白
+              tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
+            });
+          }
+        }
+      });
+
+      console.log('Processed tag counts:', tagCounts);
+
+      const sortedTags = Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([name, count]) => ({ name, count }));
+
+      console.log('Sorted and limited tags:', sortedTags);
+      return sortedTags;
+    } catch (error) {
+      console.error('Error fetching trending tags:', error);
+      return [];
+    }
+  }
+  
 }
 
 const noteOperations = new NoteOperations();
