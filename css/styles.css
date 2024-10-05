@@ -19,7 +19,7 @@ body {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #fff; /* 白色背景 */
+    background-color: #f0f2f5; /* 白色背景 */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 添加阴影 */
     border-radius: 10px; /* 圆角 */
   }
@@ -29,7 +29,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 10px 20px;
-    background-color: #fff;
+    background-color: #f0f2f5;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     margin-bottom: 20px;
@@ -89,7 +89,7 @@ body {
     border-radius: 8px; /* 增加圆角半径 */
     font-size: 20px; /* 增加字体大小 */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 增加阴影 */
-    background-color: #f9f9f9;
+    background-color:  #f0f2f5;
     box-sizing: border-box;
     transition: background-color 0.3s, box-shadow 0.3s; /* 添加过渡效果 */
   }
@@ -106,7 +106,7 @@ body {
     border-radius: 8px; /* 保持原样 */
     font-size: 18px; /* 保持原样 */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 保持原样 */
-    background-color: #f9f9f9;
+    background-color:  #f0f2f5;
     box-sizing: border-box;
     transition: background-color 0.3s, box-shadow 0.3s; /* 保持原样 */
   }
@@ -122,7 +122,7 @@ body {
   #addNoteButton {
     font-family: 'Noto Sans SC', sans-serif;
     background: #007bff;
-    color: white;
+    color:  #f0f2f5;
     border: none;
     border-radius: 40px; /* 更圆滑的形状 */
     width: 80px; /* 增加宽度 */
@@ -163,7 +163,7 @@ body {
   }
   
   li {
-    background-color: #fff;
+    background-color: #f0f2f5;
     margin-bottom: 10px; /* 增加列表项之间的间距 */
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -173,7 +173,7 @@ body {
   
   .note-content {
     padding: 15px;
-    background-color: #f9f9f9;
+    background-color:  #f0f2f5;
     margin-bottom: 10px;
   }
   
@@ -214,7 +214,7 @@ body {
     position: absolute;
     right: 0;
     top: 100%;
-    background-color: #ffffff;
+    background-color: #f0f2f5;
     min-width: 100px;
     margin-top: 5px;
     padding: 5px;
@@ -234,7 +234,7 @@ body {
   }
   
   .dropdown-content a:hover {
-    background-color: #f1f1f1;
+    background-color: #f0f2f5;
     color: #000;
   }
   
@@ -256,7 +256,7 @@ body {
   }
   
   .tag {
-    background-color: #e0e0e0;
+    background-color: #f0f2f5;
     color: #666;
     padding: 2px 8px;
     border-radius: 12px;
@@ -420,9 +420,6 @@ body {
     background-color:  #007bff; /* 深蓝色 */
     transform: scale(1.05); /* 悬停时大 */
   }
-
-  
-  
   .note-item {
     margin-bottom: 10px;
   }
@@ -431,7 +428,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f9f9f9;
+    background-color:  #f0f2f5;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     padding: 5px;
@@ -477,7 +474,7 @@ body {
     position: absolute;
     right: 0;
     top: 100%;
-    background-color: #ffffff;
+    background-color:  #f0f2f5;
     min-width: 120px;
     padding: 5px;
     box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
@@ -593,7 +590,7 @@ body {
 }
 
 .tag {
-  background-color: #e0e0e0;
+  background-color: #f0f2f5;
   color: #666;
   padding: 2px 8px;
   border-radius: 12px;
@@ -603,7 +600,7 @@ body {
 /* 评论容器样式 */
 .comments-container {
   margin-top: 10px;
-  background-color: #f7f9f9;
+  background-color: #f0f2f5;
   border-radius: 12px;
   padding: 10px;
 }
@@ -626,7 +623,7 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: #1da1f2;
+  background-color: #007bff;
   color: white;
   display: flex;
   align-items: center;
@@ -681,7 +678,7 @@ body {
 }
 
 .act-btn.comment:hover {
-  color: #1da1f2;
+  color: #007bff;
 }
 
 /* 评论数量样式 */
@@ -704,7 +701,7 @@ body {
 }
 
 .modal-content {
-  background-color: #fefefe;
+  background-color:  #f0f2f5;
   margin: 15% auto;
   padding: 20px;
   border: 1px solid #888;
@@ -863,7 +860,7 @@ mark {
 .left-sidebar {
   width: 275px;
   padding: 20px;
-  background-color: #ffffff;
+  background-color:  #f0f2f5;
   border-right: 1px solid #e6ecf0;
 }
 
@@ -876,7 +873,7 @@ mark {
 .right-sidebar {
   width: 290px;
   padding: 20px;
-  background-color: #ffffff;
+  background-color:  #f0f2f5;
   border-left: 1px solid #e6ecf0;
 }
 
@@ -939,7 +936,7 @@ mark {
   justify-content: space-between;
   align-items: center;
   padding: 10px 15px;
-  background-color: #f8f9fa;
+  background-color: #f0f2f5;
   border-radius: 25px;
   margin-bottom: 15px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -993,41 +990,33 @@ mark {
 }
 
 .trending-tags {
-  background-color: #f7f9fa;
-  border-radius: 15px;
+  background-color: #f0f2f5; /* 白色背景 */
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); /* 添加阴影效果 */
   padding: 15px;
-  margin-bottom: 20px;
+  margin-top: 20px;
 }
 
 .trending-tags h2 {
-  font-size: 20px;
-  color: #14171a;
+  color: #333333; /* 深灰色标题 */
+  font-size: 18px;
   margin-bottom: 15px;
-}
-
-#topTagsList {
-  list-style-type: none;
-  padding: 0;
+  font-weight: bold;
 }
 
 .trending-tag-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #e6ecf0;
-}
-
-.trending-tag-item:last-child {
-  border-bottom: none;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background-color: #f8f9fa; /* 浅灰色背景 */
+  border-radius: 4px;
 }
 
 .tag-name {
-  font-weight: bold;
-  color: #1da1f2;
+  color: #495057; /* 中灰色文本 */
+  font-size: 14px;
+  text-decoration: none;
 }
 
-.tag-count {
-  font-size: 14px;
-  color: #657786;
+.tag-name:hover {
+  text-decoration: underline;
 }
