@@ -14,13 +14,21 @@ let allNotesLoaded = false;
 let originalNotes = [];
 let isShowingSearchResults = false;
 let isGeneratingComment = false;
+let loadingTimeout;
 
 function showLoadingIndicator() {
   document.getElementById('loading-indicator').classList.remove('hidden');
+  
+  // 设置48秒超时
+  loadingTimeout = setTimeout(() => {
+    hideLoadingIndicator();
+    showErrorMessage("Loading timed out. Please refresh the page and try again.");
+  }, 48000);
 }
 
 function hideLoadingIndicator() {
   document.getElementById('loading-indicator').classList.add('hidden');
+  clearTimeout(loadingTimeout);
 }
 
 function updateNoteList(notesToDisplay, append = false) {
@@ -296,8 +304,10 @@ async function initializeUI() {
     }
 
     setupEventListeners();
-    originalNotes = await noteOperations.getNotes();
-    updateNoteList(originalNotes);
+    
+    // 将初始加载的笔记设置为 originalNotes
+    originalNotes = initialNotes;
+
   } catch (error) {
     console.error('Error initializing UI:', error);
     showErrorMessage('An error occurred while loading notes. Please refresh the page and try again.');

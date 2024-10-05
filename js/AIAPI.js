@@ -203,7 +203,7 @@ class AIAPI {
             auto_save_history: true, // 自动保存对话历史
             additional_messages: [{
               role: "user", // 设置消息角色为用户
-              content: `Generate one comment for the following content: ${content}`, // 构建请求评论生成的提示信息
+              content: `Generate only one comment for the following content: ${content}`, // 构建请求评论生成的提示信息
               content_type: "text" // 指定内容类型为文本
             }]
           };
