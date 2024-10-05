@@ -50,9 +50,6 @@ function showAllNotesLoadedMessage() {
 
 function showErrorMessage(message) {
   console.error(message);
-  // 可以添加一个 toast 或者 alert 来显示错误消息
-  // 例如：
-  // alert(message);
 }
 
 function updateNoteList(notesToDisplay, append = false) {
