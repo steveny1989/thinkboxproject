@@ -255,9 +255,15 @@ async function handleSearch(event) {
       isShowingSearchResults = true;
       updateNoteList(searchResults);
       showSearchResultsInfo(searchResults.length, searchTerm);
+      // 应用高亮到搜索结果
+      const noteElements = document.querySelectorAll('.note-item');
+      noteElements.forEach(noteElement => applyHighlight(noteElement, searchTerm));
+      
     } catch (error) {
-      console.error('Error searching notes:', error);
+      console.error('Error during search:', error);
       showErrorMessage('An error occurred while searching. Please try again.');
+    } finally {
+      hideLoadingIndicator();
     }
   }
 }
@@ -747,4 +753,26 @@ function renderSingleComment(comment) {
       </div>
     </div>
   `;
+}
+
+function highlightText(text, searchTerm) {
+  if (!searchTerm) return text;
+  const regex = new RegExp(`(${searchTerm})`, 'gi');
+  return text.replace(regex, '<mark>$1</mark>');
+}
+
+function applyHighlight(noteElement, searchTerm) {
+  if (!searchTerm) return;
+
+  // 高亮笔记内容
+  const noteTextElement = noteElement.querySelector('.note-text');
+  if (noteTextElement) {
+    noteTextElement.innerHTML = highlightText(noteTextElement.textContent, searchTerm);
+  }
+
+  // 高亮标签（如果存在）
+  const tagElements = noteElement.querySelectorAll('.tag');
+  tagElements.forEach(tagElement => {
+    tagElement.innerHTML = highlightText(tagElement.textContent, searchTerm);
+  });
 }

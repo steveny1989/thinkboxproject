@@ -825,3 +825,9 @@ body {
   color: #666;
   font-style: italic;
 }
+
+mark {
+  background-color: yellow;
+  padding: 2px;
+  border-radius: 2px;
+}
