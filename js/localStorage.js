@@ -1,5 +1,6 @@
 const LOCAL_STORAGE_KEY = 'thinkbox_notes';
 const LOCAL_STORAGE_TAGS_KEY = 'thinkbox_tags';
+const TEMP_TO_SERVER_NOTE_MAP_KEY = 'thinkbox_temp_to_server_note_map';
 
 export const localStorageService = {
   saveNotes(notes) {
@@ -116,6 +117,24 @@ export const localStorageService = {
     } catch (error) {
       console.error('Error getting tags for note from localStorage:', error);
       return [];
+    }
+  },
+
+  saveTempToServerNoteMap(map) {
+    try {
+      localStorage.setItem(TEMP_TO_SERVER_NOTE_MAP_KEY, JSON.stringify(Array.from(map.entries())));
+    } catch (error) {
+      console.error('Error saving temp to server note map to localStorage:', error);
+    }
+  },
+
+  getTempToServerNoteMap() {
+    try {
+      const mapData = localStorage.getItem(TEMP_TO_SERVER_NOTE_MAP_KEY);
+      return mapData ? new Map(JSON.parse(mapData)) : new Map();
+    } catch (error) {
+      console.error('Error getting temp to server note map from localStorage:', error);
+      return new Map();
     }
   }
 };

@@ -14,6 +14,7 @@ class NoteOperations {
       "Kelly", "Logan", "Morgan", "Noel", "Oakley", 
       "Parker", "Quinn", "Riley", "Sage", "Taylor"
     ];
+    this.tempToServerNoteMap = new Map(localStorageService.getTempToServerNoteMap());
   }
 
   async loadNotes() {
@@ -43,11 +44,24 @@ class NoteOperations {
       throw new Error('Invalid note text');
     }
     try {
+      const tempId = 'temp-' + Date.now();
+      const tempNote = { note_id: tempId, content: noteText, created_at: new Date().toISOString() };
+      this.notes.unshift(tempNote);
+      this.tempToServerNoteMap.set(tempId, null); // 初始时，服务器ID为null
+
       const newNote = await this.api.notes.addNote({ content: noteText });
-      this.notes.unshift(newNote);
-      localStorageService.saveNotes(this.notes);
       
-      // 异步生成标签，不等待完成
+      // 更新映射和笔记列表
+      this.tempToServerNoteMap.set(tempId, newNote.note_id);
+      const index = this.notes.findIndex(note => note.note_id === tempId);
+      if (index !== -1) {
+        this.notes[index] = newNote;
+      }
+
+      localStorageService.saveNotes(this.notes);
+      localStorageService.saveTempToServerNoteMap(this.tempToServerNoteMap);
+
+      // 异步生成标签
       this.generateAndSaveTagsForNote(newNote).then(tags => {
         newNote.tags = tags;
         localStorageService.saveNotes(this.notes);
@@ -68,23 +82,34 @@ class NoteOperations {
     // 从内存中移除笔记
     this.notes = this.notes.filter(note => note.note_id !== noteId);
 
-    // 如果不是临时笔记，从服务器删除
-    if (!noteId.startsWith('temp-')) {
+    // 更新本地存储
+    await localStorageService.saveNotes(this.notes);
+
+    if (noteId.startsWith('temp-')) {
+      const serverNoteId = this.tempToServerNoteMap.get(noteId);
+      if (serverNoteId) {
+        try {
+          await this.api.notes.deleteNote(serverNoteId);
+          console.log(`NoteOperations: Corresponding server note ${serverNoteId} deleted for temp note ${noteId}`);
+        } catch (error) {
+          console.error(`NoteOperations: Error deleting server note ${serverNoteId} for temp note ${noteId}:`, error);
+        }
+      }
+      this.tempToServerNoteMap.delete(noteId);
+    } else {
       try {
         await this.api.notes.deleteNote(noteId);
         console.log(`NoteOperations: Note ${noteId} deleted from server`);
       } catch (error) {
         console.error(`NoteOperations: Error deleting note ${noteId} from server:`, error);
-        throw error; // 将错误抛出，让 UI 层处理
+        throw error;
       }
     }
 
-    // 更新本地存储
-    localStorageService.saveNotes(this.notes);
-
     // 从生成的标签映射中删除
     this.generatedTagsMap.delete(noteId);
-    localStorageService.saveTags(Array.from(this.generatedTagsMap.entries()));
+    await localStorageService.saveTags(Array.from(this.generatedTagsMap.entries()));
+    await localStorageService.saveTempToServerNoteMap(this.tempToServerNoteMap);
 
     console.log(`NoteOperations: Note ${noteId} deletion completed`);
     return true;
