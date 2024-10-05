@@ -129,12 +129,16 @@ export const localStorageService = {
   },
 
   getTempToServerNoteMap() {
+    const mapString = localStorage.getItem(TEMP_TO_SERVER_NOTE_MAP_KEY);
+    console.log('Raw localStorage tempToServerNoteMap:', mapString);
+    if (!mapString) return null;
     try {
-      const mapData = localStorage.getItem(TEMP_TO_SERVER_NOTE_MAP_KEY);
-      return mapData ? new Map(JSON.parse(mapData)) : new Map();
+      const parsed = JSON.parse(mapString);
+      console.log('Parsed tempToServerNoteMap:', parsed);
+      return parsed;
     } catch (error) {
-      console.error('Error getting temp to server note map from localStorage:', error);
-      return new Map();
+      console.error('Error parsing tempToServerNoteMap from localStorage:', error);
+      return null;
     }
   }
 };

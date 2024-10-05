@@ -5,7 +5,18 @@ import { localStorageService } from './localStorage.js';
 class NoteOperations {
   constructor() {
     this.notes = [];  // 初始化为空数组
-    this.generatedTagsMap = new Map(localStorageService.getTags());
+
+    // 处理 generatedTagsMap
+    this.generatedTagsMap = new Map();
+    const tagsFromStorage = localStorageService.getTags();
+    console.log('Raw tagsFromStorage:', tagsFromStorage);
+    if (tagsFromStorage && typeof tagsFromStorage === 'object') {
+      Object.entries(tagsFromStorage).forEach(([key, value]) => {
+        this.generatedTagsMap.set(key, value);
+      });
+    }
+    console.log('Initialized generatedTagsMap:', this.generatedTagsMap);
+    
     this.api = api;
     this.helper = helper;
     this.randomNames = [
@@ -14,7 +25,18 @@ class NoteOperations {
       "Kelly", "Logan", "Morgan", "Noel", "Oakley", 
       "Parker", "Quinn", "Riley", "Sage", "Taylor"
     ];
-    this.tempToServerNoteMap = new Map(localStorageService.getTempToServerNoteMap());
+    // 处理 tempToServerNoteMap
+    this.tempToServerNoteMap = new Map();
+    const tempToServerNoteMapFromStorage = localStorageService.getTempToServerNoteMap();
+    console.log('Raw tempToServerNoteMapFromStorage:', tempToServerNoteMapFromStorage);
+
+    if (tempToServerNoteMapFromStorage && typeof tempToServerNoteMapFromStorage === 'object') {
+      Object.entries(tempToServerNoteMapFromStorage).forEach(([key, value]) => {
+        this.tempToServerNoteMap.set(key, value);
+      });
+    }
+
+    console.log('Initialized tempToServerNoteMap:', this.tempToServerNoteMap);
   }
 
   async loadNotes() {
@@ -106,7 +128,7 @@ class NoteOperations {
       }
     }
 
-    // 从生成的��签映射中删除
+    // 从生成的签映射中删除
     this.generatedTagsMap.delete(noteId);
     await localStorageService.saveTags(Array.from(this.generatedTagsMap.entries()));
     await localStorageService.saveTempToServerNoteMap(this.tempToServerNoteMap);
