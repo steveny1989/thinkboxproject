@@ -421,6 +421,7 @@ async function initializeTrendingTags() {
         return `
           <li class="trending-tag-item">
             <span class="tag-name">#${tag.name || 'Unknown'}</span>
+            <span class="tag-count">${tag.count || 0}</span>
           </li>
         `;
       }).join('');
@@ -436,8 +437,8 @@ async function initializeTrendingTags() {
   // 初始加载
   await fetchAndUpdateTrendingTags();
 
-  // 每30分钟更新一次
-  setInterval(fetchAndUpdateTrendingTags, 30 * 60 * 1000);
+  // 每60分钟更新一次
+  setInterval(fetchAndUpdateTrendingTags, 60 * 60 * 1000);
 }
 
 function setupEventListeners() {

@@ -1005,10 +1005,14 @@ mark {
 }
 
 .trending-tag-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 10px;
   padding: 8px 12px;
-  background-color: #f8f9fa; /* 浅灰色背景 */
+  background-color: #f8f9fa;
   border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
 .tag-name {
@@ -1019,4 +1023,13 @@ mark {
 
 .tag-name:hover {
   text-decoration: underline;
+}
+
+.tag-count {
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 400;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
 }

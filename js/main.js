@@ -4,7 +4,12 @@ import { auth } from './firebase.js';
 import noteOperations from './noteOperations.js';
 import { initializeUI, handleLogout, updateNoteList } from './ui.js';
 
+// 添加加载指示器的引用
+const loadingIndicator = document.getElementById('loading-indicator');
+
 async function handleAuthStateChange(user) {
+  loadingIndicator.style.display = 'block'; // 显示加载指示器
+  
   if (user) {
     console.log('User authenticated:', user.email);
     try {
@@ -18,6 +23,8 @@ async function handleAuthStateChange(user) {
     console.log('User not authenticated. Redirecting to login page...');
     handleLogout();
   }
+  
+  loadingIndicator.style.display = 'none'; // 隐藏加载指示器
 }
 
 auth.onAuthStateChanged(handleAuthStateChange);
