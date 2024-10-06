@@ -28,11 +28,15 @@
             <!-- 笔记部分 -->
             <div id="notesSection" class="content-section">
                 <div class="input-container">
-                    <textarea id="noteInput" placeholder="What's in your mind?" rows="6"></textarea>
-                    <button id="addNoteButton" type="button">Post</button>
-                    <button id="voiceInputButton" type="button" aria-label="Voice Input" title="Voice Input">
-                        <i class="fas fa-microphone"></i>
-                    </button>
+                    <textarea id="noteInput" placeholder="What's in your mind?"></textarea>
+                    <div class="voice-button-container">
+                        <button id="voiceInputButton" type="button" aria-label="Voice Input" title="Voice Input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    <div class="post-button-container">
+                        <button id="addNoteButton" type="button">Post</button>
+                    </div>
                 </div>
                 <div class="search-container">
                     <input type="text" id="searchInput" placeholder="Search notes...">

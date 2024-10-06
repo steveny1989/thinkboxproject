@@ -98,6 +98,41 @@ body {
     background-color: #e0f0ff;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* 增加悬停时的阴影 */
   }
+
+  .button-container {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+#addNoteButton, #voiceInputButton {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#addNoteButton {
+    background-color: #007bff;
+    color: white;
+}
+
+#voiceInputButton {
+    background-color: #6c757d;
+    color: white;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+#voiceInputButton.active {
+    background-color: #dc3545;
+}
   
   #searchInput {
     width: 100%;
@@ -1119,4 +1154,82 @@ mark {
 /* 确保 textarea 有相对定位 */
 #noteInput {
   position: relative;
+}
+
+input-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+#noteInput {
+  width: 100%;
+  height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+  resize: vertical;
+  min-height: 100px;
+  padding: 20px;
+  padding-bottom: 60px; /* 为按钮留出空间 */
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.voice-button-container {
+  position: absolute;
+  bottom: 15px;
+  left: 15px; /* 将语音按钮放在左下角 */
+}
+
+.post-button-container {
+  position: absolute;
+  bottom: 15px;
+  right: 15px; /* 保持发布按钮在右下角 */
+}
+
+#voiceInputButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background-color: #4285f4; /* 改为蓝色，与 addNoteButton 一致 */
+  color: white; /* 改为白色，以便在蓝色背景上更易见 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+#addNoteButton {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 20px;
+  background-color: #4285f4;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+#voiceInputButton:hover {
+  background-color: #e8eaed;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#addNoteButton:hover {
+  background-color: #3367d6;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#voiceInputButton.active {
+  background-color: #ea4335;
+  color: white;
 }
