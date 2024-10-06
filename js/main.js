@@ -12,8 +12,6 @@ let isInitialized = false;
 async function handleAuthStateChange(user) {
   if (isInitialized) return;
   
-  loadingIndicator.style.display = 'block';
-  
   if (user) {
     console.log('User authenticated:', user.email);
     try {
@@ -40,7 +38,6 @@ async function handleAuthStateChange(user) {
     handleLogout();
   }
   
-  loadingIndicator.style.display = 'none';
   isInitialized = true;
 }
 

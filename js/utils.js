@@ -31,3 +31,12 @@ export function getMySQLDateTime() {
   
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+
+export function isValidUrl(string) {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}

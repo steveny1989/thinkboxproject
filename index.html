@@ -30,6 +30,9 @@
                 <div class="input-container">
                     <textarea id="noteInput" placeholder="What's in your mind?" rows="6"></textarea>
                     <button id="addNoteButton" type="button">Post</button>
+                    <button id="voiceInputButton" type="button" aria-label="Voice Input" title="Voice Input">
+                        <i class="fas fa-microphone"></i>
+                    </button>
                 </div>
                 <div class="search-container">
                     <input type="text" id="searchInput" placeholder="Search notes...">
@@ -37,7 +40,7 @@
                 <ul id="noteList"></ul>
                 <div id="loadingIndicator" class="loading-indicator hidden">
                     <div class="spinner"></div>
-                    <span>Loading more notes...</span>
+                    <span id="loadingMessage">Loading...</span>
                 </div>
                 <div id="allNotesLoaded" class="all-notes-loaded hidden">
                     You've reached the end of your notes.
@@ -58,8 +61,5 @@
 
     <!-- 引入 JavaScript 文件 -->
     <script type="module" src="/js/main.js"></script>
-    <div id="loading-indicator" class="loading-indicator hidden">
-        <div class="spinner"></div>
-    </div>
 </body>
 </html>

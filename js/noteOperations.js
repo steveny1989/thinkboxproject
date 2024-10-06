@@ -386,6 +386,10 @@ class NoteOperations {
     }
   }
   
+  getTotalNoteCount() {
+    return this.notes.length;
+  }
+  
 }
 
 const noteOperations = new NoteOperations();

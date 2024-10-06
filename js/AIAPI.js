@@ -2,6 +2,7 @@ import { auth } from './firebase.js';
 
 const COZE_API_URL = 'https://api.coze.cn/v3/chat';
 const COZE_API_KEY = 'pat_7ds29bjXUQ2MU6iXoKCM00yz6n9mif4UPHvsdZp2zSQN4vMQoNx1rBOEKLcb8qxX';
+const JINA_API_KEY = 'jina_7d693e7cf3f3489a882cae33f1a957cc-CE2ZEhuNGJR1y2_I80ybPjDiiRC';
 
 class AIAPI {
 
@@ -350,6 +351,133 @@ class AIAPI {
           }
         } catch (error) {
           console.error('Error in tagsCommentor:', error);
+          throw error;
+        }
+      }
+
+      async fetchWebContent(url) {
+        console.log('Fetching web content for URL:', url);
+        const user = auth.currentUser;
+        if (!user) {
+          console.error('No user logged in');
+          throw new Error('No user logged in');
+        }
+
+        try {
+          const readerUrl = `https://r.jina.ai/${url}`;
+          
+          console.log('Sending request to:', readerUrl);
+          const response = await fetch(readerUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${JINA_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error response body:', errorText);
+            throw new Error(`Web content fetching failed: ${response.status} ${response.statusText}. ${errorText}`);
+          }
+
+          const content = await response.text();
+          console.log('Fetched content (first 200 chars):', content.substring(0, 200));
+          return content;
+        } catch (error) {
+          console.error('Error in fetchWebContent:', error);
+          throw error;
+        }
+      }
+
+      async rewriteContent(content) {
+        const user = auth.currentUser;
+        if (!user) {
+          console.error('No user logged in');
+          throw new Error('No user logged in');
+        }
+      
+        try {
+          const rewriteRequest = {
+            bot_id: "7422650152651472907", // 请替换为专门用于改写的机器人ID
+            user_id: "123",
+            stream: false,
+            auto_save_history: true,
+            additional_messages: [{
+              role: "user",
+              content: `请改写以下内容，保持原意的同时使用不同的表达方式：\n\n${content}`,
+              content_type: "text"
+            }]
+          };
+      
+          console.log('Sending rewrite request:', JSON.stringify(rewriteRequest, null, 2));
+      
+          const response = await fetch(`${COZE_API_URL}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${COZE_API_KEY}`
+            },
+            body: JSON.stringify(rewriteRequest)
+          });
+      
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
+      
+          if (!response.ok) {
+            const errorBody = await response.text();
+            console.error('Error response body:', errorBody);
+            throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+          }
+      
+          const data = await response.json();
+          console.log('Rewrite API response:', data);
+      
+          if (data.code !== 0) {
+            throw new Error(`Rewrite failed: ${data.msg}`);
+          }
+      
+          const chatId = data.data.id;
+          const conversationId = data.data.conversation_id;
+          let status = "in_progress";
+      
+          while (status === "in_progress") {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const statusResponse = await fetch(`${COZE_API_URL}/retrieve?chat_id=${chatId}&conversation_id=${conversationId}`, {
+              headers: {
+                'Authorization': `Bearer ${COZE_API_KEY}`
+              }
+            });
+      
+            const statusData = await statusResponse.json();
+            if (statusData.code !== 0) {
+              throw new Error(`Failed to retrieve rewrite status: ${statusData.msg}`);
+            }
+            status = statusData.data.status;
+          }
+      
+          const finalResponse = await fetch(`${COZE_API_URL}/message/list?chat_id=${chatId}&conversation_id=${conversationId}`, {
+            headers: {
+              'Authorization': `Bearer ${COZE_API_KEY}`
+            }
+          });
+      
+          const finalData = await finalResponse.json();
+          if (finalData.code !== 0) {
+            throw new Error(`Failed to retrieve final rewrite: ${finalData.msg}`);
+          }
+      
+          if (finalData.data.length > 0) {
+            const rewrittenContent = finalData.data[0].content;
+            return rewrittenContent;
+          } else {
+            throw new Error("No rewritten content found");
+          }
+        } catch (error) {
+          console.error('Error in rewriteContent:', error);
           throw error;
         }
       }

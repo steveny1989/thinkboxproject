@@ -4,6 +4,9 @@ import { formatTimestamp } from './noteHelper.js';
 import { localStorageService } from './localStorage.js';
 import { debounce } from './utils.js';
 import renderHelpers from './renderHelpers.js';
+import { isValidUrl } from './utils.js';
+import api from './api.js';
+import aiAPI from './AIAPI.js';
 
 
 const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
@@ -16,10 +19,39 @@ let isShowingSearchResults = false;
 let isGeneratingComment = false;
 let loadingTimeout;
 
-function showLoadingIndicator() {
-  document.getElementById('loading-indicator').classList.remove('hidden');
-  
+function showLoadingIndicator(message = 'Loading...') {
+  console.log('Attempting to show loading indicator');
+  let loadingIndicator = document.getElementById('loadingIndicator');
+  let loadingMessage;
+
+  if (!loadingIndicator) {
+    console.log('Creating loading indicator');
+    loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'loadingIndicator';
+    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.innerHTML = `
+      <div class="spinner"></div>
+      <span id="loadingMessage"></span>
+    `;
+    document.body.appendChild(loadingIndicator);
+  }
+
+  loadingMessage = document.getElementById('loadingMessage');
+  if (!loadingMessage) {
+    console.warn('Loading message element not found, creating it');
+    loadingMessage = document.createElement('span');
+    loadingMessage.id = 'loadingMessage';
+    loadingIndicator.appendChild(loadingMessage);
+  }
+
+  loadingMessage.textContent = message;
+  loadingIndicator.classList.remove('hidden');
+  console.log('Loading indicator shown with message:', message);
+
   // 设置48秒超时
+  if (loadingTimeout) {
+    clearTimeout(loadingTimeout);
+  }
   loadingTimeout = setTimeout(() => {
     hideLoadingIndicator();
     showErrorMessage("Loading timed out. Please refresh the page and try again.");
@@ -28,12 +60,12 @@ function showLoadingIndicator() {
 
 function hideLoadingIndicator() {
   console.log('Hiding loading indicator');
-  const indicator = document.getElementById('loading-indicator');
+  const indicator = document.getElementById('loadingIndicator');
   if (indicator) {
     indicator.classList.add('hidden');
     console.log('Added hidden class to loading indicator');
   } else {
-    console.warn('Loading indicator element not found');
+    console.warn('Loading indicator element not found when trying to hide');
   }
   if (loadingTimeout) {
     clearTimeout(loadingTimeout);
@@ -417,31 +449,55 @@ async function handleAddNote(event) {
   if (event && event.preventDefault) {
     event.preventDefault();
   }
-  const noteText = noteInput.value.trim();
+  const noteInput = document.getElementById('noteInput');
+  let noteText = noteInput.value.trim();
   if (noteText) {
+    showLoadingIndicator('Processing note...');
     try {
-      // 创建一临时的笔记对象
+      if (isValidUrl(noteText)) {
+        showLoadingIndicator('Fetching web content...');
+        const content = await fetchWebContent(noteText);
+        noteText = content;
+      }
+
+      // 检查内容长度，如果超过500字符，使用AI改写
+      if (noteText.length > 500) {
+        showLoadingIndicator("Rewriting content...");
+        console.log('Content too long, rewriting...');
+        noteText = await aiAPI.rewriteContent(noteText);
+        console.log('Rewritten content:', noteText);
+      }
+
+      // 原有的添加笔记逻辑
+      showLoadingIndicator('Saving note...');
+      // 创建一个临时的笔记对象
       const tempNote = {
-        note_id: 'temp-' + Date.now(), // 临时ID
+        note_id: 'temp-' + Date.now(),
         content: noteText,
         tags: []
       };
 
-            // 添加到内存列表
-            noteOperations.addTempNote(tempNote);
-            
+      // 添加到内存列表
+      noteOperations.addTempNote(tempNote);
+      
       // 立即添加到 UI
       const noteElement = createNoteElement(tempNote);
+      const noteList = document.getElementById('noteList');
       noteList.insertBefore(noteElement, noteList.firstChild);
       noteInput.value = '';
 
-      // 异添加笔记，传更新UI的回调函数
+      // 异步添加笔记，传入更新UI的回调函数
       const newNote = await noteOperations.addNote(noteText, updateNoteTagsInUI);
       
       // 更新 DOM 中的 note_id
       noteElement.dataset.noteId = newNote.note_id;
+
+      console.log('Note added successfully:', newNote);
     } catch (error) {
-      console.error('Error adding note:', error);
+      console.error('Error adding note or fetching web content:', error);
+      showErrorMessage('An error occurred. Please try again.');
+    } finally {
+      hideLoadingIndicator();
     }
   }
 }
@@ -668,7 +724,7 @@ async function handleGenerateComments(noteId) {
       newCommentElement.style.opacity = '0';
       commentsContainer.appendChild(newCommentElement);
 
-      // 触发重排后淡入显示
+      // 触重排后淡入显示
       setTimeout(() => {
         newCommentElement.style.transition = 'opacity 0.5s ease-in';
         newCommentElement.style.opacity = '1';
@@ -845,7 +901,86 @@ function applyHighlight(noteElement, searchTerm) {
   });
 }
 
+function initializeSpeechRecognition() {
+  if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
 
+    recognition.onresult = (event) => {
+      const result = event.results[event.results.length - 1];
+      const transcript = result[0].transcript;
+      document.getElementById('noteInput').value += transcript;
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error', event.error);
+    };
+
+    recognition.onend = () => {
+      isListening = false;
+      updateButtonText();
+    };
+  } else {
+    console.warn('Web Speech API is not supported in this browser');
+    document.getElementById('voiceButton').style.display = 'none';
+  }
+}
+
+function toggleSpeechRecognition() {
+  if (!recognition) {
+    console.warn('Speech recognition is not initialized');
+    return;
+  }
+
+  if (isListening) {
+    recognition.stop();
+    isListening = false;
+  } else {
+    recognition.start();
+    isListening = true;
+  }
+  updateButtonText();
+}
+
+function updateButtonText() {
+  const button = document.getElementById('voiceButton');
+  button.textContent = isListening ? 'Stop Voice Input' : 'Start Voice Input';
+}
+
+async function handleNoteInputChange(event) {
+  const input = event.target;
+  const url = input.value.trim();
+
+  if (isValidUrl(url)) {
+    try {
+      showLoadingIndicator();
+      const content = await fetchWebContent(url);
+      input.value = content;
+    } catch (error) {
+      console.error('Error fetching web content:', error);
+      showErrorMessage('Failed to fetch web content. Please try again.');
+    } finally {
+      hideLoadingIndicator();
+    }
+  }
+}
+
+async function fetchWebContent(url) {
+  try {
+    const content = await api.ai.fetchWebContent(url);
+    return content;
+  } catch (error) {
+    console.error('Error in fetchWebContent:', error);
+    throw error;
+  }
+}
+
+// 初始化
+document.addEventListener('DOMContentLoaded', () => {
+  initializeSpeechRecognition();
+  document.getElementById('voiceButton').addEventListener('click', toggleSpeechRecognition);
+});
 
 // 确保导出 handleAddNote 函数
 export {
