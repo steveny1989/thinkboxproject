@@ -2,7 +2,7 @@ const AUTH_PAGE_URL = "html/auth.html"; // 定义 auth.html 的路径
 
 import { auth } from './firebase.js';
 import noteOperations from './noteOperations.js';
-import { initializeUI, handleLogout, updateNoteList } from './ui.js';
+import { initializeUI, handleLogout, updateNoteList, initializeTrendingTagsAnalysis } from './ui.js';
 
 
 // 添加加载指示器的引用
@@ -28,6 +28,9 @@ async function handleAuthStateChange(user) {
       if (initialNotes && initialNotes.length > 0) {
         updateNoteList(initialNotes);
       }
+
+      // 初始化热门标签分析
+      await initializeTrendingTagsAnalysis();
     } catch (error) {
       console.error('Error in handleAuthStateChange:', error);
       // 显示错误消息给用户

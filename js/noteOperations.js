@@ -104,7 +104,7 @@ class NoteOperations {
     // 从内存中移除笔记
     this.notes = this.notes.filter(note => note.note_id !== noteId);
 
-    // 更新本地存储
+    // 更新本地储
     await localStorageService.saveNotes(this.notes);
 
     if (noteId.startsWith('temp-')) {
@@ -225,24 +225,6 @@ class NoteOperations {
     return this.randomNames[Math.floor(Math.random() * this.randomNames.length)];
   }
 
-  // async saveCommentsToServer(noteId, comments) {
-  //   try {
-  //     const savedComments = await this.api.comments.addComments(noteId, comments);
-  //     // 更新本地笔记中的评论，替换临时 ID 为服务器返回的 ID
-  //     const note = this.notes.find(n => n.note_id === noteId);
-  //     if (note) {
-  //       note.comments = note.comments.map(comment => {
-  //         const savedComment = savedComments.find(sc => sc.content === comment.content);
-  //         return savedComment || comment;
-  //       });
-  //       localStorageService.saveNotes(this.notes);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error saving comments to server:', error);
-  //     // 这里可以添加重试逻辑或通知用户
-  //   }
-  // }
-
   getNotes() {
     return this.notes;  // 返笔记
   }
@@ -275,12 +257,25 @@ class NoteOperations {
     }
   }
   
-  async getPaginatedNotes(lastNoteId = null, limitCount = 24) {
+  async initializePaginatedNotes() {
+    if (this.notes.length === 0) {
+      return this.getPaginatedNotes();
+    }
+    return this.notes;
+  }
+
+  async getPaginatedNotes(lastNoteId = null, limit = 24) {
+    console.log('Fetching paginated notes. lastNoteId:', lastNoteId, 'limit:', limit);
+    
+    if (lastNoteId === null && this.notes.length > 0) {
+      console.log('Returning cached notes');
+      return this.notes;
+    }
+
     try {
-      console.log(`Fetching paginated notes. lastNoteId: ${lastNoteId}, limit: ${limitCount}`);
-      const paginatedNotes = await this.api.notes.getPaginatedNotes(lastNoteId, limitCount);
-      console.log(`Received ${paginatedNotes.length} notes from API`);
-      
+      const paginatedNotes = await this.api.notes.getPaginatedNotes(lastNoteId, limit);
+      console.log('Received', paginatedNotes.length, 'notes from API');
+
       if (lastNoteId === null) {
         console.log('First page, replacing local cache');
         this.notes = paginatedNotes;
@@ -288,8 +283,8 @@ class NoteOperations {
         console.log('Not first page, appending to local cache');
         this.notes = [...this.notes, ...paginatedNotes];
       }
-      
-      console.log(`Total notes in local cache after update: ${this.notes.length}`);
+
+      console.log('Total notes in local cache after update:', this.notes.length);
       
       // 更新本地存储
       localStorageService.saveNotes(this.notes);
@@ -308,11 +303,6 @@ class NoteOperations {
       console.error('Error getting paginated notes:', error);
       throw error;
     }
-  }
-
-  async initializePaginatedNotes() {
-    this.notes = [];  // 清空现有的笔记
-    return this.getPaginatedNotes();  // 加载第一页笔记
   }
 
   async searchNotes(searchTerm) {
@@ -372,6 +362,27 @@ class NoteOperations {
     } catch (error) {
       console.error('Error fetching trending tags:', error);
       return [];
+    }
+  }
+
+  async analyzeTrendingTags(trendingTags) {
+    console.log('Analyzing trending tags:', trendingTags);
+    try {
+      if (!trendingTags || !Array.isArray(trendingTags) || trendingTags.length === 0) {
+        console.log('No valid trending tags provided for analysis');
+        return "No trending tags available for analysis.";
+      }
+
+      const tagsString = trendingTags.map(tag => `#${tag.name} (${tag.count})`).join(', ');
+      console.log('Tags string for analysis:', tagsString);
+
+      const analysisReport = await this.api.ai.tagsCommentor([tagsString]);
+      console.log('Analysis report received:', analysisReport);
+
+      return analysisReport;
+    } catch (error) {
+      console.error('Error in analyzeTrendingTags:', error);
+      return "An error occurred while analyzing trending tags.";
     }
   }
   

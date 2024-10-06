@@ -144,7 +144,7 @@ function setupNoteListeners() {
   // 移除现有的事件监听器（如果有的话）
   noteList.removeEventListener('click', handleNoteListClick);
   
-  // 添加新的事件监听器
+  // 添加的事件监听器
   noteList.addEventListener('click', handleNoteListClick);
 }
 
@@ -337,6 +337,46 @@ async function initializeUI() {
   }
 }
 
+// 新增：延迟加载热门标签分析
+async function initializeTrendingTagsAnalysis() {
+  console.log('Initializing trending tags analysis');
+  try {
+    const trendingTags = await noteOperations.getTrendingTags(10);
+    console.log('Trending tags for analysis:', trendingTags);
+    if (trendingTags.length > 0) {
+      const analysisReport = await noteOperations.analyzeTrendingTags(trendingTags);
+      updateTrendingTagsAnalysis(trendingTags, analysisReport);
+    } else {
+      console.log('No trending tags available for analysis');
+    }
+  } catch (error) {
+    console.error('Error initializing trending tags analysis:', error);
+    showErrorMessage('Failed to analyze trending tags. Please try again later.');
+  }
+}
+
+function updateTrendingTagsAnalysis(trendingTags, analysisReport) {
+  console.log('Updating trending tags analysis');
+  const trendingTagsAnalysisElement = document.getElementById('trending-tags-analysis');
+  if (trendingTagsAnalysisElement) {
+    const tagsHtml = trendingTags.map(tag => `<span class="tag">#${tag.name} (${tag.count})</span>`).join(' ');
+    trendingTagsAnalysisElement.innerHTML = `
+      <h3>Some Suggestions</h3>
+      <div class="analysis-report">
+        <h4></h4>
+        <p>${analysisReport}</p>
+      </div>
+    `;
+    console.log('Trending tags analysis updated');
+  } else {
+    console.warn('Trending tags analysis element not found. Creating element.');
+    const newElement = document.createElement('div');
+    newElement.id = 'trending-tags-analysis';
+    document.body.appendChild(newElement);
+    updateTrendingTagsAnalysis(trendingTags, analysisReport); // 递归调用以更新新创建的元素
+  }
+}
+
 async function loadMoreNotes() {
   if (isShowingSearchResults) {
     console.log('Showing search results, not loading more notes');
@@ -467,6 +507,9 @@ function setupEventListeners() {
 
     // 添加趋势标签功能
     initializeTrendingTags();
+  
+    // 添加趋势标签分析功能
+    initializeTrendingTagsAnalysis();
 
   // 添加搜索功能
   const searchInput = document.getElementById('searchInput');
@@ -517,21 +560,6 @@ function setupEventListeners() {
     }
   });
 }
-
-// 确保导出 handleAddNote 函数
-export {
-  initializeUI,
-  updateNoteList,
-  handleAddNote,
-  handleLogout,
-  updateTagsDisplay,
-  displayGeneratedTags,
-  handleDeleteNote,
-  handleNoteInputKeydown,  // 新添加的函数
-  showLoadingIndicator,
-  hideLoadingIndicator,
-  handleSearch
-};
 
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
@@ -810,3 +838,22 @@ function applyHighlight(noteElement, searchTerm) {
     tagElement.innerHTML = highlightText(tagElement.textContent, searchTerm);
   });
 }
+
+
+
+// 确保导出 handleAddNote 函数
+export {
+  initializeUI,
+  updateNoteList,
+  handleAddNote,
+  handleLogout,
+  updateTagsDisplay,
+  displayGeneratedTags,
+  handleDeleteNote,
+  handleNoteInputKeydown,  // 新添加的函数
+  showLoadingIndicator,
+  hideLoadingIndicator,
+  handleSearch,
+  initializeTrendingTagsAnalysis,
+  updateTrendingTagsAnalysis
+};
