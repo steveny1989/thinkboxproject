@@ -72,6 +72,12 @@ function updateNoteList(notesToDisplay, append = false) {
   noteList.appendChild(fragment);
 
   setupNoteListeners();
+
+  // 显示 "You've reached the end of your notes" 消息
+  const allNotesLoadedElement = document.getElementById('allNotesLoaded');
+  if (allNotesLoadedElement && notesToDisplay.length < 24) { // 假设每页加载24条笔记
+    allNotesLoadedElement.classList.remove('hidden');
+  }
 }
 
 function updateUserInfo(userEmailElement) {
