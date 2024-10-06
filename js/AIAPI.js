@@ -277,6 +277,83 @@ class AIAPI {
           throw error; // 将错误继续向上抛出
         }
       }
+
+      async tagsCommentor(tags) {
+        const user = auth.currentUser;
+        if (!user) {
+          console.error('No user logged in');
+          throw new Error('No user logged in');
+        }
+    
+        try {
+          const tagsCommentRequest = {
+            bot_id: "7422507897416417331", // 请替换为专门用于标签分析的机器人ID
+            user_id: "123",
+            stream: false,
+            auto_save_history: true,
+            additional_messages: [{
+              role: "user",
+              content: `Analyze the following tags and provide feedback and suggestions: ${tags.join(', ')}`,
+              content_type: "text"
+            }]
+          };
+    
+          const commentResponse = await fetch(`${COZE_API_URL}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${COZE_API_KEY}`
+            },
+            body: JSON.stringify(tagsCommentRequest)
+          });
+    
+          const commentData = await commentResponse.json();
+          if (commentData.code !== 0) {
+            throw new Error(`Tags analysis failed: ${commentData.msg}`);
+          }
+    
+          const chatId = commentData.data.id;
+          const conversationId = commentData.data.conversation_id;
+          let status = "in_progress";
+    
+          while (status === "in_progress") {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const statusResponse = await fetch(`${COZE_API_URL}/retrieve?chat_id=${chatId}&conversation_id=${conversationId}`, {
+              headers: {
+                'Authorization': `Bearer ${COZE_API_KEY}`
+              }
+            });
+    
+            const statusData = await statusResponse.json();
+            if (statusData.code !== 0) {
+              throw new Error(`Failed to retrieve tags analysis status: ${statusData.msg}`);
+            }
+            status = statusData.data.status;
+          }
+    
+          const finalResponse = await fetch(`${COZE_API_URL}/message/list?chat_id=${chatId}&conversation_id=${conversationId}`, {
+            headers: {
+              'Authorization': `Bearer ${COZE_API_KEY}`
+            }
+          });
+    
+          const finalData = await finalResponse.json();
+          if (finalData.code !== 0) {
+            throw new Error(`Failed to retrieve final tags analysis: ${finalData.msg}`);
+          }
+    
+          if (finalData.data.length > 0) {
+            const analysisContent = finalData.data[0].content;
+            return analysisContent;
+          } else {
+            throw new Error("No tags analysis content found");
+          }
+        } catch (error) {
+          console.error('Error in tagsCommentor:', error);
+          throw error;
+        }
+      }
+
 }
 
 export default new AIAPI();

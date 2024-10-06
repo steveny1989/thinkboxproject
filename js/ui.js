@@ -349,7 +349,8 @@ async function loadMoreNotes() {
   showLoadingIndicator();
 
   try {
-    const notes = await noteOperations.getPaginatedNotes(lastLoadedNoteId);
+    const lastNoteId = lastLoadedNoteId;
+    const notes = await noteOperations.getPaginatedNotes(lastNoteId);
     if (notes.length === 0) {
       allNotesLoaded = true;
       showAllNotesLoadedMessage();
