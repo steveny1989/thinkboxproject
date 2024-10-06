@@ -1187,8 +1187,8 @@ input-container {
 
 .post-button-container {
   position: absolute;
-  bottom: 15px;
-  right: 15px; /* 保持发布按钮在右下角 */
+  bottom: 10px;
+  right: 10px; /* 保持发布按钮在右下角 */
 }
 
 #voiceInputButton {
