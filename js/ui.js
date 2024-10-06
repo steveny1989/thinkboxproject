@@ -18,6 +18,17 @@ let originalNotes = [];
 let isShowingSearchResults = false;
 let isGeneratingComment = false;
 let loadingTimeout;
+let recognition;
+let isListening = false;
+
+
+if ('webkitSpeechRecognition' in window) {
+  recognition = new webkitSpeechRecognition();
+} else if ('SpeechRecognition' in window) {
+  recognition = new SpeechRecognition();
+} else {
+  console.warn('Speech recognition is not supported in this browser.');
+}
 
 function showLoadingIndicator(message = 'Loading...') {
   console.log('Attempting to show loading indicator');
@@ -902,34 +913,32 @@ function applyHighlight(noteElement, searchTerm) {
 }
 
 function initializeSpeechRecognition() {
-  if ('webkitSpeechRecognition' in window) {
-    recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
-    recognition.onresult = (event) => {
-      const result = event.results[event.results.length - 1];
-      const transcript = result[0].transcript;
-      document.getElementById('noteInput').value += transcript;
-    };
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error', event.error);
-    };
-
-    recognition.onend = () => {
-      isListening = false;
-      updateButtonText();
-    };
-  } else {
-    console.warn('Web Speech API is not supported in this browser');
-    document.getElementById('voiceButton').style.display = 'none';
+  if (!recognition) {
+    console.warn('Speech recognition is not supported in this browser.');
+    return;
   }
+
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = (event) => {
+    const result = event.results[event.results.length - 1];
+    const transcript = result[0].transcript;
+    
+    if (result.isFinal) {
+      const noteInput = document.getElementById('noteInput');
+      noteInput.value += transcript + ' ';
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+  };
 }
 
 function toggleSpeechRecognition() {
   if (!recognition) {
-    console.warn('Speech recognition is not initialized');
+    console.warn('Speech recognition is not supported in this browser.');
     return;
   }
 
@@ -940,12 +949,22 @@ function toggleSpeechRecognition() {
     recognition.start();
     isListening = true;
   }
-  updateButtonText();
+  updateButtonState();
 }
 
-function updateButtonText() {
-  const button = document.getElementById('voiceButton');
-  button.textContent = isListening ? 'Stop Voice Input' : 'Start Voice Input';
+function updateButtonState() {
+  const button = document.getElementById('voiceInputButton');
+  if (button) {
+    if (isListening) {
+      button.classList.add('active');
+      button.setAttribute('aria-label', 'Stop voice input');
+    } else {
+      button.classList.remove('active');
+      button.setAttribute('aria-label', 'Start voice input');
+    }
+  } else {
+    console.warn('Voice input button not found');
+  }
 }
 
 async function handleNoteInputChange(event) {
@@ -979,7 +998,12 @@ async function fetchWebContent(url) {
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
   initializeSpeechRecognition();
-  document.getElementById('voiceButton').addEventListener('click', toggleSpeechRecognition);
+  const voiceButton = document.getElementById('voiceInputButton');
+  if (voiceButton) {
+    voiceButton.addEventListener('click', toggleSpeechRecognition);
+  } else {
+    console.warn('Voice input button not found');
+  }
 });
 
 // 确保导出 handleAddNote 函数

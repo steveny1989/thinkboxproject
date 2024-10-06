@@ -152,24 +152,28 @@ body {
     transform: scale(0.95); /* 点击时缩小 */
   }
 
-  #voiceInputButton {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+/* 在你的 CSS 文件中 */
+#voiceInputButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 #voiceInputButton:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
 
-#voiceInputButton.recording {
-    background-color: #dc3545;
+#voiceInputButton.active {
+  background-color: #dc3545;
+}
+
+#voiceInputButton i {
+  font-size: 20px;
 }
   
   button:hover {
