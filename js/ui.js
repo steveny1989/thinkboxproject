@@ -20,6 +20,7 @@ let isGeneratingComment = false;
 let loadingTimeout;
 let recognition;
 let isListening = false;
+let isAnalyzing = false;
 
 
 if ('webkitSpeechRecognition' in window) {
@@ -370,6 +371,12 @@ async function initializeUI() {
 
 // 新增：延迟加载热门标签分析
 async function initializeTrendingTagsAnalysis() {
+  if (isAnalyzing) {
+    console.log('Analysis already in progress, skipping');
+    return;
+  }
+  
+  isAnalyzing = true;
   console.log('Initializing trending tags analysis');
   try {
     const trendingTags = await noteOperations.getTrendingTags(10);
@@ -383,6 +390,8 @@ async function initializeTrendingTagsAnalysis() {
   } catch (error) {
     console.error('Error initializing trending tags analysis:', error);
     showErrorMessage('Failed to analyze trending tags. Please try again later.');
+  } finally {
+    isAnalyzing = false;
   }
 }
 

@@ -58,9 +58,18 @@ body {
   margin-bottom: 20px;
 }
 
+.header-left {
+  flex: 1;
+  text-align: left;
+}
+
+.header-right {
+  flex: 1;
+  text-align: right;
+}
 .header h1 {
   flex: 1;
-  text-align: center;
+  text-align: left;
   margin: 0;
   color: var(--primary-color);
 }
