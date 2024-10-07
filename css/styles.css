@@ -519,6 +519,7 @@ li {
 /* 标签样式 */
 .note-tags-container {
   margin-top: 5px;
+  margin-left: 10px;
 }
 
 .note-tags {
