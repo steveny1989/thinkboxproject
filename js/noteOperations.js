@@ -5,6 +5,7 @@ import { localStorageService } from './localStorage.js';
 class NoteOperations {
   constructor() {
     this.notes = [];  // 初始化为空数组
+    this.initializeNoteCompletion();
 
     // 处理 generatedTagsMap
     this.generatedTagsMap = new Map();
@@ -94,6 +95,23 @@ class NoteOperations {
       return newNote;
     } catch (error) {
       console.error('Error adding note:', error);
+      throw error;
+    }
+  }
+
+  initializeNoteCompletion() {
+    // 移除这个方法中的 DOM 操作
+    console.log('Note completion initialized');
+  }
+
+  async completeUserInput(partialInput) {
+    if (partialInput.trim() === '') return '';
+
+    try {
+      const completion = await this.api.ai.completeUserInput(partialInput);
+      return completion;
+    } catch (error) {
+      console.error('Error completing user input:', error);
       throw error;
     }
   }
@@ -326,6 +344,13 @@ class NoteOperations {
   }
 
   async getTrendingTags(limit = 10) {
+    const cachedData = localStorageService.getTrendingTagsCache();
+    const currentTime = Date.now();
+    if (cachedData && currentTime < cachedData.expiration) {
+      console.log('Using cached trending tags');
+      return cachedData.tags;
+    }
+
     try {
       const allTags = await api.tags.getAllTags();
       console.log('All tags received:', allTags);
@@ -358,6 +383,9 @@ class NoteOperations {
         .map(([name, count]) => ({ name, count }));
 
       console.log('Sorted and limited tags:', sortedTags);
+
+      const expirationTime = currentTime + this.cacheExpiration;
+      localStorageService.saveTrendingTagsCache(sortedTags, expirationTime);
       return sortedTags;
     } catch (error) {
       console.error('Error fetching trending tags:', error);
@@ -366,6 +394,13 @@ class NoteOperations {
   }
 
   async analyzeTrendingTags(trendingTags) {
+    const cachedData = localStorageService.getTrendingTagsAnalysisCache();
+    const currentTime = Date.now();
+    if (cachedData && currentTime < cachedData.expiration) {
+      console.log('Using cached trending tags analysis');
+      return cachedData.analysis;
+    }
+
     console.log('Analyzing trending tags:', trendingTags);
     try {
       if (!trendingTags || !Array.isArray(trendingTags) || trendingTags.length === 0) {
@@ -379,6 +414,8 @@ class NoteOperations {
       const analysisReport = await this.api.ai.tagsCommentor([tagsString]);
       console.log('Analysis report received:', analysisReport);
 
+      const expirationTime = currentTime + this.cacheExpiration;
+      localStorageService.saveTrendingTagsAnalysisCache(analysisReport, expirationTime);
       return analysisReport;
     } catch (error) {
       console.error('Error in analyzeTrendingTags:', error);
@@ -390,6 +427,10 @@ class NoteOperations {
     return this.notes.length;
   }
   
+  refreshCache() {
+    localStorageService.clearTrendingTagsCache();
+  }
+
 }
 
 const noteOperations = new NoteOperations();

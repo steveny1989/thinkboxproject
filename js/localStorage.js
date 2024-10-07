@@ -1,6 +1,9 @@
 const LOCAL_STORAGE_KEY = 'thinkbox_notes';
 const LOCAL_STORAGE_TAGS_KEY = 'thinkbox_tags';
 const TEMP_TO_SERVER_NOTE_MAP_KEY = 'thinkbox_temp_to_server_note_map';
+const TRENDING_TAGS_CACHE_KEY = 'thinkbox_trending_tags_cache';
+const TRENDING_TAGS_ANALYSIS_CACHE_KEY = 'thinkbox_trending_tags_analysis_cache';
+const CACHE_EXPIRATION_KEY = 'thinkbox_cache_expiration';
 
 export const localStorageService = {
   saveNotes(notes) {
@@ -140,5 +143,83 @@ export const localStorageService = {
       console.error('Error parsing tempToServerNoteMap from localStorage:', error);
       return null;
     }
+  },
+
+  saveTrendingTagsCache(tags, expirationTime) {
+    try {
+      localStorage.setItem(TRENDING_TAGS_CACHE_KEY, JSON.stringify(tags));
+      localStorage.setItem(CACHE_EXPIRATION_KEY, expirationTime.toString());
+      console.log('Trending tags cache saved:', tags);
+    } catch (error) {
+      console.error('Error saving trending tags cache to localStorage:', error);
+    }
+  },
+
+  getTrendingTagsCache() {
+    try {
+      const cachedTags = localStorage.getItem(TRENDING_TAGS_CACHE_KEY);
+      const expirationTime = localStorage.getItem(CACHE_EXPIRATION_KEY);
+      if (cachedTags && expirationTime) {
+        console.log('Trending tags cache retrieved:', JSON.parse(cachedTags));
+        return {
+          tags: JSON.parse(cachedTags),
+          expiration: parseInt(expirationTime)
+        };
+      }
+      console.log('No trending tags cache found');
+      return null;
+    } catch (error) {
+      console.error('Error getting trending tags cache from localStorage:', error);
+      return null;
+    }
+  },
+
+  saveTrendingTagsAnalysisCache(analysis, expirationTime) {
+    try {
+      localStorage.setItem(TRENDING_TAGS_ANALYSIS_CACHE_KEY, JSON.stringify(analysis));
+      localStorage.setItem(CACHE_EXPIRATION_KEY, expirationTime.toString());
+    } catch (error) {
+      console.error('Error saving trending tags analysis cache to localStorage:', error);
+    }
+  },
+
+  getTrendingTagsAnalysisCache() {
+    try {
+      const cachedAnalysis = localStorage.getItem(TRENDING_TAGS_ANALYSIS_CACHE_KEY);
+      const expirationTime = localStorage.getItem(CACHE_EXPIRATION_KEY);
+      if (cachedAnalysis && expirationTime) {
+        return {
+          analysis: JSON.parse(cachedAnalysis),
+          expiration: parseInt(expirationTime)
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting trending tags analysis cache from localStorage:', error);
+      return null;
+    }
+  },
+
+  clearTrendingTagsCache() {
+    try {
+      localStorage.removeItem(TRENDING_TAGS_CACHE_KEY);
+      localStorage.removeItem(CACHE_EXPIRATION_KEY);
+    } catch (error) {
+      console.error('Error clearing trending tags cache from localStorage:', error);
+    }
+  },
+
+  clearTrendingTagsAnalysisCache() {
+    try {
+      localStorage.removeItem(TRENDING_TAGS_ANALYSIS_CACHE_KEY);
+      localStorage.removeItem(CACHE_EXPIRATION_KEY);
+    } catch (error) {
+      console.error('Error clearing trending tags analysis cache from localStorage:', error);
+    }
+  },
+
+  clearAllTrendingCaches() {
+    this.clearTrendingTagsCache();
+    this.clearTrendingTagsAnalysisCache();
   }
 };

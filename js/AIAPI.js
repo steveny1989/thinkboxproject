@@ -482,6 +482,85 @@ class AIAPI {
         }
       }
 
+      async completeUserInput(partialInput) {
+        console.log('Entering AIAPI.completeUserInput', { partialInput });
+        const user = auth.currentUser;
+        if (!user) {
+          console.error('No user logged in');
+          throw new Error('No user logged in');
+        }
+    
+        try {
+          const completionRequest = {
+            bot_id: "7422904350227316751", // 使用适合文本补全的机器人 ID
+            user_id: "123",
+            stream: false,
+            auto_save_history: true,
+            additional_messages: [{
+              role: "user",
+              content: `Complete the following text: ${partialInput}`,
+              content_type: "text"
+            }]
+          };
+    
+          console.log('Completion request body:', JSON.stringify(completionRequest, null, 2));
+    
+          const completionResponse = await fetch(`${COZE_API_URL}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${COZE_API_KEY}`
+            },
+            body: JSON.stringify(completionRequest)
+          });
+    
+          const completionData = await completionResponse.json();
+          if (completionData.code !== 0) {
+            throw new Error(`Completion generation failed: ${completionData.msg}`);
+          }
+    
+          const chatId = completionData.data.id;
+          const conversationId = completionData.data.conversation_id;
+          let status = "in_progress";
+    
+          while (status === "in_progress") {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const statusResponse = await fetch(`${COZE_API_URL}/retrieve?chat_id=${chatId}&conversation_id=${conversationId}`, {
+              headers: {
+                'Authorization': `Bearer ${COZE_API_KEY}`
+              }
+            });
+    
+            const statusData = await statusResponse.json();
+            if (statusData.code !== 0) {
+              throw new Error(`Failed to retrieve completion status: ${statusData.msg}`);
+            }
+            status = statusData.data.status;
+          }
+    
+          const finalResponse = await fetch(`${COZE_API_URL}/message/list?chat_id=${chatId}&conversation_id=${conversationId}`, {
+            headers: {
+              'Authorization': `Bearer ${COZE_API_KEY}`
+            }
+          });
+    
+          const finalData = await finalResponse.json();
+          if (finalData.code !== 0) {
+            throw new Error(`Failed to retrieve final completion: ${finalData.msg}`);
+          }
+    
+          if (finalData.data.length > 0) {
+            const completionContent = finalData.data[0].content;
+            return completionContent;
+          } else {
+            throw new Error("No completion content found");
+          }
+        } catch (error) {
+          console.error('Error in completeUserInput:', error);
+          throw error;
+        }
+      }
+
 }
 
 export default new AIAPI();

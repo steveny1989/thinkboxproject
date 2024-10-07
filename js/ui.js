@@ -456,6 +456,26 @@ async function loadMoreNotes() {
   }
 }
 
+// 在文件顶部添加这个函数定义
+function showNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  }, 3000);
+}
+
+// 修改 handleAddNote 函数
 async function handleAddNote(event) {
   if (event && event.preventDefault) {
     event.preventDefault();
@@ -463,28 +483,42 @@ async function handleAddNote(event) {
   const noteInput = document.getElementById('noteInput');
   let noteText = noteInput.value.trim();
   if (noteText) {
-    showLoadingIndicator('Processing note...');
     try {
       if (isValidUrl(noteText)) {
         showLoadingIndicator('Fetching web content...');
         const content = await fetchWebContent(noteText);
         noteText = content;
+        noteInput.value = noteText;
+        hideLoadingIndicator();
       }
 
       // 检查内容长度，如果超过500字符，使用AI改写
-      if (noteText.length > 500) {
+      if (noteText.length > 500 && !noteInput.dataset.rewritten) {
         showLoadingIndicator("Rewriting content...");
         console.log('Content too long, rewriting...');
-        noteText = await aiAPI.rewriteContent(noteText);
-        console.log('Rewritten content:', noteText);
+        const rewrittenText = await aiAPI.rewriteContent(noteText);
+        console.log('Rewritten content:', rewrittenText);
+        
+        // 更新 noteText 为改写后的内容
+        noteText = rewrittenText;
+        
+        // 更新输入框的内容，让用户看到改写后的内容
+        noteInput.value = rewrittenText;
+        
+        // 显示一个通知，告诉用户内容已被改写
+        showNotification('Content has been rewritten by AI for brevity. Please review and post again if satisfied.');
+        
+        // 标记输入框，表示内容已被改写
+        noteInput.dataset.rewritten = 'true';
+        
+        hideLoadingIndicator();
+        return; // 结束函数执行，等待用户确认改写后的内容
       }
 
-      // 原有的添加笔记逻辑
-      showLoadingIndicator('Saving note...');
       // 创建一个临时的笔记对象
       const tempNote = {
         note_id: 'temp-' + Date.now(),
-        content: noteText,
+        content: noteText, // 使用可能已经被改写的 noteText
         tags: []
       };
 
@@ -495,7 +529,6 @@ async function handleAddNote(event) {
       const noteElement = createNoteElement(tempNote);
       const noteList = document.getElementById('noteList');
       noteList.insertBefore(noteElement, noteList.firstChild);
-      noteInput.value = '';
 
       // 异步添加笔记，传入更新UI的回调函数
       const newNote = await noteOperations.addNote(noteText, updateNoteTagsInUI);
@@ -504,6 +537,13 @@ async function handleAddNote(event) {
       noteElement.dataset.noteId = newNote.note_id;
 
       console.log('Note added successfully:', newNote);
+      
+      // 清空输入框
+      noteInput.value = '';
+      
+      // 重置输入框状态
+      delete noteInput.dataset.rewritten;
+
     } catch (error) {
       console.error('Error adding note or fetching web content:', error);
       showErrorMessage('An error occurred. Please try again.');
@@ -568,6 +608,11 @@ function setupEventListeners() {
     const logoutButton = document.getElementById('logoutButton');
     if (logoutButton) {
       logoutButton.addEventListener('click', handleLogout);
+    }
+//自动完成的监听器
+    const completeButton = document.getElementById('completeButton');
+    if (completeButton) {
+      completeButton.addEventListener('click', handleCompleteUserInput);
     }
 
   // 添加滚动事件监听器，实现无限滚动
@@ -1006,6 +1051,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+async function handleCompleteUserInput() {
+  const noteInput = document.getElementById('noteInput');
+  const partialInput = noteInput.value;
+
+  if (partialInput.trim() === '') return;
+
+  try {
+    showLoadingIndicator('Completing input...');
+    const completion = await noteOperations.completeUserInput(partialInput);
+    noteInput.value = partialInput + ' ' + completion;
+    noteInput.setSelectionRange(noteInput.value.length, noteInput.value.length);
+    noteInput.focus();
+  } catch (error) {
+    console.error('Error completing user input:', error);
+    showErrorMessage('Failed to complete input. Please try again.');
+  } finally {
+    hideLoadingIndicator();
+  }
+}
+
 // 确保导出 handleAddNote 函数
 export {
   initializeUI,
@@ -1020,5 +1085,27 @@ export {
   hideLoadingIndicator,
   handleSearch,
   initializeTrendingTagsAnalysis,
-  updateTrendingTagsAnalysis
+  updateTrendingTagsAnalysis,
+  handleCompleteUserInput,
 };
+
+// 在文件的适当位置添加这个 CSS
+const style = document.createElement('style');
+style.textContent = `
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .notification.show {
+    opacity: 1;
+  }
+`;
+document.head.appendChild(style);
