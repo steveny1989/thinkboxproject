@@ -119,11 +119,14 @@ body {
   padding-bottom: 60px;
   border: 2px solid var(--border-color);
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 18px;
   box-shadow: 0 4px 8px var(--shadow-color);
   box-sizing: border-box;
   transition: background-color 0.3s, box-shadow 0.3s;
   background-color: var(--background-color); /* 使用与整体背景相同的颜色 */
+  border-top: 4px solid var(--secondary-color);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-weight: 400;
 }
 
 .voice-button-container {
@@ -370,7 +373,7 @@ li {
   padding: 8px 16px;  /* 内边距 */
   display: flex;
   justify-content: flex-start;  /* 将按钮靠左对齐 */
-  gap: 8px;  /* 按钮之间的间距 */
+  gap: 20px;  /* 按钮之间的间距 */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);  /* 轻微的阴影效果 */
   margin-top: -1px;  /* 略微上移，覆盖笔记卡片的底部边框 */
 }
@@ -378,8 +381,8 @@ li {
 .note-actions {
   display: flex;
   justify-content: flex-start;
-  align-items: center;
-  gap: 20px; /* 增加操作按钮之间的间距 */
+  align-items:flex-start;
+  gap: 40px; /* 增加操作按钮之间的间距 */
 }
 
 /* 单个操作包装器样式 */
@@ -394,7 +397,7 @@ li {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 18px; /* 增加图标大小 */
+  font-size: 12px; /* 增加图标大小 */
   color: #555; /* 稍微深一点的颜色 */
   padding: 8px; /* 增加可点击区域 */
   transition: color 0.2s ease, transform 0.2s ease;
@@ -529,7 +532,7 @@ li {
 .tag {
   background-color: #e0f0ff;
   color: #0066cc;
-  font-size: 14px; /* 稍微增加字体大小 */
+  font-size: 12px; /* 稍微增加字体大小 */
   font-weight: 500; /* 添加适度的字体粗细 */
   padding: 6px 14px; /* 增加内边距 */
   border-radius: 16px;
@@ -549,7 +552,7 @@ li {
 /* 加载指示器 */
 .loading-indicator {
   position: absolute;
-  bottom: 50px;
+  top: 50px;
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(255, 255, 255, 0.9);
@@ -565,6 +568,7 @@ li {
 
 .loading-indicator.hidden {
   opacity: 0;
+  transform: translateX(-50%) translateY(-100%);
   pointer-events: none;
 }
 
