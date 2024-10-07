@@ -123,6 +123,7 @@ body {
   box-shadow: 0 4px 8px var(--shadow-color);
   box-sizing: border-box;
   transition: background-color 0.3s, box-shadow 0.3s;
+  background-color: var(--background-color); /* 使用与整体背景相同的颜色 */
 }
 
 .voice-button-container {
@@ -279,11 +280,18 @@ li {
 }
 
 .note-container {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 15px;
+  border: 1px solid #e0e0e0;  /* 添加浅灰色边框 */
+  border-radius: 8px;  /* 圆角边框 */
+  padding: 16px;  /* 内边距 */
+  margin-bottom: 8px;  /* 笔记之间的间距 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);  /* 轻微的阴影效果 */
+  transition: box-shadow 0.3s ease, transform 0.3s ease;  /* 添加过渡效果 */
+  border-top: 4px solid var(--secondary-color);  
+}
+
+.note-container:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  /* 悬停时增强阴影 */
+  transform: translateY(-2px);  /* 轻微上浮效果 */
 }
 
 .note-content {
@@ -353,20 +361,32 @@ li {
 }
 
 /* 笔记操作容器样式 */
+
+.note-actions-container {
+  background-color: #f8f9fa;  /* 略微浅一点的背景色 */
+  border: 1px solid #e0e0e0;  /* 与笔记卡片相同的边框 */
+  border-top: none;  /* 移除顶部边框，使其看起来像卡片的延续 */
+  border-radius: 0 0 8px 8px;  /* 只在底部添加圆角 */
+  padding: 8px 16px;  /* 内边距 */
+  display: flex;
+  justify-content: flex-start;  /* 将按钮靠左对齐 */
+  gap: 8px;  /* 按钮之间的间距 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);  /* 轻微的阴影效果 */
+  margin-top: -1px;  /* 略微上移，覆盖笔记卡片的底部边框 */
+}
+
 .note-actions {
   display: flex;
   justify-content: flex-start;
   align-items: center;
   gap: 20px; /* 增加操作按钮之间的间距 */
-  margin-top: 15px; /* 与笔记内容保持一定距离 */
-  padding: 10px 0; /* 增加上下内边距 */
 }
 
 /* 单个操作包装器样式 */
 .action-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px; /* 图标和计数之间的间距 */
+  gap: 5px; /* 图标和计数之间的间距 */
 }
 
 /* 操作按钮样式 */
@@ -793,16 +813,18 @@ mark {
 }
 
 .tag-count {
-  font-size: 12px;
-  color: #65676b;
-  background-color: #ffffff;
-  padding: 2px 6px;
+  font-size: 11px;
+  background-color: rgba(0, 123, 255, 0.1);  /* 使用主色的半透明版本 */
+  padding: 3px 8px;
   border-radius: 12px;
-  font-weight: bold;
+  font-weight: 600;
+  display: inline-block;
+  margin-left: 8px;
+  transition: background-color 0.1s ease;
 }
 
 #trending-tags-container {
-  background-color: #ffffff;
+  background-color: var(--background-color); 
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -830,7 +852,7 @@ mark {
 
 /* 趋势标签分析容器 */
 #trending-tags-analysis {
-  background-color: #ffffff;
+  background-color: var(--background-color); 
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 20px;
