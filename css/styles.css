@@ -1,683 +1,411 @@
+/* 全局样式 */
+:root {
+  --primary-color: #007BFF;
+  --secondary-color: #0056b3;
+  --background-color: #f8f9fa;
+  --text-color: #333;
+  --border-color: #ccc;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    background-color: #f0f2f5; /* 背景颜色 */
-    display: flex;
-    min-height: 100vh;
-  }
-  
-  h1 {
-    text-align: center;
-    color: #007BFF; /* 蓝色 */
-    margin-bottom: 1.25rem; /* 20px */
-  }
-  
-  .container {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f0f2f5; /* 白色背景 */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 添加阴影 */
-    border-radius: 10px; /* 圆角 */
-  }
-  
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background-color: #f0f2f5;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .header h1 {
-    flex: 1;
-    text-align: center;
-    margin: 0;
-  }
-  
-  .user-info {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex: 1;
-  }
-  
-  #userEmail {
-    margin-right: 10px;
-    font-size: 12px; /* 调整字体大小 */
-    color: #333;
-  }
-  
-  .logout-button {
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 5px 10px; /* 调整内边距 */
-    cursor: pointer;
-    font-size: 12px; /* 调整字体大小 */
-  }
-  
-  .logout-button:hover {
-    background-color: #0056b3;
-  }
-  
-  .main-content {
-    max-width: 800px; /* 或者您认为合适的宽度 */
-    margin: 0 auto; /* 居中内容 */
-    padding: 0 20px; /* 添加一些左右内边距 */
-  }
-  
-  .input-container, .search-container {
-    margin-bottom: 20px;
-  }
-  textarea#noteInput {
-    width: 100%;
-    height:200px;
-    max-height: 400px; /* 设置最大高度 */
-    overflow-y: auto; /* 添加垂直滚动条 */
-    resize: vertical; /* 允许垂直调整大小 */
-    min-height: 100px; /* 设置最小高度 */
-    padding: 20px; /* 增加内边距 */
-    border: 2px solid #ccc; /* 增加边框宽度 */
-    border-radius: 8px; /* 增加圆角半径 */
-    font-size: 20px; /* 增加字体大小 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 增加阴影 */
-    background-color:  #f0f2f5;
-    box-sizing: border-box;
-    transition: background-color 0.3s, box-shadow 0.3s; /* 添加过渡效果 */
-  }
-  
-  textarea#noteInput:hover {
-    background-color: #e0f0ff;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* 增加悬停时的阴影 */
-  }
-
-  .button-container {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    display: flex;
-    gap: 10px;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: var(--background-color);
+  display: flex;
+  min-height: 100vh;
 }
 
-#addNoteButton, #voiceInputButton {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+/* 布局 */
+.layout-container {
+  display: flex;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
-#addNoteButton {
-    background-color: #007bff;
-    color: white;
+.left-sidebar {
+  width: 275px;
+  padding: 20px;
+  background-color: var(--background-color);
+  border-right: 1px solid #e6ecf0;
 }
 
-#voiceInputButton {
-    background-color: #6c757d;
-    color: white;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+.main-content {
+  flex: 1;
+  padding: 30px;
+  max-width: calc(100% - 600px);
 }
 
-#voiceInputButton.active {
-    background-color: #dc3545;
+.right-sidebar {
+  width: 290px;
+  padding: 20px;
+  background-color: var(--background-color);
+  border-left: 1px solid #e6ecf0;
 }
-  
-  #searchInput {
-    width: 100%;
-    padding: 15px; /* 保持原样 */
-    border: 2px solid #ccc; /* 保持原样 */
-    border-radius: 8px; /* 保持原样 */
-    font-size: 18px; /* 保持原样 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 保持原样 */
-    background-color:  #f0f2f5;
-    box-sizing: border-box;
-    transition: background-color 0.3s, box-shadow 0.3s; /* 保持原样 */
-  }
-  
-  #searchInput:hover {
-    background-color: #e0f0ff;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* 保持原样 */
-  }
-  .input-container {
-    position: relative;
-  }
 
-  #addNoteButton {
-    font-family: 'Noto Sans SC', sans-serif;
-    background: #007bff;
-    color:  #f0f2f5;
-    border: none;
-    border-radius: 40px; /* 更圆滑的形状 */
-    width: 80px; /* 增加宽度 */
-    height: 40px; /* 增加高度 */
-    font-size: 14px; /* 增加字体大小 */
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 增加阴影 */
-    transition: background-color 0.3s, transform 0.2s; /* 添加过渡效果 */
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-  }
+/* 头部样式 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: var(--background-color);
+  box-shadow: 0 2px 4px var(--shadow-color);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
 
-  #addNoteButton::after {
-    content: '';
-  }
+.header h1 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+  color: var(--primary-color);
+}
 
-  #addNoteButton:hover {
-    background-color: #0056b3; /* 悬停时的背景颜色 */
-    transform: scale(1.05); /* 悬停时放大 */
-  }
-  
-  #addNoteButton:active {
-    transform: scale(0.95); /* 点击时缩小 */
-  }
+.user-info {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+}
 
-/* 在你的 CSS 文件中 */
+#userEmail {
+  margin-right: 10px;
+  font-size: 12px;
+  color: var(--text-color);
+}
+
+.logout-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.logout-button:hover {
+  background-color: var(--secondary-color);
+}
+
+/* 输入区域 */
+.input-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+#noteInput {
+  width: 100%;
+  height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+  resize: vertical;
+  min-height: 100px;
+  padding: 20px;
+  padding-bottom: 60px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 16px;
+  box-shadow: 0 4px 8px var(--shadow-color);
+  box-sizing: border-box;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.voice-button-container {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+}
+
+.post-button-container {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
 #voiceInputButton {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
   border: none;
-  background-color: #007bff;
+  border-radius: 50%;
+  background-color: #4285f4;
   color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition: background-color 0.3s, box-shadow 0.3s;
 }
 
-#voiceInputButton:hover {
-  background-color: #0056b3;
+#completeButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #4285f4;
+  cursor: pointer;
+}
+
+#addNoteButton {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 20px;
+  background-color: #4285f4;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+#voiceInputButton:hover,
+#addNoteButton:hover {
+  background-color: #3367d6;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 #voiceInputButton.active {
-  background-color: #dc3545;
+  background-color: #ea4335;
 }
 
-#voiceInputButton i {
-  font-size: 20px;
-}
-  
-  button:hover {
-    background-color: #0056b3; /* 深蓝色 */
-    transform: scale(1.05); /* 悬停时放大 */
-  }
-  
-  ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  li {
-    background-color: #f0f2f5;
-    margin-bottom: 10px; /* 增加列表项之间的间距 */
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    overflow: hidden; /* 确保内容不会溢出 */
-    position: relative; /* 为下拉菜单定位 */
-  }
-  
-  .note-content {
-    padding: 15px;
-    background-color:  #f0f2f5;
-    margin-bottom: 10px;
-  }
-  
-  .note-content span {
-    display: block;
-    margin-bottom: 2px;
-  }
-  
-  .timestamp-dropdown-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .timestamp {
-    font-size: 0.8em;
-    color: #888;
-    margin-right: 10px; /* 增加时间戳和下拉菜单之间的间距 */
-  }
-  
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
-  
-  .dropdown-trigger {
-    cursor: pointer;
-    font-size: 16px;
-    line-height: 1;
-    padding: 0;
-    margin: 0;
-    color: #666;
-    right:0;
-  }
-  
-  .dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 100%;
-    background-color: #f0f2f5;
-    min-width: 100px;
-    margin-top: 5px;
-    padding: 5px;
-    box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
-    z-index: 1;
-    border-radius: 4px;
-  }
-  
-  .dropdown-content a {
-    color: #333;
-    padding: 4px 8px;
-    text-decoration: none;
-    display: block;
-    font-size: 10px;
-    text-align: right;
-    transition: background-color 0.2s, color 0.2s;
-  }
-  
-  .dropdown-content a:hover {
-    background-color: #f0f2f5;
-    color: #000;
-  }
-  
-  .dropdown:hover .dropdown-content {
-    display: block;
-  }
-
-  .note-tags-container {
-    padding: 10px 15px;
-    background-color: #f0f2f5;
-    border-top: 1px solid #e0e0e0;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .note-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-  }
-  
-  .tag {
-    background-color: #f0f2f5;
-    color: #666;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
-  }
-  
-.note-actions-container {
-    display: flex; /* 使用 Flexbox 布局 */
-    flex-direction: column; /* 垂直排列子元素 */
-    margin-top: 10px; /* 与其他元素之间的间距 */
+/* 搜索区域 */
+#searchInput {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 18px;
+  box-shadow: 0 4px 8px var(--shadow-color);
+  background-color: var(--background-color);
+  box-sizing: border-box;
+  transition: background-color 0.3s, box-shadow 0.3s;
 }
 
-.note-actions {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 10px; /* 减小按钮之间的间距 */
+#searchInput:hover {
+  background-color: #e0f0ff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-.act-wrap {
-    display: flex;
-    align-items: center;
-    margin-right: 5px; /* 减小右侧边距 */
-}
-
-.act-btn {
-    all: unset;
-    cursor: pointer;
-    font-size: 14px;
-    color: #666; /* 默认灰色 */
-    transition: color 0.2s;
-    padding: 5px; /* 减小内边距 */
-    background: none;
-    border: none;
-}
-
-.act-btn:hover,
-.act-btn:focus,
-.act-btn:active,
-.act-btn.active {
-    color: #007bff; /* 悬停、焦点、激活和选中状态为蓝色 */
-    background: none; /* 确保没有背景 */
-    border: none; /* 确保没有边框 */
-    outline: none; /* 移除焦点轮廓 */
-}
-
-.count {
-    font-size: 12px;
-    color: #666;
-    margin-left: 2px; /* 减小计数器和按钮之间的距离 */
-}
-
-.comments {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    font-size: 14px;
-    color: #333;
-}
-
-.comment-input-container {
-    display: flex; /* 使用 Flexbox 布局 */
-    align-items: center; /* 垂直居中对齐 */
-    margin-top: 10px; /* 与其他元素之间的间距 */
-    width: 100%; /* 确保输入框容器占满宽度 */
-}
-
-.comment-input {
-    flex-grow: 1; /* 输入框占据剩余空间 */
-    padding: 5px; /* 内边距 */
-    border: 1px solid #ccc; /* 边框 */
-    border-radius: 4px; /* 圆角 */
-    margin-right: 10px; /* 输入框与按钮之间的间距 */
-}
-
-.submit-comment {
-    padding: 5px 10px; /* 内边距 */
-    border: none; /* 无边框 */
-    border-radius: 4px; /* 圆角 */
-    background-color: #007BFF; /* 按钮背景颜色 */
-    color: white; /* 按钮文字颜色 */
-    cursor: pointer; /* 鼠标悬停时显示手型光标 */
-}
-
-.submit-comment:hover {
-    background-color: #0056b3; /* 悬停时的背景颜色 */
-}
-
-.note-actions span {
-    margin: 0 100px 0 0; /* 右边距为 15px，其他为 0 */
-    cursor: pointer; /* 鼠标悬停时显示手型光标 */
-    font-size: 12px; /* 字体大小 */
-    padding: 8px 12px; /* 添加内边距 */
-    border-radius: 5px; /* 圆角 */
-    background-color: transparent; /* 背景透明 */
-    transition: transform 0.2s; /* 添加过渡效果 */
-    display: flex; /* 使图标和文本在同一行 */
-    align-items: center; /* 垂直居中对齐 */
-    color: rgba(128, 128, 128, 0.7); /* 图标颜色为灰色 */
-}
-
-.note-actions span:hover {
-    transform: scale(1.05); /* 悬停时放大 */
-    color: rgba(128, 128, 128, 1); /* 悬停时变为灰色 */
-}
-
-.note-actions i {
-    margin-right: 5px; /* 图标与文本之间的间距 */
-    font-size: 12px; /* 图标大小 */
-    color: inherit; /* 继承父元素的颜色 */
-}
-  
-  .edit-input {
-    width: 100%;
-    margin-right: 10px; /* 10px */
-    padding: 5px; /* 5px */
-    font-size: 1rem; /* 16px */
-  }
-  
-  .highlight {
-    background-color: #cce4ff; /* 高亮显示的背景颜色 */
-  }
-  
-  #addNoteButton {
-    align-self: flex-end;
-    padding: 10px 20px;
-    border: none;
-    background-color: #007bff;
-    color: white;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px; /* 增加顶部外边距 */
-  }
-  
-  #addNoteButton:hover {
-    background-color: #0056b3;
-  }
-  
-  .search-container {
-    margin-bottom: 20px;
-  }
-  
-  .small-button {
-    font-family: 'Noto Sans SC', sans-serif; /* 使用思黑体 */
-    background: none;
-    color: white;
-    border: none;
-    font-size: 14px; /* 调整字体大小 */
-    cursor: pointer;
-    display: inline;
-    transition: background-color 0.3s, transform 0.2s; /* 添加过渡效果 */
-  }
-  
-  .small-button::after {
-    content: '...'; /* 使用伪元素设置内容 */
-    font-size: 14px; /* 调整字体大小 */
-    color:  #007bff; /* 设置文本颜色 */
-  }
-  
-  .small-button:hover {
-    background-color:  #007bff; /* 深蓝色 */
-    transform: scale(1.05); /* 悬停时大 */
-  }
-  .note-item {
-    margin-bottom: 10px;
-  }
-  
-  .note-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color:  #f0f2f5;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    padding: 5px;
-    margin-bottom: 5px;
-  }
-  
-  .note-content {
-    flex-grow: 1;
-    margin-right: 10px;
-  }
-  
-  .note-text {
-    font-size: 16px;
-    margin-bottom: 0px;
-  }
-  
-  .note-timestamp {
-    font-size: 12px;
-    color: #666;
-  }
-  
-  .dropdown {
-    position: relative;
-    display: inline-block;
-  }
-  
-  .dropdown-trigger {
-    cursor: pointer;
-    font-size: 20px;
-    line-height: 1;
-    padding: 10px;
-    margin-left: 20px;
-    color: #666;
-  }
-
-  /* 悬停效果 */
-.dropdown-trigger:hover {
-  transition: background-color 0.3s, box-shadow 0.3s; /* 添加过渡效果 */;
-}
-
-  .dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 100%;
-    background-color:  #f0f2f5;
-    min-width: 120px;
-    padding: 5px;
-    box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
-    z-index: 1;
-    border-radius: 4px;
-    margin-top: 2px;
-  }
-  
-  .dropdown-content a {
-    color: #333;
-    padding: 4px 8px;
-    text-decoration: none;
-    display: block;
-    font-size: 10px;
-    text-align: center;
-    transition: background-color 0.2s, color 0.2s;
-  }
-  
-  .dropdown-content a:hover {
-    background-color: #f1f1f1;
-    color: #000;
-  }
-  
-  .dropdown:hover .dropdown-content {
-    display: block;
-  }
-
-  .feedback-button {
-    margin-right:20px;
-    position: relative;
-    padding: 10px 20px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.feedback-button::before {
-    content: '✨'; /* 这里可以替换为其他图案或字符 */
-    margin-right: 8px; /* 与文本的间距 */
-    font-size: 16px; /* 图案的大小 */
-}
-
-.hidden {
-  display: none !important;
-}
-
-#loading {
-    display: none;
-}
-
-.spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.comment-input-container {
-    display: flex; /* 使用 Flexbox 布局 */
-    align-items: center; /* 垂直居中对齐 */
-    margin-top: 10px; /* 与其他元素之间的间距 */
-}
-
-.comment-input {
-    flex-grow: 1; /* 输入框占据剩余空间 */
-    padding: 5px; /* 内边距 */
-    border: 1px solid #ccc; /* 边框 */
-    border-radius: 4px; /* 圆角 */
-    margin-right: 10px; /* 输入框与按钮之间的间距 */
-}
-
-.submit-comment {
-    padding: 5px 10px; /* 内边距 */
-    border: none; /* 无边框 */
-    border-radius: 4px; /* 圆角 */
-    background-color: #007BFF; /* 按钮背景颜色 */
-    color: white; /* 按钮文字颜色 */
-    cursor: pointer; /* 鼠标悬停时显示手型光标 */
-}
-
-.submit-comment:hover {
-    background-color: #0056b3; /* 悬停时的背景颜色 */
-}
-
-.comment-list {
-    margin-top: 10px; /* 与输入框之间的间距 */
-}
-
-.comment-item {
-    padding: 5px; /* 内边距 */
-    border-bottom: 1px solid #e0e0e0; /* 底部边框 */
-    color: #333; /* 评论文本颜色 */
-}
-
-.note-tags-container {
-  margin-top: 5px;
-}
-
-.note-tags {
+.clear-search-button {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
 }
 
-.tag {
-  background-color: #f0f2f5;
-  color: #666;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.8em;
+.clear-search-button:hover {
+  background-color: var(--secondary-color);
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* 评论容器样式 */
-.comments-container {
+.clear-search-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 1px 2px var(--shadow-color);
+}
+
+.search-results-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: var(--background-color);
+  border-radius: 25px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.search-results-info span {
+  font-size: 14px;
+  color: #495057;
+}
+
+/* 笔记列表 */
+ul {
+  list-style-type: none;
+  padding: 20px;
+}
+
+li {
+  background-color: var(--background-color);
+  margin-bottom: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  overflow: hidden;
+  position: relative;
+}
+/* 笔记项样式 */
+
+#noteList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.note-item {
+  background-color: var(--background-color);
+  margin-bottom: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  overflow: hidden;
+  position: relative;
+}
+
+.note-container {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 15px;
+}
+
+.note-content {
+  flex-grow: 1;
+  padding-right: 30px; /* 为 dropdown 留出空间 */
+}
+
+.note-text {
+  display: block;
   margin-top: 10px;
-  background-color: #f0f2f5;
-  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.note-timestamp {
+  font-size: 0.8em;
+  color: #657786;
+}
+
+/* Dropdown 样式 */
+.dropdown {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.dropdown-trigger {
+  cursor: pointer;
+  padding: 5px;
+  font-size: 16px;
+  color: var(--text-color);
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: #ffffff;
+  min-width: 120px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  border-radius: 4px;
+}
+
+.dropdown-content a {
+  color: var(--text-color);
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  font-size: 14px;
+}
+
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.delete-note {
+  color: black !important;
+}
+
+.delete-note:hover {
+  background-color: #0056b3 !important;
+}
+
+/* 笔记操作容器样式 */
+.note-actions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20px; /* 增加操作按钮之间的间距 */
+  margin-top: 15px; /* 与笔记内容保持一定距离 */
+  padding: 10px 0; /* 增加上下内边距 */
+}
+
+/* 单个操作包装器样式 */
+.action-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 图标和计数之间的间距 */
+}
+
+/* 操作按钮样式 */
+.act-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px; /* 增加图标大小 */
+  color: #555; /* 稍微深一点的颜色 */
+  padding: 8px; /* 增加可点击区域 */
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.act-btn:hover {
+  color: var(--primary-color);
+  transform: scale(1.1); /* 悬停时稍微放大 */
+}
+
+/* 计数样式 */
+.count {
+  font-size: 14px;
+  color: #666;
+  min-width: 20px; /* 确保有足够的空间显示数字 */
+  text-align: left;
+}
+
+.comments-container {
+  margin-top: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
   padding: 10px;
 }
 
-/* 单个评论卡片样式 */
 .comment-card {
   display: flex;
-  padding: 10px;
-  border-bottom: 1px solid #e1e8ed;
-  margin-bottom: 10px;
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s ease;
 }
 
 .comment-card:last-child {
   border-bottom: none;
-  margin-bottom: 0;
 }
 
-/* 评论头像样式 */
+.comment-card:hover {
+  background-color: #f0f2f5;
+}
+
 .comment-avatar {
   width: 40px;
   height: 40px;
@@ -688,65 +416,145 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 16px;
-  margin-right: 10px;
+  font-size: 18px;
+  margin-right: 12px;
 }
 
-/* 评论主体样式 */
 .comment-body {
   flex: 1;
 }
 
-/* 评论头部样式 */
 .comment-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   margin-bottom: 5px;
 }
 
 .comment-author {
   font-weight: bold;
-  color: #14171a;
+  color: #333;
 }
 
 .comment-timestamp {
-  font-size: 0.85em;
-  color: #657786;
+  font-size: 0.8em;
+  color: #777;
 }
 
-/* 评论内容样式 */
 .comment-content {
-  color: #14171a;
+  color: #444;
   line-height: 1.4;
 }
 
-/* 生成评论时的加载提示样式 */
-.comments-container p {
-  text-align: center;
-  color: #657786;
-  padding: 10px;
+/* 评论输入框样式 */
+.comment-input-container {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
 }
 
-/* 评论按钮样式（如果需要） */
-.act-btn.comment {
-  background: none;
+.comment-input {
+  flex-grow: 1;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.comment-input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.submit-comment {
+  padding: 8px 16px;
   border: none;
-  color: #657786;
+  border-radius: 20px;
+  background-color: #007bff;
+  color: white;
   cursor: pointer;
+  font-size: 14px;
+  margin-left: 10px;
+  transition: background-color 0.2s ease;
 }
 
-.act-btn.comment:hover {
-  color: #007bff;
+.submit-comment:hover {
+  background-color: #0056b3;
 }
 
-/* 评论数量样式 */
-.act-wrap .count {
-  font-size: 0.9em;
-  color: #657786;
-  margin-left: 5px;
+
+/* 标签样式 */
+.note-tags-container {
+  margin-top: 5px;
 }
 
+.note-tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 10px 0;
+  gap: 8px; /* 使用 gap 属性来设置标签之间的间距 */
+}
+
+/* 单个标签样式 */
+.tag {
+  background-color: #e0f0ff;
+  color: #0066cc;
+  font-size: 14px; /* 稍微增加字体大小 */
+  font-weight: 500; /* 添加适度的字体粗细 */
+  padding: 6px 14px; /* 增加内边距 */
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  border: 1px solid #b3d9ff;
+  letter-spacing: 0.5px; /* 增加字母间距 */
+  line-height: 1.4; /* 增加行高 */
+}
+
+.tag:hover {
+  background-color: #b3d9ff; /* 鼠标悬停时加深背景色 */
+  color: #004080; /* 鼠标悬停时加深文字颜色 */
+  transform: translateY(-2px); /* 轻微上浮效果 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+}
+
+/* 加载指示器 */
+.loading-indicator {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  box-shadow: 0 2px 10px var(--shadow-color);
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+
+.loading-indicator.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite, glow 2s ease-in-out infinite;
+  margin-right: 10px;
+}
+
+#loadingMessage {
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+/* 模态框 */
 .modal {
   display: none;
   position: fixed;
@@ -760,14 +568,14 @@ body {
 }
 
 .modal-content {
-  background-color:  #f0f2f5;
+  background-color: var(--background-color);
   margin: 15% auto;
   padding: 20px;
   border: 1px solid #888;
   width: 80%;
   max-width: 600px;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px var(--shadow-color);
 }
 
 .close {
@@ -785,104 +593,26 @@ body {
   cursor: pointer;
 }
 
-.loading-indicator {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  color: #666;
-}
-
-.loading-indicator .spinner {
-  margin-right: 10px;
-}
-
-.all-notes-loaded {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-  font-style: italic;
-}
-
-.hidden {
-  display: none;
-}
-
-/* 优化 spinner 样式 */
-.spinner {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.clear-search-button {
-  font-family: 'Noto Sans SC', sans-serif;
-  background: #007bff;
+/* 通知 */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #4CAF50;
   color: white;
-  border: none;
-  border-radius: 20px; /* 更圆滑的形状 */
-  padding: 8px 16px; /* 调整内边距 */
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 添加轻微阴影 */
-  transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+  padding: 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
 }
 
-.clear-search-button:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.notification.show {
+  opacity: 1;
 }
 
-.clear-search-button:active {
-  transform: scale(0.95);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* 调整搜索结果信息容器的样式 */
-.search-results-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 15px;
-  background-color: #f8f9fa;
-  border-radius: 25px;
-  margin-bottom: 15px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.search-results-info span {
-  font-size: 14px;
-  color: #495057;
-}
-
-/* 为移动设备进行进一步优化 */
-@media (max-width: 768px) {
-  .note-actions {
-    gap: 5px; /* 在移动设备上进一步减小间距 */
-  }
-
-  .act-btn {
-    padding: 3px; /* 在移动设备上进一步减小内边距 */
-    font-size: 12px; /* 在移动设备上减小图标大小 */
-  }
-
-  .count {
-    font-size: 10px; /* 在移动设备上减小计数器字体大小 */
-  }
-}
-
+/* 其他样式 */
 .empty-state {
   text-align: center;
   padding: 20px;
@@ -906,44 +636,7 @@ mark {
 .ai-thinking-text {
   text-align: center;
   margin-top: 16px;
-  color: #333333;
-}
-
-.layout-container {
-  display: flex;
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-.left-sidebar {
-  width: 275px;
-  padding: 20px;
-  background-color:  #f0f2f5;
-  border-right: 1px solid #e6ecf0;
-}
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-  max-width: calc(100% - 600px); /* 调整主内容区的最大宽度 */
-}
-
-.right-sidebar {
-  width: 290px;
-  padding: 20px;
-  background-color:  #f0f2f5;
-  border-left: 1px solid #e6ecf0;
-}
-
-.container {
-  width: 100%;
-  max-width: none; /* 移除最大宽度限制 */
-  margin: 0;
-  padding: 0;
-  background-color: transparent;
-  box-shadow: none;
-  border-radius: 0;
+  color: var(--text-color);
 }
 
 /* 响应式设计 */
@@ -958,7 +651,7 @@ mark {
 
 @media (max-width: 1024px) {
   .left-sidebar {
-    width: 88px; /* 收缩左侧栏 */
+    width: 88px;
   }
   .main-content {
     max-width: calc(100% - 88px);
@@ -977,9 +670,66 @@ mark {
   .main-content {
     max-width: 100%;
   }
+  .note-actions {
+    gap: 5px;
+  }
+  .act-btn {
+    padding: 3px;
+    font-size: 12px;
+  }
+  .count {
+    font-size: 10px;
+  }
 }
+
+/* 动画 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px #3498db; }
+  50% { box-shadow: 0 0 20px #3498db; }
+}
+
+@keyframes glowing {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 搜索相关样式 */
+.search-container {
+  margin-bottom: 20px;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.clear-search-button {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+}
+
 .clear-search-button:hover {
-  background-color: #0056b3;
+  background-color: var(--secondary-color);
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
@@ -989,16 +739,15 @@ mark {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* 调整搜索结果信息容器的样式 */
 .search-results-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 10px 15px;
-  background-color: #f0f2f5;
+  background-color: var(--background-color);
   border-radius: 25px;
   margin-bottom: 15px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--shadow-color);
 }
 
 .search-results-info span {
@@ -1006,243 +755,143 @@ mark {
   color: #495057;
 }
 
-/* 为移动设备进行进一步优化 */
-@media (max-width: 768px) {
-  .note-actions {
-    gap: 5px; /* 在移动设备上进一步减小间距 */
-  }
-
-  .act-btn {
-    padding: 3px; /* 在移动设备上进一步减小内边距 */
-    font-size: 12px; /* 在移动设备上减小图标大小 */
-  }
-
-  .count {
-    font-size: 10px; /* 在移动设备上减小计数器字体大小 */
-  }
-}
-
-.empty-state {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-  font-style: italic;
-}
-
-mark {
-  background-color: yellow;
-  padding: 2px;
-  border-radius: 2px;
-}
-
-.ai-thinking-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100px;
-}
-
-.ai-thinking-text {
-  text-align: center;
-  margin-top: 16px;
-  color: #333333;
-}
-
-.trending-tags {
-  background-color: #f0f2f5; /* 白色背景 */
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); /* 添加阴影效果 */
-  padding: 15px;
-  margin-top: 20px;
-}
-
-.trending-tags h2 {
-  color: #333333; /* 深灰色标题 */
-  font-size: 18px;
-  margin-bottom: 15px;
-  font-weight: bold;
+/* 趋势标签样式 */
+#topTagsList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
 .trending-tag-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
   padding: 8px 12px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
+  margin-bottom: 8px;
+  background-color: #f0f2f5;
+  border-radius: 8px;
   transition: background-color 0.2s ease;
 }
 
-.tag-name {
-  color: #495057; /* 中灰色文本 */
-  font-size: 14px;
-  text-decoration: none;
+.trending-tag-item:hover {
+  background-color: #e4e6e9;
 }
 
-.tag-name:hover {
-  text-decoration: underline;
+.tag-name {
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 500;
 }
 
 .tag-count {
-  color: #6c757d;
   font-size: 12px;
-  font-weight: 400;
+  color: #65676b;
+  background-color: #ffffff;
   padding: 2px 6px;
-  border-radius: 10px;
-  margin-left: auto;
+  border-radius: 12px;
+  font-weight: bold;
 }
 
+#trending-tags-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+#trending-tags-container h2 {
+  font-size: 18px;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e4e6e9;
+}
+
+/* 容器样式 */
+.container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* 趋势标签分析容器 */
 #trending-tags-analysis {
-  border-top: 1px solid #e0e0e0;
-  padding-top: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-top: 30px;
+}
+
+/* 趋势标签分析标题 */
+#trending-tags-analysis h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+/* 趋势标签分析内容 */
+#trending-tags-analysis p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+/* 强调文本 */
+#trending-tags-analysis strong {
+  color: #0066cc;
+  font-weight: 600;
+}
+
+/* 列表样式 */
+#trending-tags-analysis ul {
+  list-style-type: none;
+  padding-left: 0;
   margin-top: 15px;
 }
 
-#trending-tags-analysis h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: #333333;
-}
-
-#trending-tags-analysis .analysis-report {
+#trending-tags-analysis li {
   font-size: 14px;
-  color: #495057;
-  line-height: 1.5;
-}
-.loading-indicator {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.9); /* 半透明白色背景 */
-  z-index: 10;
-  padding: 10px;
-  box-sizing: border-box;
+  color: #444;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.loading-indicator.hidden {
-  display: none;
+#trending-tags-analysis li:last-child {
+  border-bottom: none;
 }
 
-.spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 1s linear infinite;
-  margin-right: 10px;
+/* 标签名称 */
+#trending-tags-analysis .tag-name {
+  font-weight: 600;
+  color: #0066cc;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-#loadingMessage {
-  color: #007BFF; /* 使用与 "AI is thinking" 相同的颜色 */
-  font-size: 16px;
+/* 标签计数 */
+#trending-tags-analysis .tag-count {
+  float: right;
+  background-color: #e0f0ff;
+  color: #0066cc;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
   font-weight: 600;
 }
 
-/* 确保 textarea 有相对定位 */
-#noteInput {
-  position: relative;
+/* 添加一些动画效果 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-input-container {
-  position: relative;
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-#noteInput {
-  width: 100%;
-  height: 200px;
-  max-height: 400px;
-  overflow-y: auto;
-  resize: vertical;
-  min-height: 100px;
-  padding: 20px;
-  padding-bottom: 60px; /* 为按钮留出空间 */
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  box-sizing: border-box;
-  transition: background-color 0.3s, box-shadow 0.3s;
-}
-
-.voice-button-container {
-  position: absolute;
-  bottom: 15px;
-  left: 15px; /* 将语音按钮放在左下角 */
-}
-
-.post-button-container {
-  position: absolute;
-  bottom: 10px;
-  right: 10px; /* 保持发布按钮在右下角 */
-}
-
-#voiceInputButton {
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 50%;
-  background-color: #4285f4; /* 改为蓝色，与 addNoteButton 一致 */
-  color: white; /* 改为白色，以便在蓝色背景上更易见 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.3s, box-shadow 0.3s;
-}
-
-#completeButton {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #4285f4;
-  cursor: pointer;
-}
-#completeButton:hover {
-  color: #3367d6;
-
-#addNoteButton {
-  padding: 8px 20px;
-  border: none;
-  border-radius: 20px;
-  background-color: #4285f4;
-  color: white;
-  font-weight: bold;
-  font-size: 14px;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.3s, box-shadow 0.3s;
-}
-
-#voiceInputButton:hover {
-  background-color: #e8eaed;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-#addNoteButton:hover {
-  background-color: #3367d6;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-#voiceInputButton.active {
-  background-color: #ea4335;
-  color: white;
+#trending-tags-analysis {
+  animation: fadeIn 0.5s ease-in-out;
 }

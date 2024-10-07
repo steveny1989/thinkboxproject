@@ -31,58 +31,32 @@ if ('webkitSpeechRecognition' in window) {
 }
 
 function showLoadingIndicator(message = 'Loading...') {
-  console.log('Attempting to show loading indicator');
+  const inputContainer = document.querySelector('.input-container');
   let loadingIndicator = document.getElementById('loadingIndicator');
-  let loadingMessage;
 
   if (!loadingIndicator) {
-    console.log('Creating loading indicator');
     loadingIndicator = document.createElement('div');
     loadingIndicator.id = 'loadingIndicator';
-    loadingIndicator.className = 'loading-indicator';
+    loadingIndicator.className = 'loading-indicator hidden';
     loadingIndicator.innerHTML = `
-      <div class="spinner"></div>
+      <div class="loading-spinner"></div>
       <span id="loadingMessage"></span>
     `;
-    document.body.appendChild(loadingIndicator);
+    inputContainer.appendChild(loadingIndicator);
   }
 
-  loadingMessage = document.getElementById('loadingMessage');
-  if (!loadingMessage) {
-    console.warn('Loading message element not found, creating it');
-    loadingMessage = document.createElement('span');
-    loadingMessage.id = 'loadingMessage';
-    loadingIndicator.appendChild(loadingMessage);
+  const loadingMessage = document.getElementById('loadingMessage');
+  if (loadingMessage) {
+    loadingMessage.textContent = message;
   }
 
-  loadingMessage.textContent = message;
   loadingIndicator.classList.remove('hidden');
-  console.log('Loading indicator shown with message:', message);
-
-  // 设置48秒超时
-  if (loadingTimeout) {
-    clearTimeout(loadingTimeout);
-  }
-  loadingTimeout = setTimeout(() => {
-    hideLoadingIndicator();
-    showErrorMessage("Loading timed out. Please refresh the page and try again.");
-  }, 48000);
 }
 
 function hideLoadingIndicator() {
-  console.log('Hiding loading indicator');
-  const indicator = document.getElementById('loadingIndicator');
-  if (indicator) {
-    indicator.classList.add('hidden');
-    console.log('Added hidden class to loading indicator');
-  } else {
-    console.warn('Loading indicator element not found when trying to hide');
-  }
-  if (loadingTimeout) {
-    clearTimeout(loadingTimeout);
-    console.log('Cleared loading timeout');
-  } else {
-    console.log('No loading timeout to clear');
+  const loadingIndicator = document.getElementById('loadingIndicator');
+  if (loadingIndicator) {
+    loadingIndicator.classList.add('hidden');
   }
 }
 
@@ -144,8 +118,6 @@ function createNoteElement(note) {
         <span class="note-text">${note.content}</span>
         <span class="note-timestamp">${formattedTimestamp}</span>
       </div>
-      <button class="feedback-button" data-note-id="${note.note_id}" data-note-content="${note.content}">AI</button>
-      <div class="feedback-container"></div>
       <div class="dropdown">
         <span class="dropdown-trigger">...</span>
         <div class="dropdown-content">
@@ -282,9 +254,19 @@ function updateTagsDisplay(noteId, tags) {
   console.log('Updating tags display for note:', noteId, tags);
   const tagContainer = document.querySelector(`[data-note-id="${noteId}"] .note-tags`);
   if (tagContainer) {
-    const renderedTags = renderHelpers.renderTags(tags);
-    console.log('Rendered tags:', renderedTags);
-    tagContainer.innerHTML = renderedTags;
+    // 确保 tags 是一个数组
+    const tagsArray = Array.isArray(tags) ? tags : [tags];
+    
+    // 将标签字符串分割成单独的标签
+    const individualTags = tagsArray.flatMap(tag => 
+      tag.split(/[,\s]+/)  // 用逗号或空格分割
+         .filter(t => t.startsWith('#'))
+         .map(t => t.trim())
+    );
+    
+    // 使用 renderHelpers.renderTags 来渲染分割后的标签
+    tagContainer.innerHTML = renderHelpers.renderTags(individualTags);
+    console.log('Rendered individual tags:', individualTags);
   } else {
     console.warn(`Tag container for note ${noteId} not found. Note may have been deleted.`);
   }
@@ -506,7 +488,7 @@ async function handleAddNote(event) {
         noteInput.value = rewrittenText;
         
         // 显示一个通知，告诉用户内容已被改写
-        showNotification('Content has been rewritten by AI for brevity. Please review and post again if satisfied.');
+        showNotification('Content has been rewritten by AI for brevity.');
         
         // 标记输入框，表示内容已被改写
         noteInput.dataset.rewritten = 'true';
@@ -1088,24 +1070,3 @@ export {
   updateTrendingTagsAnalysis,
   handleCompleteUserInput,
 };
-
-// 在文件的适当位置添加这个 CSS
-const style = document.createElement('style');
-style.textContent = `
-  .notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background-color: #4CAF50;
-    color: white;
-    padding: 16px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .notification.show {
-    opacity: 1;
-  }
-`;
-document.head.appendChild(style);
