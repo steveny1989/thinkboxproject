@@ -124,7 +124,7 @@ body {
   box-sizing: border-box;
   transition: background-color 0.3s, box-shadow 0.3s;
   background-color: var(--background-color); /* 使用与整体背景相同的颜色 */
-  border-top: 4px solid var(--secondary-color);
+  border-top: 4px solid var(--border-color);
   font-family: 'Noto Sans SC', sans-serif;
   font-weight: 400;
 }
@@ -289,7 +289,7 @@ li {
   margin-bottom: 8px;  /* 笔记之间的间距 */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);  /* 轻微的阴影效果 */
   transition: box-shadow 0.3s ease, transform 0.3s ease;  /* 添加过渡效果 */
-  border-top: 4px solid var(--secondary-color);  
+  border-top: 4px solid var(--border-color);  
 }
 
 .note-container:hover {
@@ -834,7 +834,7 @@ mark {
   padding: 16px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
-  border-top: 4px solid var(--secondary-color);  
+  border-top: 4px solid var(--border-color);
 }
 
 #trending-tags-container h2 {
@@ -863,7 +863,7 @@ mark {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 20px;
   margin-top: 30px;
-  border-top: 4px solid var(--secondary-color);  
+  border-top: 4px solid var(--border-color);
 }
 
 /* 趋势标签分析标题 */
