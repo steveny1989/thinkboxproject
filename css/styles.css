@@ -24,6 +24,7 @@ body {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
+  gap: 20px; /* 添加间距 */
 }
 
 .left-sidebar {
@@ -434,57 +435,60 @@ li {
   min-width: 20px; /* 确保有足够的空间显示数字 */
   text-align: left;
 }
-
+/* 评论容器样式 */
 .comments-container {
-  margin-top: 15px;
   background-color: #f8f9fa;
   border-radius: 8px;
-  padding: 10px;
+  padding: 15px;
+  margin-top: 15px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
 }
 
+/* 单个评论卡片样式 */
 .comment-card {
   display: flex;
-  padding: 12px;
-  border-bottom: 1px solid #e0e0e0;
-  transition: background-color 0.2s ease;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.comment-card:last-child {
-  border-bottom: none;
-}
-
-.comment-card:hover {
-  background-color: #f0f2f5;
-}
-
+/* 评论头像样式 */
 .comment-avatar {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background-color: #007bff;
-  color: white;
+  color: #f8f9fa;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 16px;
   margin-right: 12px;
+  flex-shrink: 0;
 }
 
+/* 评论主体样式 */
 .comment-body {
-  flex: 1;
+  flex-grow: 1;
 }
 
+/* 评论头部样式 */
 .comment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
 .comment-author {
-  font-weight: bold;
+  font-weight: 600;
   color: #333;
+  margin-right: 10px;
 }
 
 .comment-timestamp {
@@ -492,46 +496,65 @@ li {
   color: #777;
 }
 
+/* 评论内容样式 */
 .comment-content {
   color: #444;
   line-height: 1.4;
 }
 
-/* 评论输入框样式 */
+/* 评论输入框容器样式 */
 .comment-input-container {
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 15px;
+  background-color:#f8f9fa;
+  border-radius: 20px;
+  padding: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* 评论输入框样式 */
 .comment-input {
   flex-grow: 1;
+  border: none;
   padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 20px;
   font-size: 14px;
-  transition: border-color 0.2s ease;
+  border-radius: 20px;
 }
 
 .comment-input:focus {
   outline: none;
-  border-color: #007bff;
 }
 
+/* 提交评论按钮样式 */
 .submit-comment {
-  padding: 8px 16px;
+  background-color: #007bff;
+  color: #f8f9fa;
   border: none;
   border-radius: 20px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
+  padding: 8px 16px;
   font-size: 14px;
-  margin-left: 10px;
+  cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .submit-comment:hover {
   background-color: #0056b3;
+}
+
+/* 评论头像样式 */
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  margin-right: 10px;
 }
 
 

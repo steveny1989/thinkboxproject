@@ -95,34 +95,33 @@ function createNoteElement(note) {
           <a href="javascript:void(0)" class="delete-note" data-note-id="${note.note_id}">Delete</a>
         </div>
       </div>
-    </div>
-    <div class="note-tags-container">
-      <div id="tags-${note.note_id}" class="note-tags">${renderHelpers.renderTags(note.tags || [])}</div>
-    </div>
-    <div class="note-actions-container">
-      <div class="note-actions">
-              <span class="action-wrapper">
-          <button class="act-btn comment" data-note-id="${note.note_id}" title="Generate AI comment" tabindex="0" role="button" aria-label="Generate AI comment">
-            <i class="fas fa-robot" aria-hidden="true"></i>
-            <i class="fas fa-spinner fa-spin" style="display: none;" aria-hidden="true"></i>
-          </button>
-          <span class="count ${note.comments?.length > 0 ? 'has-comments' : ''}" aria-label="${note.comments?.length || 0} comments">${note.comments?.length || 0}</span>
-        </span>
-        <span class="act-wrap">
-          <button class="act-btn likes" data-note-id="${note.note_id}">
-            <i class="fas fa-thumbs-up"></i>
-          </button>
-          <span class="count">${note.likes || 0}</span>
-        </span>
-        <span class="act-wrap">
-          <button class="act-btn heart" data-note-id="${note.note_id}">
-            <i class="fas fa-heart"></i>
-          </button>
-          <span class="count">${note.hearts || 0}</span>
-        </span>
-
+      <div class="note-tags-container">
+        <div id="tags-${note.note_id}" class="note-tags">${renderHelpers.renderTags(note.tags || [])}</div>
       </div>
-      <div class="comments-container" id="comments-${note.note_id}">
+      <div class="note-actions-container">
+        <div class="note-actions">
+          <span class="action-wrapper">
+            <button class="act-btn comment" data-note-id="${note.note_id}" title="Generate AI comment" tabindex="0" role="button" aria-label="Generate AI comment">
+              <i class="fas fa-robot" aria-hidden="true"></i>
+              <i class="fas fa-spinner fa-spin" style="display: none;" aria-hidden="true"></i>
+            </button>
+            <span class="count ${note.comments?.length > 0 ? 'has-comments' : ''}" aria-label="${note.comments?.length || 0} comments">${note.comments?.length || 0}</span>
+          </span>
+          <span class="act-wrap">
+            <button class="act-btn likes" data-note-id="${note.note_id}">
+              <i class="fas fa-thumbs-up"></i>
+            </button>
+            <span class="count">${note.likes || 0}</span>
+          </span>
+          <span class="act-wrap">
+            <button class="act-btn heart" data-note-id="${note.note_id}">
+              <i class="fas fa-heart"></i>
+            </button>
+            <span class="count">${note.hearts || 0}</span>
+          </span>
+        </div>
+      </div>
+      <div class="note-comments-container" id="comments-${note.note_id}">
         ${note.comments && note.comments.length > 0 ? renderHelpers.renderComments(note.comments) : ''}
       </div>
     </div>
@@ -228,7 +227,7 @@ function updateTagsDisplay(noteId, tags) {
     // 确保 tags 是一个数组
     const tagsArray = Array.isArray(tags) ? tags : [tags];
     
-    // 将标签符���分割成单独的标签
+    // 将标签符分割成单独的标签
     const individualTags = tagsArray.flatMap(tag => 
       tag.split(/[,\s]+/)  // 用逗号或空格分割
          .filter(t => t.startsWith('#'))

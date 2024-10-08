@@ -27,17 +27,15 @@ export const MessageType = {
       messageElement.style.cssText = `
         padding: 12px 16px;
         margin-bottom: 10px;
-        border-radius: 12px;
-        color: #0056b3;
+        border-radius: 12px; // 增加圆角
+        color: white;
         opacity: 0;
         transition: opacity 0.3s ease, transform 0.3s ease;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         font-size: 14px;
         display: flex;
         align-items: center;
-        justify-content: center;
         transform: translateY(10px);
-        text-align: center;
       `;
 
       switch (type) {
@@ -57,12 +55,14 @@ export const MessageType = {
 
       messageElement.textContent = message;
 
+      if (type === MessageType.LOADING) {
+      }
+
       this.container.appendChild(messageElement);
 
       // 触发重排后淡入显示
       setTimeout(() => {
         messageElement.style.opacity = '1';
-        messageElement.style.transform = 'translateY(0)';
       }, 10);
 
       if (type !== MessageType.LOADING) {
@@ -130,9 +130,4 @@ export const MessageType = {
   
   // 添加到全局样式
   const style = document.createElement('style');
-  style.textContent = `
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  `;
   document.head.appendChild(style);
