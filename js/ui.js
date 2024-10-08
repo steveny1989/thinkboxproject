@@ -7,6 +7,14 @@ import renderHelpers from './renderHelpers.js';
 import { isValidUrl } from './utils.js';
 import api from './api.js';
 import aiAPI from './AIAPI.js';
+import { 
+  showLoadingIndicator, 
+  hideLoadingIndicator, 
+  showAllNotesLoadedMessage, 
+  showErrorMessage, 
+  showSuccessMessage 
+} from './messageManager.js';
+
 
 
 const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
@@ -28,45 +36,6 @@ if ('webkitSpeechRecognition' in window) {
   recognition = new SpeechRecognition();
 } else {
   console.warn('Speech recognition is not supported in this browser.');
-}
-
-function showLoadingIndicator(message = 'Loading...') {
-  const inputContainer = document.querySelector('.input-container');
-  let loadingIndicator = document.getElementById('loadingIndicator');
-
-  if (!loadingIndicator) {
-    loadingIndicator = document.createElement('div');
-    loadingIndicator.id = 'loadingIndicator';
-    loadingIndicator.className = 'loading-indicator hidden';
-    loadingIndicator.innerHTML = `
-      <div class="loading-spinner"></div>
-      <span id="loadingMessage"></span>
-    `;
-    inputContainer.appendChild(loadingIndicator);
-  }
-
-  const loadingMessage = document.getElementById('loadingMessage');
-  if (loadingMessage) {
-    loadingMessage.textContent = message;
-  }
-
-  loadingIndicator.classList.remove('hidden');
-}
-
-function hideLoadingIndicator() {
-  const loadingIndicator = document.getElementById('loadingIndicator');
-  if (loadingIndicator) {
-    loadingIndicator.classList.add('hidden');
-  }
-}
-
-// 添加 showAllNotesLoadedMessage 函数
-function showAllNotesLoadedMessage() {
-  document.getElementById('allNotesLoaded').classList.remove('hidden');
-}
-
-function showErrorMessage(message) {
-  console.error(message);
 }
 
 function updateNoteList(notesToDisplay, append = false) {
@@ -257,7 +226,7 @@ function updateTagsDisplay(noteId, tags) {
     // 确保 tags 是一个数组
     const tagsArray = Array.isArray(tags) ? tags : [tags];
     
-    // 将标签字符串分割成单独的标签
+    // 将标签符���分割成单独的标签
     const individualTags = tagsArray.flatMap(tag => 
       tag.split(/[,\s]+/)  // 用逗号或空格分割
          .filter(t => t.startsWith('#'))
@@ -340,7 +309,7 @@ function clearSearch() {
 async function initializeUI() {
   console.log('Initializing UI...');
   
-  showLoadingIndicator();
+  const loadingIndicator = showLoadingIndicator('Initializing...');
 
   try {
     console.log('Fetching initial notes...');
@@ -364,7 +333,7 @@ async function initializeUI() {
     console.error('Error initializing UI:', error);
     showErrorMessage('An error occurred while loading notes. Please refresh the page and try again.');
   } finally {
-    hideLoadingIndicator();
+    hideLoadingIndicator(loadingIndicator);
   }
 }
 
@@ -417,15 +386,10 @@ function updateTrendingTagsAnalysis(trendingTags, analysisReport) {
 }
 
 async function loadMoreNotes() {
-  if (isShowingSearchResults) {
-    console.log('Showing search results, not loading more notes');
-    return;
-  }
-
-  if (isLoading || allNotesLoaded) return;
+  if (isShowingSearchResults || isLoading || allNotesLoaded) return;
 
   isLoading = true;
-  showLoadingIndicator();
+  const loadingIndicator = showLoadingIndicator('Loading more notes...');
 
   try {
     const lastNoteId = lastLoadedNoteId;
@@ -442,7 +406,7 @@ async function loadMoreNotes() {
     showErrorMessage('An error occurred while loading more notes. Please try again.');
   } finally {
     isLoading = false;
-    hideLoadingIndicator();
+    hideLoadingIndicator(loadingIndicator);
   }
 }
 
