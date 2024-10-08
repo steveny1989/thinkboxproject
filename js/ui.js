@@ -71,7 +71,9 @@ function updateUserInfo(userEmailElement) {
     userEmailElement.textContent = '';
     return;
   }
-  userEmailElement.textContent = auth.currentUser.email;
+  const email = auth.currentUser.email;
+  const username = email.split('@')[0]; // 这行代码提取 @ 符号前的部分
+  userEmailElement.textContent = username;
 }
 
 function createNoteElement(note) {
