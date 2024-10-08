@@ -17,7 +17,6 @@ let allNotesLoaded = false;
 let originalNotes = [];
 let isShowingSearchResults = false;
 let isGeneratingComment = false;
-let loadingTimeout;
 let recognition;
 let isListening = false;
 let isAnalyzing = false;
@@ -477,10 +476,18 @@ async function handleAddNote(event) {
     try {
       if (isValidUrl(noteText)) {
         showLoadingIndicator('Fetching web content...');
-        const content = await fetchWebContent(noteText);
-        noteText = content;
-        noteInput.value = noteText;
-        hideLoadingIndicator();
+        try {
+          const content = await fetchWebContent(noteText);
+          if (content) {
+            noteText = content;
+            noteInput.value = noteText;
+          }
+        } catch (error) {
+          console.error('Error fetching web content:', error);
+          // 即使获取网页内容失败，我们也继续处理原始的 noteText
+        } finally {
+          hideLoadingIndicator();
+        }
       }
 
       // 检查内容长度，如果超过500字符，使用AI改写
