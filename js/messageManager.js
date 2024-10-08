@@ -27,20 +27,22 @@ export const MessageType = {
       messageElement.style.cssText = `
         padding: 12px 16px;
         margin-bottom: 10px;
-        border-radius: 4px;
-        color: white;
+        border-radius: 12px;
+        color: #0056b3;
         opacity: 0;
         transition: opacity 0.3s ease, transform 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         font-size: 14px;
         display: flex;
         align-items: center;
-        transform: translateY(-10px);
+        justify-content: center;
+        transform: translateY(10px);
+        text-align: center;
       `;
 
       switch (type) {
         case MessageType.LOADING:
-          messageElement.style.backgroundColor = '#007bff';
+          messageElement.style.backgroundColor = '#f8f9fa'; // 
           break;
         case MessageType.ERROR:
           messageElement.style.backgroundColor = '#dc3545';
@@ -55,25 +57,12 @@ export const MessageType = {
 
       messageElement.textContent = message;
 
-      if (type === MessageType.LOADING) {
-        const spinner = document.createElement('div');
-        spinner.style.cssText = `
-          width: 16px;
-          height: 16px;
-          border: 2px solid rgba(255,255,255,.3);
-          border-radius: 50%;
-          border-top-color: #fff;
-          animation: spin 1s linear infinite;
-          margin-right: 10px;
-        `;
-        messageElement.prepend(spinner);
-      }
-
       this.container.appendChild(messageElement);
 
       // 触发重排后淡入显示
       setTimeout(() => {
         messageElement.style.opacity = '1';
+        messageElement.style.transform = 'translateY(0)';
       }, 10);
 
       if (type !== MessageType.LOADING) {
