@@ -387,10 +387,11 @@ class NoteOperations {
       console.log('All tags received:', allTags);
 
       if (!Array.isArray(allTags) || allTags.length === 0) {
-        console.error('Unexpected data structure for tags or empty array:', allTags);
+        console.log('No tags found');
         return [];
       }
 
+      // 直接使用接收到的标签数据
       const tagCounts = allTags.reduce((acc, tag) => {
         if (tag && tag.name) {
           const name = tag.name.startsWith('#') ? tag.name.slice(1) : tag.name;
