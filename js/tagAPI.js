@@ -1,14 +1,25 @@
-import { auth } from './firebase.js';
 import { handleApiError } from './errorHandler.js';
 
-const BASE_API_URL = 'https://api.thinkboxs.com';
-
 class TagAPI {
+  constructor() {
+    this.baseUrl = 'https://api.thinkboxs.com';
+  }
+
+  async getAuthToken() {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      console.error('No auth token found in localStorage');
+      throw new Error('No auth token found');
+    }
+    console.log('Current auth token:', token);
+    return token;
+  }
+
   async getTags(noteId) {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch(`${BASE_API_URL}/tags/notes/${noteId}`, {
-        headers: { 'Authorization': `Bearer ${idToken}` }
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/tags/notes/${noteId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to fetch tags');
       return response.json();
@@ -18,18 +29,17 @@ class TagAPI {
   }
 
   async addTags(noteId, tags) {
-    console.log('Adding tags:', tags, 'to note:', noteId);
     try {
-      // 确保 tags 是一个数组，每个元素都是一个完整的标签字符串
+      const token = await this.getAuthToken();
       const processedTags = Array.isArray(tags) 
         ? tags.filter(tag => typeof tag === 'string' && tag.trim() !== '')
         : [tags].filter(tag => typeof tag === 'string' && tag.trim() !== '');
 
-      const response = await fetch(`${BASE_API_URL}/tags/notes/${noteId}`, {
+      const response = await fetch(`${this.baseUrl}/tags/notes/${noteId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await auth.currentUser.getIdToken()}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ tags: processedTags })
       });
@@ -43,39 +53,74 @@ class TagAPI {
       console.log('Tags added successfully:', result);
       return result;
     } catch (error) {
-      console.error('API error:', error);
-      throw error;
+      handleApiError(error, 'Error adding tags');
     }
   }
 
   async generateTags(content) {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch(`${BASE_API_URL}/tags/generate`, {
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/tags/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ content })
       });
-      if (!response.ok) throw new Error('Failed to generate tags');
+      if (!response.ok) {
+        console.error('Failed to generate tags. Status:', response.status);
+        console.error('Response:', await response.text());
+        throw new Error(`Failed to generate tags. Status: ${response.status}`);
+      }
       return response.json();
     } catch (error) {
-      handleApiError(error, 'Error generating tags');
+      console.error('Error in generateTags:', error);
+      throw error;
     }
   }
 
   async getAllTags() {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch(`${BASE_API_URL}/tags`, {
-        headers: { 'Authorization': `Bearer ${idToken}` }
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/tags`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to fetch all tags');
       return response.json();
     } catch (error) {
       handleApiError(error, 'Error fetching all tags');
+    }
+  }
+
+  async deleteTags(noteId, tags) {
+    try {
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/tags/notes/${noteId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ tags })
+      });
+      if (!response.ok) throw new Error('Failed to delete tags');
+      return { success: true, message: 'Tags deleted successfully' };
+    } catch (error) {
+      handleApiError(error, 'Error deleting tags');
+    }
+  }
+
+  async searchTags(query) {
+    try {
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/tags/search?query=${encodeURIComponent(query)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to search tags');
+      return response.json();
+    } catch (error) {
+      handleApiError(error, 'Error searching tags');
     }
   }
 }
