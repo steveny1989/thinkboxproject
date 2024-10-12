@@ -1,14 +1,25 @@
-import { auth } from './firebase.js';
 import { handleApiError } from './errorHandler.js';
 
-const BASE_API_URL = 'https://api.thinkboxs.com';
-
 class NoteAPI {
+  constructor() {
+    this.baseUrl = 'https://api.thinkboxs.com';
+  }
+
+  async getAuthToken() {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      console.error('No auth token found in localStorage');
+      throw new Error('No auth token found');
+    }
+    console.log('Current auth token:', token); // 添加这行来检查令牌
+    return token;
+  }
+
   async getNotes() {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch(`${BASE_API_URL}/notes`, {
-        headers: { 'Authorization': `Bearer ${idToken}` }
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/notes`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to fetch notes');
       return response.json();
@@ -19,28 +30,38 @@ class NoteAPI {
 
   async addNote(note) {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch(`${BASE_API_URL}/notes`, {
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/notes`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(note)
       });
       if (!response.ok) throw new Error('Failed to add note');
-      return response.json();
+      const data = await response.json();
+      console.log('Server response for addNote:', data);
+      
+      // 返回一个标准化的笔记对象，确保键名一致
+      return {
+        note_id: data.noteId, // 使用服务器返回的 noteId
+        content: note.content,
+        created_at: new Date().toISOString(),
+        user_uuid: data.user_uuid || undefined // 如果服务器没有返回 user_uuid，则设为 undefined
+      };
     } catch (error) {
-      handleApiError(error, 'Error adding note');
+      console.error('Error in addNote API call:', error);
+      throw error;
     }
   }
 
   async deleteNote(noteId) {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch(`${BASE_API_URL}/notes/${noteId}`, {
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/notes/${noteId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${idToken}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to delete note');
       return { success: true, message: 'Note deleted successfully' };
@@ -51,9 +72,9 @@ class NoteAPI {
 
   async searchNotes(query) {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch(`${BASE_API_URL}/notes/search?query=${encodeURIComponent(query)}`, {
-        headers: { 'Authorization': `Bearer ${idToken}` }
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/notes/search?query=${encodeURIComponent(query)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Failed to search notes');
       return response.json();
@@ -64,12 +85,12 @@ class NoteAPI {
 
   async generateFeedback(content) {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch(`${BASE_API_URL}/notes/feedback`, {
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/notes/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ content })
       });
@@ -82,36 +103,39 @@ class NoteAPI {
 
   async addComments(noteId, comments) {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      const response = await fetch(`${BASE_API_URL}/notes/${noteId}/comments`, {
+      const token = await this.getAuthToken();
+      const response = await fetch(`${this.baseUrl}/notes/${noteId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ comments })
       });
       if (!response.ok) throw new Error('Failed to add comments');
-      return response.json(); // 这应该返回带有服务器分配 ID 的评论数组
+      return response.json();
     } catch (error) {
       handleApiError(error, 'Error adding comments');
     }
   }
 
-  async getPaginatedNotes(lastNoteId = null, limit = 24) {
+  async getPaginatedNotes(limit = 24, offset = 0) {
     try {
-      const idToken = await auth.currentUser.getIdToken();
-      let url = `${BASE_API_URL}/notes?limit=${limit}`;
-      if (lastNoteId) {
-        url += `&lastNoteId=${lastNoteId}`;
-      }
+      const token = await this.getAuthToken();
+      const url = `${this.baseUrl}/notes?limit=${limit}&offset=${offset}`;
+      console.log('Fetching notes from URL:', url);
       const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${idToken}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Failed to fetch paginated notes');
+      if (!response.ok) {
+        console.error('Failed to fetch notes. Status:', response.status);
+        console.error('Response:', await response.text());
+        throw new Error(`Failed to fetch notes. Status: ${response.status}`);
+      }
       return response.json();
     } catch (error) {
-      handleApiError(error, 'Error fetching paginated notes');
+      console.error('Error in getPaginatedNotes:', error);
+      throw error;
     }
   }
 }

@@ -3,15 +3,22 @@ export default {
       if (!tags || tags.length === 0) {
         return '<span class="tag loading">Loading tags...</span>';
       }
-      if (Array.isArray(tags) && tags[0] && typeof tags[0].name === 'string') {
-        return tags[0].name.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('');
+      
+      if (Array.isArray(tags)) {
+        if (tags[0] && typeof tags[0].name === 'string') {
+          // 如果是对象数组，每个对象有 name 属性
+          return tags.map(tag => `<span class="tag">${tag.name.trim()}</span>`).join('');
+        } else {
+          // 如果是字符串数组
+          return tags.map(tag => `<span class="tag">${tag.trim()}</span>`).join('');
+        }
       }
+      
       if (typeof tags === 'string') {
+        // 如果是逗号分隔的字符串
         return tags.split(',').map(tag => `<span class="tag">${tag.trim()}</span>`).join('');
       }
-      if (Array.isArray(tags)) {
-        return tags.map(tag => `<span class="tag">${tag}</span>`).join('');
-      }
+      
       console.error('Invalid tags data:', tags);
       return '<span class="error-tags">Error loading tags</span>';
     },

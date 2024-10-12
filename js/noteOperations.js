@@ -63,7 +63,9 @@ class NoteOperations {
   }
 
   async addNote(noteText) {
+    console.log('addNote called with:', noteText);
     if (!this.helper.validateNoteText(noteText)) {
+      console.error('Invalid note text');
       throw new Error('Invalid note text');
     }
     try {
@@ -72,7 +74,14 @@ class NoteOperations {
       this.notes.unshift(tempNote);
       this.tempToServerNoteMap.set(tempId, null); // 初始时，服务器ID为null
 
+      console.log('Calling API to add note');
       const newNote = await this.api.notes.addNote({ content: noteText });
+      console.log('New note added:', newNote);
+      
+      // 确保 newNote 有所有必要的字段
+      if (!newNote.note_id || !newNote.content) {
+        throw new Error('Invalid note object returned from API');
+      }
       
       // 更新映射和笔记列表
       this.tempToServerNoteMap.set(tempId, newNote.note_id);
@@ -84,13 +93,17 @@ class NoteOperations {
       localStorageService.saveNotes(this.notes);
       localStorageService.saveTempToServerNoteMap(this.tempToServerNoteMap);
 
-      // 异步生成标签
-      this.generateAndSaveTagsForNote(newNote).then(tags => {
-        newNote.tags = tags;
-        localStorageService.saveNotes(this.notes);
-        // 触发事件来更新UI中的标签
-        document.dispatchEvent(new CustomEvent('tagsGenerated', { detail: { noteId: newNote.note_id, tags } }));
-      });
+      console.log('Calling generateAndSaveTagsForNote');
+      const tags = await this.generateAndSaveTagsForNote(newNote);
+      newNote.tags = tags;
+      
+      // 更新本地存储
+      this.updateNoteWithTags(newNote.note_id, tags);
+
+      // 触发事件来更新UI中的标签
+      document.dispatchEvent(new CustomEvent('tagsGenerated', { 
+        detail: { note_id: newNote.note_id, tags } 
+      }));
 
       return newNote;
     } catch (error) {
@@ -156,22 +169,36 @@ class NoteOperations {
   }
 
   async generateAndSaveTagsForNote(note) {
-    try {
-      const tags = await this.api.ai.generateTags(note.content);
-      await this.api.tags.addTags(note.note_id, tags);
-      console.log('Tags generated and saved:', note.note_id, tags);
-      
-      // 直接使用生成的标签数组，而不是创建对象数组
-      
-      // 触发事件来更新UI中的标签
-      document.dispatchEvent(new CustomEvent('tagsGenerated', { 
-        detail: { noteId: note.note_id, tags: tags }
-      }));
-      
-      return tags;
-    } catch (error) {
-      console.error('Error generating or saving tags:', error);
+    console.log('为笔记生成标签：', note);
+    if (!note || !note.content || !note.note_id) {
+      console.error('无效的笔记对象', note);
       return [];
+    }
+    try {
+      const generatedTags = await this.api.ai.generateTags(note.content);
+      console.log('生成的标签：', generatedTags);
+
+      if (generatedTags.length > 0) {
+        await this.api.tags.addTags(note.note_id, generatedTags);
+        console.log('标签已保存到服务器');
+        // 更新本地笔记对象
+        this.updateNoteWithTags(note.note_id, generatedTags);
+        return generatedTags; // 返回生成的标签数组，而不是服务器响应
+      } else {
+        console.warn('未为笔记生成有效标签：', note.note_id);
+        return [];
+      }
+    } catch (error) {
+      console.error('generateAndSaveTagsForNote 中的错误：', error);
+      return [];
+    }
+  }
+
+  updateNoteWithTags(noteId, tags) {
+    const noteIndex = this.notes.findIndex(note => note.note_id === noteId);
+    if (noteIndex !== -1) {
+      this.notes[noteIndex].tags = tags;
+      localStorageService.saveNotes(this.notes);
     }
   }
 
@@ -276,30 +303,34 @@ class NoteOperations {
   }
   
   async initializePaginatedNotes() {
-    if (this.notes.length === 0) {
-      return this.getPaginatedNotes();
+    try {
+      console.log('Initializing paginated notes...');
+      const notes = await this.getPaginatedNotes();
+      console.log('Received notes:', notes);
+      // ... 处理笔记的代码 ...
+    } catch (error) {
+      console.error('Error initializing paginated notes:', error);
+      throw error;
     }
-    return this.notes;
   }
 
   async getPaginatedNotes(lastNoteId = null, limit = 24) {
-    console.log('Fetching paginated notes. lastNoteId:', lastNoteId, 'limit:', limit);
-    
-    if (lastNoteId === null && this.notes.length > 0) {
-      console.log('Returning cached notes');
-      return this.notes;
-    }
-
+    console.log('Attempting to fetch notes with:', { lastNoteId, limit });
     try {
-      const paginatedNotes = await this.api.notes.getPaginatedNotes(lastNoteId, limit);
-      console.log('Received', paginatedNotes.length, 'notes from API');
+      const notes = await this.api.notes.getPaginatedNotes(lastNoteId, limit);
+      console.log('Received notes:', notes);
+      
+      if (!Array.isArray(notes)) {
+        console.warn('Received invalid notes data:', notes);
+        return [];
+      }
 
       if (lastNoteId === null) {
         console.log('First page, replacing local cache');
-        this.notes = paginatedNotes;
+        this.notes = notes;
       } else {
         console.log('Not first page, appending to local cache');
-        this.notes = [...this.notes, ...paginatedNotes];
+        this.notes = [...this.notes, ...notes];
       }
 
       console.log('Total notes in local cache after update:', this.notes.length);
@@ -308,15 +339,15 @@ class NoteOperations {
       localStorageService.saveNotes(this.notes);
       
       // 获取新加载笔记的标签
-      const tagsPromises = paginatedNotes.map(note => this.api.tags.getTags(note.note_id));
+      const tagsPromises = notes.map(note => this.api.tags.getTags(note.note_id));
       const tagsResults = await Promise.all(tagsPromises);
       
       // 将标签添加到相应的笔记中
-      paginatedNotes.forEach((note, index) => {
+      notes.forEach((note, index) => {
         note.tags = tagsResults[index];
       });
       
-      return paginatedNotes;
+      return notes;
     } catch (error) {
       console.error('Error getting paginated notes:', error);
       throw error;
@@ -352,28 +383,21 @@ class NoteOperations {
     }
 
     try {
-      const allTags = await api.tags.getAllTags();
+      const allTags = await this.api.tags.getAllTags();
       console.log('All tags received:', allTags);
 
-      if (!Array.isArray(allTags)) {
-        console.error('Unexpected data structure for tags:', allTags);
+      if (!Array.isArray(allTags) || allTags.length === 0) {
+        console.error('Unexpected data structure for tags or empty array:', allTags);
         return [];
       }
 
-      // 提取和处理标签
-      const tagCounts = {};
-      allTags.forEach(tagString => {
-        if (typeof tagString === 'string') {
-          // 使用正则表达式匹配所有 '#' 开头的标签
-          const tags = tagString.match(/#[^\s#,]+/g);
-          if (tags) {
-            tags.forEach(tag => {
-              const cleanTag = tag.slice(1).trim(); // 移除 '#' 符号并修剪空白
-              tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
-            });
-          }
+      const tagCounts = allTags.reduce((acc, tag) => {
+        if (tag && tag.name) {
+          const name = tag.name.startsWith('#') ? tag.name.slice(1) : tag.name;
+          acc[name] = (acc[name] || 0) + 1;
         }
-      });
+        return acc;
+      }, {});
 
       console.log('Processed tag counts:', tagCounts);
 

@@ -1,4 +1,3 @@
-import { auth, onAuthStateChanged, signOut } from './firebase.js';
 import noteOperations from './noteOperations.js';
 import { formatTimestamp } from './noteHelper.js';
 import { localStorageService } from './localStorage.js';
@@ -14,10 +13,13 @@ import {
   showErrorMessage, 
   showSuccessMessage 
 } from './messageManager.js';
+// 导入 AUTH_PAGE_URL
+import { AUTH_PAGE_URL } from './main.js';
+import { auth } from './Auth/authService.js'; // 或者你的认证模块的正确路径
 
 
 
-const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
+// const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
 
 let lastLoadedNoteId = null;
 let isLoading = false;
@@ -57,6 +59,9 @@ function updateNoteList(notesToDisplay, append = false) {
 
   noteList.appendChild(fragment);
 
+    // 更新所有笔记的标签
+    updateTagsDisplay(notesToDisplay);
+
   setupNoteListeners();
 
   // 显示 "You've reached the end of your notes" 消息
@@ -66,14 +71,26 @@ function updateNoteList(notesToDisplay, append = false) {
   }
 }
 
-function updateUserInfo(userEmailElement) {
-  if (!auth.currentUser) {
-    userEmailElement.textContent = '';
-    return;
+function updateUserInfo() {
+  const usernameElement = document.getElementById('username');
+  const userEmailElement = document.getElementById('userEmail');
+  if (auth && auth.currentUser) {
+      const email = auth.currentUser.email;
+      const username = email.split('@')[0];
+      if (usernameElement) {
+          usernameElement.textContent = ` - ${username}`;
+      }
+      if (userEmailElement) {
+          userEmailElement.textContent = email;
+      }
+  } else {
+      if (usernameElement) {
+          usernameElement.textContent = '';
+      }
+      if (userEmailElement) {
+          userEmailElement.textContent = '';
+      }
   }
-  const email = auth.currentUser.email;
-  const username = email.split('@')[0]; // 这行代码提取 @ 符号前的部分
-  userEmailElement.textContent = username;
 }
 
 function createNoteElement(note) {
@@ -126,6 +143,7 @@ function createNoteElement(note) {
       </div>
     </div>
   `;
+  
   return noteElement;
 }
 
@@ -181,10 +199,6 @@ async function handleNoteListClick(event) {
   }
 }
 
-function updateNoteTagsInUI(noteId, tags) {
-  updateTagsDisplay(noteId, tags);
-}
-
 async function handleDeleteNote(noteId) {
   console.log(`Attempting to delete note with ID: ${noteId}`);
   
@@ -213,32 +227,35 @@ async function handleDeleteNote(noteId) {
   }
 }
 
-function displayGeneratedTags(noteId, tags) {
-  const tagContainer = document.getElementById(`tags-${noteId}`);
-  if (tagContainer) {
-    tagContainer.innerHTML = tags.map(tag => `<span class="tag">${tag}</span>`).join('');
-  }
-}
+async function updateTagsDisplay(notesOrNote) {
+  console.log('updateTagsDisplay 被调用，参数：', notesOrNote);
+  
+  const notes = Array.isArray(notesOrNote) ? notesOrNote : [notesOrNote];
 
-function updateTagsDisplay(noteId, tags) {
-  console.log('Updating tags display for note:', noteId, tags);
-  const tagContainer = document.querySelector(`[data-note-id="${noteId}"] .note-tags`);
-  if (tagContainer) {
-    // 确保 tags 是一个数组
-    const tagsArray = Array.isArray(tags) ? tags : [tags];
-    
-    // 将标签符分割成单独的标签
-    const individualTags = tagsArray.flatMap(tag => 
-      tag.split(/[,\s]+/)  // 用逗号或空格分割
-         .filter(t => t.startsWith('#'))
-         .map(t => t.trim())
-    );
-    
-    // 使用 renderHelpers.renderTags 来渲染分割后的标签
-    tagContainer.innerHTML = renderHelpers.renderTags(individualTags);
-    console.log('Rendered individual tags:', individualTags);
-  } else {
-    console.warn(`Tag container for note ${noteId} not found. Note may have been deleted.`);
+  for (const note of notes) {
+    const noteId = typeof note === 'string' ? note : note.note_id;
+    const tags = Array.isArray(note.tags) ? note.tags : (typeof note === 'object' ? note.tags : []);
+
+    const noteElement = document.querySelector(`.note-item[data-note-id="${noteId}"]`);
+    if (!noteElement) {
+      console.warn(`未在DOM中找到ID为 ${noteId} 的笔记元素`);
+      continue;
+    }
+
+    const tagContainer = noteElement.querySelector('.note-tags');
+    if (!tagContainer) {
+      console.warn(`在笔记 ${noteId} 的元素中未找到标签容器`);
+      console.log('笔记元素HTML：', noteElement.innerHTML);
+      continue;
+    }
+
+    console.log(`渲染笔记 ${noteId} 的标签数组：`, tags);
+
+    // 渲染标签
+    tagContainer.innerHTML = renderHelpers.renderTags(tags);
+
+    // 如果需要等待DOM更新，可以使用 requestAnimationFrame
+    await new Promise(resolve => requestAnimationFrame(resolve));
   }
 }
 
@@ -313,6 +330,7 @@ async function initializeUI() {
   const loadingIndicator = showLoadingIndicator('Initializing...');
 
   try {
+    updateUserInfo(); // 添加这行
     console.log('Fetching initial notes...');
     const initialNotes = await noteOperations.getPaginatedNotes();
     console.log(`Received ${initialNotes.length} initial notes`);
@@ -326,6 +344,7 @@ async function initializeUI() {
     }
 
     setupEventListeners();
+    await initializeTrendingTagsAnalysis();
     
     // 将初始加载的笔记设置为 originalNotes
     originalNotes = initialNotes;
@@ -364,25 +383,30 @@ async function initializeTrendingTagsAnalysis() {
   }
 }
 
-function updateTrendingTagsAnalysis(trendingTags, analysisReport) {
-  console.log('Updating trending tags analysis');
-  const trendingTagsAnalysisElement = document.getElementById('trending-tags-analysis');
-  if (trendingTagsAnalysisElement) {
-    const tagsHtml = trendingTags.map(tag => `<span class="tag">#${tag.name} (${tag.count})</span>`).join(' ');
-    trendingTagsAnalysisElement.innerHTML = `
-      <h3>Some Suggestions</h3>
-      <div class="analysis-report">
-        <h4></h4>
-        <p>${analysisReport}</p>
-      </div>
-    `;
-    console.log('Trending tags analysis updated');
-  } else {
-    console.warn('Trending tags analysis element not found. Creating element.');
-    const newElement = document.createElement('div');
-    newElement.id = 'trending-tags-analysis';
-    document.body.appendChild(newElement);
-    updateTrendingTagsAnalysis(trendingTags, analysisReport); // 递归调用以更新新创建的元素
+async function updateTrendingTagsAnalysis() {
+  try {
+    const trendingTags = await noteOperations.getTrendingTags();
+    if (trendingTags.length === 0) {
+      console.log('No trending tags available');
+      return;
+    }
+
+    const analysisReport = await noteOperations.analyzeTrendingTags(trendingTags);
+    
+    const trendingTagsAnalysisElement = document.getElementById('trending-tags-analysis');
+    if (trendingTagsAnalysisElement) {
+      const tagsHtml = trendingTags.map(tag => `<span class="tag">#${tag.name} (${tag.count})</span>`).join(' ');
+      trendingTagsAnalysisElement.innerHTML = `
+        <h3>Analysis</h3>
+        <div class="analysis-report">
+          <p>${analysisReport}</p>
+        </div>
+      `;
+    } else {
+      console.warn('Trending tags analysis element not found');
+    }
+  } catch (error) {
+    console.error('Error updating trending tags analysis:', error);
   }
 }
 
@@ -394,13 +418,24 @@ async function loadMoreNotes() {
 
   try {
     const lastNoteId = lastLoadedNoteId;
-    const notes = await noteOperations.getPaginatedNotes(lastNoteId);
-    if (notes.length === 0) {
+    const newNotes = await noteOperations.getPaginatedNotes(lastNoteId);
+    if (newNotes.length === 0) {
       allNotesLoaded = true;
       showAllNotesLoadedMessage();
     } else {
-      updateNoteList(notes, true); // true means append, not replace
-      lastLoadedNoteId = notes[notes.length - 1].note_id;
+      // 过滤掉已经存在的笔记
+      const existingNoteIds = new Set(Array.from(document.querySelectorAll('.note-item')).map(el => el.dataset.noteId));
+      const uniqueNewNotes = newNotes.filter(note => !existingNoteIds.has(note.note_id));
+
+      if (uniqueNewNotes.length > 0) {
+        updateNoteList(uniqueNewNotes, true); // true means append, not replace
+        lastLoadedNoteId = newNotes[newNotes.length - 1].note_id;
+      } else {
+        console.log('No new unique notes to add');
+        // 如果没有新的唯一笔记，可能需要再次尝试加载
+        lastLoadedNoteId = newNotes[newNotes.length - 1].note_id;
+        loadMoreNotes(); // 递归调用以尝试加载更多笔记
+      }
     }
   } catch (error) {
     console.error('Error loading more notes:', error);
@@ -437,95 +472,87 @@ async function handleAddNote(event) {
   }
   const noteInput = document.getElementById('noteInput');
   let noteText = noteInput.value.trim();
-  if (noteText) {
-    try {
-      if (isValidUrl(noteText)) {
-        showLoadingIndicator('Fetching web content...');
-        try {
-          const content = await fetchWebContent(noteText);
-          if (content) {
-            noteText = content;
-            noteInput.value = noteText;
-          }
-        } catch (error) {
-          console.error('Error fetching web content:', error);
-          // 即使获取网页内容失败，我们也继续处理原始的 noteText
-        } finally {
-          hideLoadingIndicator();
+  clearNoteInput();
+  if (!noteText) return;
+
+  const tempNoteId = 'temp-' + Date.now();
+
+  try {
+    if (isValidUrl(noteText)) {
+      showLoadingIndicator('Fetching web content...');
+      try {
+        const content = await fetchWebContent(noteText);
+        if (content) {
+          noteText = content;
         }
-      }
-
-      // 检查内容长度，如果超过500字符，使用AI改写
-      if (noteText.length > 500 && !noteInput.dataset.rewritten) {
-        showLoadingIndicator("Rewriting content...");
-        console.log('Content too long, rewriting...');
-        const rewrittenText = await aiAPI.rewriteContent(noteText);
-        console.log('Rewritten content:', rewrittenText);
-        
-        // 更新 noteText 为改写后的内容
-        noteText = rewrittenText;
-        
-        // 更新输入框的内容，让用户看到改写后的内容
-        noteInput.value = rewrittenText;
-        
-        // 显示一个通知，告诉用户内容已被改写
-        showNotification('Content has been rewritten by AI for brevity.');
-        
-        // 标记输入框，表示内容已被改写
-        noteInput.dataset.rewritten = 'true';
-        
+      } catch (error) {
+        console.error('Error fetching web content:', error);
+        // 即使获取网页内容失败，我们也继续处理原始的 noteText
+      } finally {
         hideLoadingIndicator();
-        return; // 结束函数执行，等待用户确认改写后的内容
       }
-
-      // 创建一个临时的笔记对象
-      const tempNote = {
-        note_id: 'temp-' + Date.now(),
-        content: noteText, // 使用可能已经被改写的 noteText
-        tags: []
-      };
-
-      // 添加到内存列表
-      noteOperations.addTempNote(tempNote);
-      
-      // 立即添加到 UI
-      const noteElement = createNoteElement(tempNote);
-      const noteList = document.getElementById('noteList');
-      noteList.insertBefore(noteElement, noteList.firstChild);
-
-      // 异步添加笔记，传入更新UI的回调函数
-      const newNote = await noteOperations.addNote(noteText, updateNoteTagsInUI);
-      
-      // 更新 DOM 中的 note_id
-      noteElement.dataset.noteId = newNote.note_id;
-
-      console.log('Note added successfully:', newNote);
-      
-      // 清空输入框
-      noteInput.value = '';
-      
-      // 重置输入框状态
-      delete noteInput.dataset.rewritten;
-
-    } catch (error) {
-      console.error('Error adding note or fetching web content:', error);
-      showErrorMessage('An error occurred. Please try again.');
-    } finally {
-      hideLoadingIndicator();
     }
+
+    if (noteText.length > 500 && !noteInput.dataset.rewritten) {
+      showLoadingIndicator("Rewriting content...");
+      console.log('Content too long, rewriting...');
+      const rewrittenText = await aiAPI.rewriteContent(noteText);
+      console.log('Rewritten content:', rewrittenText);
+      
+      noteText = rewrittenText;
+      
+      showNotification('Content has been rewritten by AI for brevity.');
+      
+      hideLoadingIndicator();
+      return; // 结束函数执行，等待用户确认改写后的内容
+    }
+
+    const tempNote = {
+      note_id: tempNoteId,
+      content: noteText,
+      tags: []
+    };
+
+    noteOperations.addTempNote(tempNote);
+    
+    const tempNoteElement = createNoteElement(tempNote);
+    const noteList = document.getElementById('noteList');
+    noteList.insertBefore(tempNoteElement, noteList.firstChild);
+
+    const newNote = await noteOperations.addNote(noteText);
+    console.log('Note added successfully:', newNote);
+
+    const existingNoteElement = document.querySelector(`.note-item[data-note-id="${tempNoteId}"]`);
+    if (existingNoteElement) {
+      existingNoteElement.dataset.noteId = newNote.note_id;
+      updateNoteContent(existingNoteElement, newNote);
+    }
+
+    await updateTagsDisplay(newNote);
+
+  } catch (error) {
+    console.error('Error adding note or fetching web content:', error);
+    showErrorMessage('An error occurred. Please try again.');
+    document.querySelector(`.note-item[data-note-id="${tempNoteId}"]`)?.remove();
+  } finally {
+    hideLoadingIndicator();
+    delete noteInput.dataset.rewritten;
   }
 }
 
-async function handleLogout() {
-  // 实现登出逻辑
-  auth.signOut()
-    .then(() => {
-      console.log('User signed out successfully');
-      window.location.href = AUTH_PAGE_URL; // 重定向到登录页面
-    })
-    .catch((error) => {
-      console.error('Error signing out:', error);
-    });
+function updateNoteContent(element, note) {
+  const contentElement = element.querySelector('.note-text');
+  if (contentElement) contentElement.textContent = note.content;
+  
+  const timestampElement = element.querySelector('.note-timestamp');
+  if (timestampElement) timestampElement.textContent = formatTimestamp(note.created_at);
+  
+}
+
+function clearNoteInput() {
+  requestAnimationFrame(() => {
+    document.getElementById('noteInput').value = '';
+  });
 }
 
 async function initializeTrendingTags() {
@@ -606,9 +633,9 @@ function setupEventListeners() {
 
   document.addEventListener('tagsGenerated', (event) => {
     console.log('tagsGenerated event received', event.detail);
-    const { noteId, tags } = event.detail;
-    if (noteId && tags) {
-      updateTagsDisplay(noteId, tags);
+    const { note_id, tags } = event.detail;
+    if (note_id && tags) {
+      updateTagsDisplay(note_id, tags);
     } else {
       console.error('Invalid data in tagsGenerated event', event.detail);
     }
@@ -646,9 +673,9 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
   document.addEventListener('tagsGenerated', (event) => {
     console.log('tagsGenerated event received', event.detail);
-    const { noteId, tags } = event.detail;
-    if (noteId && tags) {
-      updateTagsDisplay(noteId, tags);
+    const { note_id, tags } = event.detail;
+    if (note_id && tags) {
+      updateTagsDisplay({ note_id, tags });
     } else {
       console.error('Invalid data in tagsGenerated event', event.detail);
     }
@@ -1034,14 +1061,23 @@ async function handleCompleteUserInput() {
   }
 }
 
+async function handleLogout() {
+  try {
+      await auth.signOut();
+      localStorage.removeItem('authToken');
+      window.location.href = AUTH_PAGE_URL;
+  } catch (error) {
+      console.error('Error during logout:', error);
+      showErrorMessage('Failed to logout. Please try again.');
+  }
+}
+
 // 确保导出 handleAddNote 函数
 export {
   initializeUI,
   updateNoteList,
   handleAddNote,
-  handleLogout,
   updateTagsDisplay,
-  displayGeneratedTags,
   handleDeleteNote,
   handleNoteInputKeydown,  // 新添加的函数
   showLoadingIndicator,
@@ -1050,4 +1086,14 @@ export {
   initializeTrendingTagsAnalysis,
   updateTrendingTagsAnalysis,
   handleCompleteUserInput,
+  handleLogout
 };
+
+// 页面加载完成后执行的初始化代码
+document.addEventListener('DOMContentLoaded', () => {
+  updateTrendingTagsAnalysis();
+  // 其他初始化代码...
+  initializeUI();
+  setupEventListeners();
+  // 可能还有其他需要在页面加载后执行的函数
+});
