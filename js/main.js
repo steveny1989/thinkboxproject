@@ -1,7 +1,7 @@
 import noteOperations from './noteOperations.js';
 import { initializeUI, updateNoteList, updateTrendingTagsAnalysis, setupEventListeners } from './ui.js';
 import { auth, loginUser, logoutUser } from './Auth/authService.js';
-import noteAPI from './noteAPI.js';
+import { debounce } from './utils.js';
 
 export const AUTH_PAGE_URL = "html/newAuth.html";
 
@@ -14,7 +14,8 @@ export const state = {
   isGeneratingComment: false,
   isListening: false,
   isAnalyzing: false,
-  notesPerPage: 24,
+  currentPage: 0,
+  pageSize: 24
 };
 
 let isInitialized = false;
@@ -53,13 +54,7 @@ async function handleAuthStateChange(authStatus) {
         setupEventListeners();
         isInitialized = true;
       } catch (error) {
-        if (error.message.includes('401') || error.message.includes('Unauthorized')) {
-          console.error('Authentication error:', error);
-          showErrorMessage('Your session has expired. Please log in again.');
-          logoutUser();
-        } else {
-          throw error;
-        }
+        handleInitializationError(error);
       }
     } else {
       console.log('User is signed out');
@@ -68,6 +63,17 @@ async function handleAuthStateChange(authStatus) {
   } catch (error) {
     console.error('Error in handleAuthStateChange:', error);
     showErrorMessage('An unexpected error occurred. Please try again later.');
+  }
+}
+
+function handleInitializationError(error) {
+  if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+    console.error('Authentication error:', error);
+    showErrorMessage('Your session has expired. Please log in again.');
+    logoutUser();
+  } else {
+    console.error('Initialization error:', error);
+    showErrorMessage('An error occurred during initialization. Please try again.');
   }
 }
 
@@ -84,17 +90,9 @@ const debouncedInitializeApp = debounce(initializeApp, 300);
 
 document.addEventListener('DOMContentLoaded', debouncedInitializeApp);
 
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
 // 启动应用
 debouncedInitializeApp();
+
+const debouncedUpdateTrendingTagsAnalysis = debounce(updateTrendingTagsAnalysis, 300);
+
+// 在需要调用 updateTrendingTagsAnalysis 的地方使用 debouncedUpdateTrendingTagsAnalysis

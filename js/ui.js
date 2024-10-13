@@ -660,7 +660,7 @@ async function initializeTrendingTags() {
 
   async function fetchAndUpdateTrendingTags() {
     const trendingTags = await noteOperations.getTrendingTags();
-    console.log('Fetched trending tags:', trendingTags); // 添加这行日志
+    console.log('Fetched trending tags:', trendingTags);
     updateTopTagsList(trendingTags);
   }
 

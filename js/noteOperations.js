@@ -38,6 +38,12 @@ class NoteOperations {
     }
 
     console.log('Initialized tempToServerNoteMap:', this.tempToServerNoteMap);
+
+    this.cachedTrendingTags = null;
+    this.lastFetchTime = 0;
+    this.CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    this.analysisReportCache = null;
+    this.analysisReportCacheTime = 0;
   }
 
   async loadNotes() {
@@ -97,7 +103,7 @@ class NoteOperations {
       const tags = await this.generateAndSaveTagsForNote(newNote);
       newNote.tags = tags;
       
-      // 更新本地存储
+      // 更新本地存���
       this.updateNoteWithTags(newNote.note_id, tags);
 
       // 触发事件来更新UI中的标签
@@ -325,7 +331,7 @@ class NoteOperations {
         return [];
       }
 
-      // 更新本地缓存
+      // 更��本地缓存
       if (page === 0) {
         this.notes = notes;
       } else {
@@ -372,7 +378,15 @@ class NoteOperations {
     }
   }
 
+  
   async getTrendingTags(limit = 10) {
+    console.log('getTrendingTags called from:', new Error().stack);
+    const now = Date.now();
+    if (this.cachedTrendingTags && now - this.lastFetchTime < this.CACHE_DURATION) {
+      console.log('Returning cached trending tags');
+      return this.cachedTrendingTags;
+    }
+
     try {
       const allTags = await this.api.tags.getAllTags();
       console.log('All tags received:', allTags);
@@ -404,6 +418,9 @@ class NoteOperations {
         .map(([name, count]) => ({ name, count }));
 
       console.log('Sorted and limited tags:', sortedTags);
+
+      this.cachedTrendingTags = sortedTags;
+      this.lastFetchTime = now;
       return sortedTags;
     } catch (error) {
       console.error('Error fetching trending tags:', error);
@@ -411,27 +428,28 @@ class NoteOperations {
     }
   }
 
-  async analyzeTrendingTags() {
-    console.log('Starting trending tags analysis');
+  async analyzeTrendingTags(trendingTags) {
+    const now = Date.now();
+    if (this.analysisReportCache && now - this.analysisReportCacheTime < this.CACHE_DURATION) {
+      console.log('Returning cached analysis report');
+      return this.analysisReportCache;
+    }
+
+    console.log('Generating new analysis report');
+    const tagsString = trendingTags.map(tag => `#${tag.name} (${tag.count})`).join(', ');
+    console.log('Tags string for analysis:', tagsString);
+
     try {
-      const trendingTags = await this.getTrendingTags();
-      console.log('Fetched trending tags for analysis:', trendingTags);
-
-      if (!trendingTags || !Array.isArray(trendingTags) || trendingTags.length === 0) {
-        console.log('No valid trending tags available for analysis');
-        return "No trending tags available for analysis.";
-      }
-
-      const tagsString = trendingTags.map(tag => `#${tag.name} (${tag.count})`).join(', ');
-      console.log('Tags string for analysis:', tagsString);
-
       const analysisReport = await this.api.ai.tagsCommentor([tagsString]);
       console.log('Analysis report received:', analysisReport);
 
+      this.analysisReportCache = analysisReport;
+      this.analysisReportCacheTime = now;
+
       return analysisReport;
     } catch (error) {
-      console.error('Error in analyzeTrendingTags:', error);
-      return "An error occurred while analyzing trending tags.";
+      console.error('Error getting tags analysis:', error);
+      throw error;
     }
   }
   
