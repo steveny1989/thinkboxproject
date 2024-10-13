@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authentication</title>
-    <link rel="stylesheet" href="../css/auth.css">
-    <link rel="icon" href="data:,">
+    <title>ThinkBox - Authentication</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <div class="container">
+        <header class="header">
+            <div class="logo-container">
+                <h1 class="logo">ThinkBox</h1>
+            </div>
+        </header>
         <div class="auth-container">
-            <h2>注册</h2>
-            <form id="registerForm">
-                <input type="email" id="registerEmail" placeholder="Email" required>
-                <input type="password" id="registerPassword" placeholder="Password" required>
-                <input type="text" id="registerUsername" placeholder="Username (optional)">
-                <button type="submit" id="registerButton">注册</button>
-                <div id="registerError" class="error hidden">注册失败</div>
+            <div class="auth-toggle">
+                <button id="loginToggle" class="active">登录</button>
+                <button id="registerToggle">注册</button>
+            </div>
+            <form id="authForm">
+                <input type="email" id="email" name="email" placeholder="邮箱" required>
+                <input type="password" id="password" name="password" placeholder="密码" required>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="确认密码" required style="display:none;">
+                <button type="submit" id="submitButton">提交</button>
             </form>
-            
-            <h2>登录</h2>
-            <form id="loginForm">
-                <input type="email" id="loginEmail" placeholder="Email" required>
-                <input type="password" id="loginPassword" placeholder="Password" required>
-                <button type="submit" id="loginButton">登录</button>
-                <div id="loginError" class="error hidden">登录失败</div>
-            </form>
+            <div id="errorMessage" class="error hidden"></div>
         </div>
     </div>
     <script type="module" src="../js/Auth/authService.js"></script>

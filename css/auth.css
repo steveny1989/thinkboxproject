@@ -1,58 +1,172 @@
+:root {
+  --primary-color: #007BFF;
+  --secondary-color: #0056b3;
+  --background-color: #f8f9fa;
+  --text-color: #333;
+  --border-color: #ccc;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background-color: var(--background-color);
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
 }
 
 .container {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 300px;
+    background-color: #ffffff;
+    padding: 60px 50px;  /* 增加内边距 */
+    border-radius: 30px 30px 30px 100px;  /* 增加圆角尺寸 */
+    box-shadow: 
+        0 15px 40px rgba(0, 0, 0, 0.1),
+        0 5px 10px rgba(0, 0, 0, 0.05);
+    width: 500px;  /* 增加宽度 */
+    max-width: 95%;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 调整装饰元素大小 */
+.container::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 120px;
+    height: 120px;
+    background: var(--primary-color);
+    opacity: 0.1;
+    border-radius: 50%;
+}
+
+.container::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: -40px;
+    width: 100px;
+    height: 100px;
+    background: var(--secondary-color);
+    opacity: 0.1;
+    border-radius: 50%;
+}
+
+/* Logo 样式 */
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.logo-container {
+    display: inline-block;
+}
+
+.logo {
+    font-size: 60px;  /* 增大字体 */
+    font-weight: bold;
+    color: var(--primary-color);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 40px;
+}
+
+.logo::before {
+    font-size: 66px;
+    margin-right: 20px;
+}
+
+/* 添加悬停效果 */
+.logo:hover {
+    transform: scale(1.05);
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.auth-toggle {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+    background-color: #f0f0f0;
+    border-radius: 25px;
+    padding: 5px;
+    width: 320px;  /* 增加宽度 */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.auth-toggle button {
+    background: none;
+    border: none;
+    padding: 14px 28px;
+    cursor: pointer;
+    font-size: 20px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    flex: 1;
+    text-align: center;
+}
+
+.auth-toggle button.active {
+    background-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .auth-container h2 {
     margin-top: 0;
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
 .auth-container input {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 18px;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.auth-container button {
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: #fff;
+.auth-container input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+.auth-container button[type="submit"] {
+    background-color: var(--primary-color);
+    color: white;
     border: none;
-    border-radius: 4px;
+    padding: 18px;
+    border-radius: 8px;
+    font-size: 22px;
+    font-weight: bold;
     cursor: pointer;
-    margin: 10px 0;
+    transition: background-color 0.3s, transform 0.2s;
+    margin-top: 10px;  /* 增加顶部间距 */
 }
 
-.auth-container button:hover {
-    background-color: #0056b3;
+.auth-container button[type="submit"]:hover {
+    background-color: var(--secondary-color);
+    transform: translateY(-2px);
 }
 
-.auth-container .error {
-    color: red;
-    margin: 10px 0;
-    display: none;
-}
-
-.auth-container .loading {
-    display: none;
+.error {
+    color: #dc3545;
+    margin-top: 25px;
     text-align: center;
+    font-size: 16px;
+    padding: 12px;
 }
 
 .hidden {
@@ -88,4 +202,49 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* 添加响应式设计 */
+@media (max-width: 600px) {
+    .container {
+        padding: 40px 30px;
+        border-radius: 20px 20px 20px 60px;
+    }
+
+    .logo {
+        font-size: 48px;
+    }
+
+    .logo::before {
+        font-size: 54px;
+    }
+
+    .auth-toggle {
+        width: 100%;
+    }
+
+    .auth-container input,
+    .auth-container button[type="submit"] {
+        padding: 16px;
+        font-size: 18px;
+    }
+}
+
+/* 添加这个新的样式来增加注册按钮和登录标题之间的间距，并添加虚线分隔符 */
+#registerForm {
+    margin-bottom: 30px;  /* 减少底部边距，为分隔符腾出空间 */
+    padding-bottom: 30px; /* 添加内边距，使分隔符不会紧贴按钮 */
+    border-bottom: 2px dashed var(--border-color); /* 添加虚线边框 */
+    position: relative; /* 为伪元素定位做准备 */
+}
+
+#registerForm::after {
+    position: absolute;
+    bottom: -10px; /* 调整位置使其位于虚线上 */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #fff; /* 与背景色相同 */
+    padding: 0 10px; /* 文字左右留白 */
+    color: var(--text-color);
+    font-size: 14px;
 }
