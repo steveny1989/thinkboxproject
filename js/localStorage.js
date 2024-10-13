@@ -176,8 +176,16 @@ export const localStorageService = {
 
   saveTrendingTagsAnalysisCache(analysis, expirationTime) {
     try {
-      localStorage.setItem(TRENDING_TAGS_ANALYSIS_CACHE_KEY, JSON.stringify(analysis));
-      localStorage.setItem(CACHE_EXPIRATION_KEY, expirationTime.toString());
+      if (analysis === undefined) {
+        console.warn('Attempted to save undefined analysis to cache');
+        return;
+      }
+      const cacheData = JSON.stringify({
+        analysis: analysis,
+        expiration: expirationTime
+      });
+      localStorage.setItem(TRENDING_TAGS_ANALYSIS_CACHE_KEY, cacheData);
+      console.log('Trending tags analysis cache saved:', analysis);
     } catch (error) {
       console.error('Error saving trending tags analysis cache to localStorage:', error);
     }
@@ -185,15 +193,14 @@ export const localStorageService = {
 
   getTrendingTagsAnalysisCache() {
     try {
-      const cachedAnalysis = localStorage.getItem(TRENDING_TAGS_ANALYSIS_CACHE_KEY);
-      const expirationTime = localStorage.getItem(CACHE_EXPIRATION_KEY);
-      if (cachedAnalysis && expirationTime) {
-        return {
-          analysis: JSON.parse(cachedAnalysis),
-          expiration: parseInt(expirationTime)
-        };
+      const cachedData = localStorage.getItem(TRENDING_TAGS_ANALYSIS_CACHE_KEY);
+      if (cachedData === null || cachedData === 'undefined') {
+        console.log('No valid trending tags analysis cache found');
+        return null;
       }
-      return null;
+      const parsedData = JSON.parse(cachedData);
+      console.log('Trending tags analysis cache retrieved:', parsedData);
+      return parsedData;
     } catch (error) {
       console.error('Error getting trending tags analysis cache from localStorage:', error);
       return null;

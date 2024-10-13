@@ -119,20 +119,25 @@ class NoteAPI {
     }
   }
 
-  async getPaginatedNotes(limit = 24, offset = 0) {
+  async getPaginatedNotes(page = 0, limit = 48) {
     try {
       const token = await this.getAuthToken();
-      const url = `${this.baseUrl}/notes?limit=${limit}&offset=${offset}`;
+      const url = `${this.baseUrl}/notes?page=${page}&limit=${limit}`;
       console.log('Fetching notes from URL:', url);
+  
       const response = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
+  
       if (!response.ok) {
-        console.error('Failed to fetch notes. Status:', response.status);
-        console.error('Response:', await response.text());
         throw new Error(`Failed to fetch notes. Status: ${response.status}`);
       }
-      return response.json();
+  
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Error in getPaginatedNotes:', error);
       throw error;

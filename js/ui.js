@@ -1,3 +1,4 @@
+import { state } from './main.js';
 import noteOperations from './noteOperations.js';
 import { formatTimestamp } from './noteHelper.js';
 import { localStorageService } from './localStorage.js';
@@ -6,71 +7,19 @@ import renderHelpers from './renderHelpers.js';
 import { isValidUrl } from './utils.js';
 import api from './api.js';
 import aiAPI from './AIAPI.js';
-import { 
-  showLoadingIndicator, 
-  hideLoadingIndicator, 
-  showAllNotesLoadedMessage, 
-  showErrorMessage, 
-  showSuccessMessage 
-} from './messageManager.js';
-// 导入 AUTH_PAGE_URL
+import { messageManager, showLoadingIndicator, hideLoadingIndicator, showAllNotesLoadedMessage, showErrorMessage } from './messageManager.js';
 import { AUTH_PAGE_URL } from './main.js';
 import { auth } from './Auth/authService.js'; // 或者你的认证模块的正确路径
 
-
-
-// const AUTH_PAGE_URL = "./html/auth.html"; // 定义 auth.html 的路径
-
-let lastLoadedNoteId = null;
-let isLoading = false;
-let allNotesLoaded = false;
-let originalNotes = [];
-let isShowingSearchResults = false;
-let isGeneratingComment = false;
-let recognition;
-let isListening = false;
-let isAnalyzing = false;
-
-
-if ('webkitSpeechRecognition' in window) {
-  recognition = new webkitSpeechRecognition();
-} else if ('SpeechRecognition' in window) {
-  recognition = new SpeechRecognition();
-} else {
-  console.warn('Speech recognition is not supported in this browser.');
+// UI 初始化
+export function initializeUI() {
+  console.log('Initializing UI...');
+  updateUserInfo();
+  loadInitialNotes();
+  setupEventListeners();
 }
 
-function updateNoteList(notesToDisplay, append = false) {
-  console.log('Updating note list with', notesToDisplay.length, 'notes');
-  const noteList = document.getElementById('noteList');
-  const userEmailElement = document.getElementById('userEmail');
-
-  updateUserInfo(userEmailElement);
-  
-  if (!append) {
-    noteList.innerHTML = '';
-  }
-
-  const fragment = document.createDocumentFragment();
-  notesToDisplay.forEach(note => {
-    const noteElement = createNoteElement(note);
-    fragment.appendChild(noteElement);
-  });
-
-  noteList.appendChild(fragment);
-
-    // 更新所有笔记的标签
-    updateTagsDisplay(notesToDisplay);
-
-  setupNoteListeners();
-
-  // 显示 "You've reached the end of your notes" 消息
-  const allNotesLoadedElement = document.getElementById('allNotesLoaded');
-  if (allNotesLoadedElement && notesToDisplay.length < 24) { // 假设每页加载24条笔记
-    allNotesLoadedElement.classList.remove('hidden');
-  }
-}
-
+// 更新用户信息显示
 function updateUserInfo() {
   const usernameElement = document.getElementById('username');
   const userEmailElement = document.getElementById('userEmail');
@@ -90,6 +39,115 @@ function updateUserInfo() {
       if (userEmailElement) {
           userEmailElement.textContent = '';
       }
+  }
+}
+
+// 加载初始笔记
+async function loadInitialNotes() {
+  try {
+    showLoadingIndicator('Loading notes...');
+    state.currentPage = 0; // 重置到第一页
+    const notes = await noteOperations.getPaginatedNotes(state.currentPage, state.pageSize);
+    state.originalNotes = notes;
+    updateNoteList(notes);
+    state.currentPage++; // 准备加载下一页
+  } catch (error) {
+    console.error('Error loading initial notes:', error);
+    showErrorMessage('Failed to load notes. Please try again.');
+  } finally {
+    hideLoadingIndicator();
+  }
+}
+
+//语音识别
+let recognition;
+
+if ('webkitSpeechRecognition' in window) {
+  recognition = new webkitSpeechRecognition();
+} else if ('SpeechRecognition' in window) {
+  recognition = new SpeechRecognition();
+} else {
+  console.warn('Speech recognition is not supported in this browser.');
+}
+function initializeSpeechRecognition() {
+  if (!recognition) {
+    console.warn('Speech recognition is not supported in this browser.');
+    return;
+  }
+
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = (event) => {
+    const result = event.results[event.results.length - 1];
+    const transcript = result[0].transcript;
+    
+    if (result.isFinal) {
+      const noteInput = document.getElementById('noteInput');
+      noteInput.value += transcript + ' ';
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+  };
+}
+
+function toggleSpeechRecognition() {
+  if (!recognition) {
+    console.warn('Speech recognition is not supported in this browser.');
+    return;
+  }
+
+  if (isListening) {
+    recognition.stop();
+    isListening = false;
+  } else {
+    recognition.start();
+    isListening = true;
+  }
+  updateButtonState();
+}
+
+function updateButtonState() {
+  const button = document.getElementById('voiceInputButton');
+  if (button) {
+    if (isListening) {
+      button.classList.add('active');
+      button.setAttribute('aria-label', 'Stop voice input');
+    } else {
+      button.classList.remove('active');
+      button.setAttribute('aria-label', 'Start voice input');
+    }
+  } else {
+    console.warn('Voice input button not found');
+  }
+}
+
+//更新笔记列表
+
+function updateNoteList(notesToDisplay, append = false) {
+  const noteList = document.getElementById('noteList');
+  if (!append) {
+    noteList.innerHTML = '';
+  }
+
+  const fragment = document.createDocumentFragment();
+  notesToDisplay.forEach(note => {
+    const noteElement = createNoteElement(note);
+    fragment.appendChild(noteElement);
+  });
+  noteList.appendChild(fragment);
+
+    // 更新所有笔记的标签
+    updateTagsDisplay(notesToDisplay);
+
+  setupNoteListeners();
+
+  // 显示 "You've reached the end of your notes" 消息
+  const allNotesLoadedElement = document.getElementById('allNotesLoaded');
+  if (allNotesLoadedElement && notesToDisplay.length < 24) { // 假设每页加载24条笔记
+    allNotesLoadedElement.classList.remove('hidden');
   }
 }
 
@@ -264,13 +322,13 @@ async function handleSearch(event) {
   console.log('Searching for:', searchTerm);
 
   if (searchTerm.length === 0) {
-    isShowingSearchResults = false;
+    state.isShowingSearchResults = false;
     updateNoteList(originalNotes);
     hideSearchResultsInfo();
   } else {
     try {
       const searchResults = await noteOperations.searchNotes(searchTerm);
-      isShowingSearchResults = true;
+      state.isShowingSearchResults = true;
       updateNoteList(searchResults);
       showSearchResultsInfo(searchResults.length, searchTerm);
       // 应用高亮到搜索结果
@@ -306,7 +364,9 @@ function showSearchResultsInfo(resultCount, searchTerm) {
       <span>Clear Search</span>
     </button>
   `;
-  document.getElementById('clearSearch').addEventListener('click', clearSearch);
+  const clearSearchButton = document.getElementById('clearSearch');
+  clearSearchButton.removeEventListener('click', clearSearch); // 移除旧的监听器
+  clearSearchButton.addEventListener('click', clearSearch);
 }
 
 function hideSearchResultsInfo() {
@@ -319,52 +379,39 @@ function hideSearchResultsInfo() {
 function clearSearch() {
   const searchInput = document.getElementById('searchInput');
   searchInput.value = '';
-  isShowingSearchResults = false;
+  state.isShowingSearchResults = false;
   updateNoteList(originalNotes);
   hideSearchResultsInfo();
 }
 
-async function initializeUI() {
-  console.log('Initializing UI...');
-  
-  const loadingIndicator = showLoadingIndicator('Initializing...');
+function applyHighlight(noteElement, searchTerm) {
+  if (!searchTerm) return;
 
-  try {
-    updateUserInfo(); // 添加这行
-    console.log('Fetching initial notes...');
-    const initialNotes = await noteOperations.getPaginatedNotes();
-    console.log(`Received ${initialNotes.length} initial notes`);
-    updateNoteList(initialNotes);
-    
-    if (initialNotes.length > 0) {
-      lastLoadedNoteId = initialNotes[initialNotes.length - 1].note_id;
-    } else {
-      allNotesLoaded = true;
-      showAllNotesLoadedMessage();
-    }
-
-    setupEventListeners();
-    await initializeTrendingTagsAnalysis();
-    
-    // 将初始加载的笔记设置为 originalNotes
-    originalNotes = initialNotes;
-
-  } catch (error) {
-    console.error('Error initializing UI:', error);
-    showErrorMessage('An error occurred while loading notes. Please refresh the page and try again.');
-  } finally {
-    hideLoadingIndicator(loadingIndicator);
+  // 高亮笔记内容
+  const noteTextElement = noteElement.querySelector('.note-text');
+  if (noteTextElement) {
+    noteTextElement.innerHTML = highlightText(noteTextElement.textContent, searchTerm);
   }
+
+  // 高亮标签（如果存在）
+  const tagElements = noteElement.querySelectorAll('.tag');
+  tagElements.forEach(tagElement => {
+    tagElement.innerHTML = highlightText(tagElement.textContent, searchTerm);
+  });
 }
+
+function highlightText(text, searchTerm) {
+  if (!searchTerm) return text;
+  const regex = new RegExp(`(${searchTerm})`, 'gi');
+  return text.replace(regex, '<mark>$1</mark>');
+}
+
 
 // 新增：延迟加载热门标签分析
 async function initializeTrendingTagsAnalysis() {
-  if (isAnalyzing) {
-    console.log('Analysis already in progress, skipping');
-    return;
-  }
+  if (state.isAnalyzing) return; // 使用 state.isAnalyzing 而不是 isAnalyzing
   
-  isAnalyzing = true;
+  state.isAnalyzing = true;
   console.log('Initializing trending tags analysis');
   try {
     const trendingTags = await noteOperations.getTrendingTags(10);
@@ -379,7 +426,7 @@ async function initializeTrendingTagsAnalysis() {
     console.error('Error initializing trending tags analysis:', error);
     showErrorMessage('Failed to analyze trending tags. Please try again later.');
   } finally {
-    isAnalyzing = false;
+    state.isAnalyzing = false;
   }
 }
 
@@ -411,58 +458,47 @@ async function updateTrendingTagsAnalysis() {
 }
 
 async function loadMoreNotes() {
-  if (isShowingSearchResults || isLoading || allNotesLoaded) return;
+  if (state.isShowingSearchResults || state.isLoading || state.allNotesLoaded) return;
 
-  isLoading = true;
+  state.isLoading = true;
   const loadingIndicator = showLoadingIndicator('Loading more notes...');
 
   try {
-    const lastNoteId = lastLoadedNoteId;
-    const newNotes = await noteOperations.getPaginatedNotes(lastNoteId);
+    console.log('Loading more notes, page:', state.currentPage);
+    const newNotes = await noteOperations.getPaginatedNotes(state.currentPage, state.pageSize);
+    console.log('New notes received:', newNotes);
+
     if (newNotes.length === 0) {
-      allNotesLoaded = true;
+      console.log('No new notes received, all notes loaded');
+      state.allNotesLoaded = true;
       showAllNotesLoadedMessage();
     } else {
-      // 过滤掉已经存在的笔记
-      const existingNoteIds = new Set(Array.from(document.querySelectorAll('.note-item')).map(el => el.dataset.noteId));
-      const uniqueNewNotes = newNotes.filter(note => !existingNoteIds.has(note.note_id));
+      updateNoteList(newNotes, true); // true means append, not replace
+      state.currentPage++; // 增加页码
 
-      if (uniqueNewNotes.length > 0) {
-        updateNoteList(uniqueNewNotes, true); // true means append, not replace
-        lastLoadedNoteId = newNotes[newNotes.length - 1].note_id;
+      if (newNotes.length < state.pageSize) {
+        // 如果返回的笔记数量少于页面大小，说明这是最后一页
+        showEndOfNotesMessage();
       } else {
-        console.log('No new unique notes to add');
-        // 如果没有新的唯一笔记，可能需要再次尝试加载
-        lastLoadedNoteId = newNotes[newNotes.length - 1].note_id;
-        loadMoreNotes(); // 递归调用以尝试加载更多笔记
+        // 如果不是最后一页，显示已加载的笔记数量
+        showLoadedNotesCountMessage(newNotes.length);
       }
     }
   } catch (error) {
     console.error('Error loading more notes:', error);
     showErrorMessage('An error occurred while loading more notes. Please try again.');
   } finally {
-    isLoading = false;
+    state.isLoading = false;
     hideLoadingIndicator(loadingIndicator);
   }
 }
 
-// 在文件顶部添加这个函数定义
-function showNotification(message) {
-  const notification = document.createElement('div');
-  notification.className = 'notification';
-  notification.textContent = message;
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.classList.add('show');
-  }, 10);
+function showEndOfNotesMessage() {
+  messageManager.showInfo("You've reached the end of your notes!");
+}
 
-  setTimeout(() => {
-    notification.classList.remove('show');
-    setTimeout(() => {
-      document.body.removeChild(notification);
-    }, 300);
-  }, 3000);
+function showLoadedNotesCountMessage(count) {
+  messageManager.showInfo(`Loaded ${count} more notes. Scroll for more!`);
 }
 
 // 修改 handleAddNote 函数
@@ -540,6 +576,34 @@ async function handleAddNote(event) {
   }
 }
 
+async function handleNoteInputChange(event) {
+  const input = event.target;
+  const url = input.value.trim();
+
+  if (isValidUrl(url)) {
+    try {
+      showLoadingIndicator();
+      const content = await fetchWebContent(url);
+      input.value = content;
+    } catch (error) {
+      console.error('Error fetching web content:', error);
+      showErrorMessage('Failed to fetch web content. Please try again.');
+    } finally {
+      hideLoadingIndicator();
+    }
+  }
+}
+
+async function fetchWebContent(url) {
+  try {
+    const content = await api.ai.fetchWebContent(url);
+    return content;
+  } catch (error) {
+    console.error('Error in fetchWebContent:', error);
+    throw error;
+  }
+}
+
 function updateNoteContent(element, note) {
   const contentElement = element.querySelector('.note-text');
   if (contentElement) contentElement.textContent = note.content;
@@ -547,6 +611,26 @@ function updateNoteContent(element, note) {
   const timestampElement = element.querySelector('.note-timestamp');
   if (timestampElement) timestampElement.textContent = formatTimestamp(note.created_at);
   
+}
+
+async function handleCompleteUserInput() {
+  const noteInput = document.getElementById('noteInput');
+  const partialInput = noteInput.value;
+
+  if (partialInput.trim() === '') return;
+
+  try {
+    showLoadingIndicator('Completing input...');
+    const completion = await noteOperations.completeUserInput(partialInput);
+    noteInput.value = partialInput + ' ' + completion;
+    noteInput.setSelectionRange(noteInput.value.length, noteInput.value.length);
+    noteInput.focus();
+  } catch (error) {
+    console.error('Error completing user input:', error);
+    showErrorMessage('Failed to complete input. Please try again.');
+  } finally {
+    hideLoadingIndicator();
+  }
 }
 
 function clearNoteInput() {
@@ -569,6 +653,8 @@ async function initializeTrendingTags() {
           </li>
         `;
       }).join('');
+    } else {
+      console.error('topTagsList element not found');
     }
   }
 
@@ -585,8 +671,7 @@ async function initializeTrendingTags() {
   setInterval(fetchAndUpdateTrendingTags, 60 * 60 * 1000);
 }
 
-function setupEventListeners() {
-  // ... 保持原有的事件监听设置 ...
+export function setupEventListeners() {
 
     // 添笔记的事件监听器
     const addNoteButton = document.getElementById('addNoteButton');
@@ -605,9 +690,9 @@ function setupEventListeners() {
       completeButton.addEventListener('click', handleCompleteUserInput);
     }
 
-  // 添加滚动事件监听器，实现无限滚动
+  // 添加滚事件监听器，实现无限滚动
   window.addEventListener('scroll', _.throttle(() => {
-    if (!isShowingSearchResults && 
+    if (!state.isShowingSearchResults && 
         (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100) {
       loadMoreNotes();
     }
@@ -770,7 +855,7 @@ async function handleGenerateComments(noteId) {
       newCommentElement.style.opacity = '0';
       commentsContainer.appendChild(newCommentElement);
 
-      // 触重排后淡入显示
+      // 触重排后淡入显
       setTimeout(() => {
         newCommentElement.style.transition = 'opacity 0.5s ease-in';
         newCommentElement.style.opacity = '1';
@@ -802,109 +887,6 @@ async function handleGenerateComments(noteId) {
   }
 }
 
-async function handleFeedback(noteId, noteContent) {
-  console.log('Entering handleFeedback');
-  
-  // 检查是否已存在反馈元素
-  let messageElement = document.querySelector(`.feedback-message[data-note-id="${noteId}"]`);
-  let isExisting = !!messageElement;
-
-  if (!messageElement) {
-    messageElement = document.createElement('div');
-    messageElement.className = 'feedback-message';
-    messageElement.setAttribute('data-note-id', noteId);
-    messageElement.style.cssText = `
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #fff;
-      color: #333333;
-      padding: 24px;
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-      max-width: 90%;
-      width: 400px;
-      max-height: 80vh;
-      overflow-y: auto;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      transition: opacity 0.3s ease;
-      opacity: 0;
-    `;
-    document.body.appendChild(messageElement);
-  }
-
-  if (isExisting) {
-    // 如果反馈已经存在，切换其显示状态
-    if (messageElement.style.display === 'none' || messageElement.style.opacity === '0') {
-      // 如果当前是隐藏状态，则显示
-      messageElement.style.display = 'block';
-      setTimeout(() => {
-        messageElement.style.opacity = '1';
-      }, 10);
-    } else {
-      // 如果当前是显示状态，则隐藏
-      closeFeedback(messageElement);
-    }
-    return; // 直接返回，不再继续执行生成新反馈的逻辑
-  }
-
-  // 显示或重新显示反馈
-  try {
-    // 显示"正在思考"的消息
-    messageElement.innerHTML = `
-      <div class="ai-thinking-container">
-        <div class="spinner"></div>
-      </div>
-      <p class="ai-thinking-text">AI is thinking...</p>
-    `;
-    messageElement.style.display = 'block';
-    setTimeout(() => {
-      messageElement.style.opacity = '1';
-    }, 10);
-
-    // 调用 AI API 生成反馈
-    const feedback = await noteOperations.generateFeedbackForNote(noteId, noteContent);
-    console.log('Received feedback:', feedback);
-
-    // 显示生成的反馈
-    messageElement.innerHTML = `
-      <h3 style="margin-top: 0; margin-bottom: 16px; font-size: 18px; font-weight: 600; color: #007BFF;">AI Feedback</h3>
-      <p style="margin-bottom: 24px; line-height: 1.5;">${feedback}</p>
-      <button id="closeFeedback-${noteId}" class="feedback-button" style="align-self: flex-end;">Close</button>
-    `;
-
-    // 添加关闭按钮的事件监听器
-    document.getElementById(`closeFeedback-${noteId}`).addEventListener('click', (event) => {
-      event.stopPropagation(); // 阻止事件冒泡
-      closeFeedback(messageElement);
-    });
-  } catch (error) {
-    console.error('Error in handleFeedback:', error);
-    messageElement.innerHTML = `
-      <p style="margin-bottom: 24px; color: #e74c3c;">Failed to generate feedback. Please try again.</p>
-      <button id="closeFeedback-${noteId}" class="feedback-button" style="align-self: flex-end;">Close</button>
-    `;
-
-    // 添加关闭按钮的事件监听器
-    document.getElementById(`closeFeedback-${noteId}`).addEventListener('click', (event) => {
-      event.stopPropagation(); // 阻止事件冒泡
-      closeFeedback(messageElement);
-    });
-  }
-}
-
-function closeFeedback(element) {
-  element.style.opacity = '0';
-  setTimeout(() => {
-    element.style.display = 'none';
-    element.innerHTML = ''; // 清空内容
-  }, 300);
-}
-
 function renderSingleComment(comment) {
   console.log('Rendering comment:', comment);
   const author = comment.author || 'Anonymous';
@@ -925,110 +907,6 @@ function renderSingleComment(comment) {
   `;
 }
 
-function highlightText(text, searchTerm) {
-  if (!searchTerm) return text;
-  const regex = new RegExp(`(${searchTerm})`, 'gi');
-  return text.replace(regex, '<mark>$1</mark>');
-}
-
-function applyHighlight(noteElement, searchTerm) {
-  if (!searchTerm) return;
-
-  // 高亮笔记内容
-  const noteTextElement = noteElement.querySelector('.note-text');
-  if (noteTextElement) {
-    noteTextElement.innerHTML = highlightText(noteTextElement.textContent, searchTerm);
-  }
-
-  // 高亮标签（如果存在）
-  const tagElements = noteElement.querySelectorAll('.tag');
-  tagElements.forEach(tagElement => {
-    tagElement.innerHTML = highlightText(tagElement.textContent, searchTerm);
-  });
-}
-
-function initializeSpeechRecognition() {
-  if (!recognition) {
-    console.warn('Speech recognition is not supported in this browser.');
-    return;
-  }
-
-  recognition.continuous = true;
-  recognition.interimResults = true;
-
-  recognition.onresult = (event) => {
-    const result = event.results[event.results.length - 1];
-    const transcript = result[0].transcript;
-    
-    if (result.isFinal) {
-      const noteInput = document.getElementById('noteInput');
-      noteInput.value += transcript + ' ';
-    }
-  };
-
-  recognition.onerror = (event) => {
-    console.error('Speech recognition error:', event.error);
-  };
-}
-
-function toggleSpeechRecognition() {
-  if (!recognition) {
-    console.warn('Speech recognition is not supported in this browser.');
-    return;
-  }
-
-  if (isListening) {
-    recognition.stop();
-    isListening = false;
-  } else {
-    recognition.start();
-    isListening = true;
-  }
-  updateButtonState();
-}
-
-function updateButtonState() {
-  const button = document.getElementById('voiceInputButton');
-  if (button) {
-    if (isListening) {
-      button.classList.add('active');
-      button.setAttribute('aria-label', 'Stop voice input');
-    } else {
-      button.classList.remove('active');
-      button.setAttribute('aria-label', 'Start voice input');
-    }
-  } else {
-    console.warn('Voice input button not found');
-  }
-}
-
-async function handleNoteInputChange(event) {
-  const input = event.target;
-  const url = input.value.trim();
-
-  if (isValidUrl(url)) {
-    try {
-      showLoadingIndicator();
-      const content = await fetchWebContent(url);
-      input.value = content;
-    } catch (error) {
-      console.error('Error fetching web content:', error);
-      showErrorMessage('Failed to fetch web content. Please try again.');
-    } finally {
-      hideLoadingIndicator();
-    }
-  }
-}
-
-async function fetchWebContent(url) {
-  try {
-    const content = await api.ai.fetchWebContent(url);
-    return content;
-  } catch (error) {
-    console.error('Error in fetchWebContent:', error);
-    throw error;
-  }
-}
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
@@ -1040,26 +918,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('Voice input button not found');
   }
 });
-
-async function handleCompleteUserInput() {
-  const noteInput = document.getElementById('noteInput');
-  const partialInput = noteInput.value;
-
-  if (partialInput.trim() === '') return;
-
-  try {
-    showLoadingIndicator('Completing input...');
-    const completion = await noteOperations.completeUserInput(partialInput);
-    noteInput.value = partialInput + ' ' + completion;
-    noteInput.setSelectionRange(noteInput.value.length, noteInput.value.length);
-    noteInput.focus();
-  } catch (error) {
-    console.error('Error completing user input:', error);
-    showErrorMessage('Failed to complete input. Please try again.');
-  } finally {
-    hideLoadingIndicator();
-  }
-}
 
 async function handleLogout() {
   try {
@@ -1074,7 +932,6 @@ async function handleLogout() {
 
 // 确保导出 handleAddNote 函数
 export {
-  initializeUI,
   updateNoteList,
   handleAddNote,
   updateTagsDisplay,
@@ -1088,12 +945,3 @@ export {
   handleCompleteUserInput,
   handleLogout
 };
-
-// 页面加载完成后执行的初始化代码
-document.addEventListener('DOMContentLoaded', () => {
-  updateTrendingTagsAnalysis();
-  // 其他初始化代码...
-  initializeUI();
-  setupEventListeners();
-  // 可能还有其他需要在页面加载后执行的函数
-});

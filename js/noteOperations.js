@@ -181,7 +181,7 @@ class NoteOperations {
       if (generatedTags.length > 0) {
         await this.api.tags.addTags(note.note_id, generatedTags);
         console.log('标签已保存到服务器');
-        // 更新本地笔记对象
+        // 更新本地笔记
         this.updateNoteWithTags(note.note_id, generatedTags);
         return generatedTags; // 返回生成的标签数组，而不是服务器响应
       } else {
@@ -227,7 +227,7 @@ class NoteOperations {
       const commentContent = await this.api.ai.generateComments(contextForAI);
       
       const randomName = this.getRandomName();
-      console.log('Generated random name:', randomName); // 添加这行日志
+      console.log('Generated random name:', randomName); // 添加行志
 
       const newComment = {
         id: 'temp-' + Math.random().toString(36).substr(2, 9),
@@ -314,40 +314,38 @@ class NoteOperations {
     }
   }
 
-  async getPaginatedNotes(lastNoteId = null, limit = 24) {
-    console.log('Attempting to fetch notes with:', { lastNoteId, limit });
+  async getPaginatedNotes(page = 0, limit = 24) {
+    console.log('Attempting to fetch notes with:', { page, limit });
     try {
-      const notes = await this.api.notes.getPaginatedNotes(lastNoteId, limit);
+      const notes = await this.api.notes.getPaginatedNotes(page, limit);
       console.log('Received notes:', notes);
-      
+
       if (!Array.isArray(notes)) {
         console.warn('Received invalid notes data:', notes);
         return [];
       }
 
-      if (lastNoteId === null) {
-        console.log('First page, replacing local cache');
+      // 更新本地缓存
+      if (page === 0) {
         this.notes = notes;
       } else {
-        console.log('Not first page, appending to local cache');
         this.notes = [...this.notes, ...notes];
       }
 
       console.log('Total notes in local cache after update:', this.notes.length);
-      
-      // 更新本地存储
-      localStorageService.saveNotes(this.notes);
-      
-      // 获取新加载笔记的标签
-      const tagsPromises = notes.map(note => this.api.tags.getTags(note.note_id));
-      const tagsResults = await Promise.all(tagsPromises);
-      
-      // 将标签添加到相应的笔记中
-      notes.forEach((note, index) => {
-        note.tags = tagsResults[index];
-      });
-      
-      return notes;
+
+      // 处理标签字符串和标签ID
+      const processedNotes = notes.map(note => ({
+        ...note,
+        tags: Array.isArray(note.tags) 
+          ? note.tags 
+          : (typeof note.tags === 'string' ? note.tags.split(',').map(tag => ({ name: tag.trim() })) : []),
+        tag_ids: Array.isArray(note.tag_ids) 
+          ? note.tag_ids 
+          : (typeof note.tag_ids === 'string' ? note.tag_ids.split(',') : [])
+      }));
+
+      return processedNotes;
     } catch (error) {
       console.error('Error getting paginated notes:', error);
       throw error;
@@ -375,13 +373,6 @@ class NoteOperations {
   }
 
   async getTrendingTags(limit = 10) {
-    const cachedData = localStorageService.getTrendingTagsCache();
-    const currentTime = Date.now();
-    if (cachedData && currentTime < cachedData.expiration) {
-      console.log('Using cached trending tags');
-      return cachedData.tags;
-    }
-
     try {
       const allTags = await this.api.tags.getAllTags();
       console.log('All tags received:', allTags);
@@ -391,26 +382,28 @@ class NoteOperations {
         return [];
       }
 
-      // 直接使用接收到的标签数据
-      const tagCounts = allTags.reduce((acc, tag) => {
-        if (tag && tag.name) {
-          const name = tag.name.startsWith('#') ? tag.name.slice(1) : tag.name;
-          acc[name] = (acc[name] || 0) + 1;
+      const tagCountMap = new Map();
+
+      allTags.forEach(tagObject => {
+        if (tagObject && typeof tagObject.name === 'string') {
+          // 使用正则表达式匹配所有以 # 开头的标签
+          const tags = tagObject.name.match(/#[^\s#,]+/g) || [];
+          tags.forEach(tag => {
+            // 移除 # 符号和可能的尾随逗号
+            const cleanTag = tag.slice(1).replace(/,+$/, '');
+            tagCountMap.set(cleanTag, (tagCountMap.get(cleanTag) || 0) + 1);
+          });
         }
-        return acc;
-      }, {});
+      });
 
-      console.log('Processed tag counts:', tagCounts);
+      console.log('Tag count map:', Object.fromEntries(tagCountMap));
 
-      const sortedTags = Object.entries(tagCounts)
+      const sortedTags = Array.from(tagCountMap.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, limit)
         .map(([name, count]) => ({ name, count }));
 
       console.log('Sorted and limited tags:', sortedTags);
-
-      const expirationTime = currentTime + this.cacheExpiration;
-      localStorageService.saveTrendingTagsCache(sortedTags, expirationTime);
       return sortedTags;
     } catch (error) {
       console.error('Error fetching trending tags:', error);
@@ -418,18 +411,14 @@ class NoteOperations {
     }
   }
 
-  async analyzeTrendingTags(trendingTags) {
-    const cachedData = localStorageService.getTrendingTagsAnalysisCache();
-    const currentTime = Date.now();
-    if (cachedData && currentTime < cachedData.expiration) {
-      console.log('Using cached trending tags analysis');
-      return cachedData.analysis;
-    }
-
-    console.log('Analyzing trending tags:', trendingTags);
+  async analyzeTrendingTags() {
+    console.log('Starting trending tags analysis');
     try {
+      const trendingTags = await this.getTrendingTags();
+      console.log('Fetched trending tags for analysis:', trendingTags);
+
       if (!trendingTags || !Array.isArray(trendingTags) || trendingTags.length === 0) {
-        console.log('No valid trending tags provided for analysis');
+        console.log('No valid trending tags available for analysis');
         return "No trending tags available for analysis.";
       }
 
@@ -439,8 +428,6 @@ class NoteOperations {
       const analysisReport = await this.api.ai.tagsCommentor([tagsString]);
       console.log('Analysis report received:', analysisReport);
 
-      const expirationTime = currentTime + this.cacheExpiration;
-      localStorageService.saveTrendingTagsAnalysisCache(analysisReport, expirationTime);
       return analysisReport;
     } catch (error) {
       console.error('Error in analyzeTrendingTags:', error);
