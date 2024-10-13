@@ -205,45 +205,104 @@ body {
 
 /* 添加响应式设计 */
 @media (max-width: 600px) {
+    body {
+        padding: 20px;
+    }
+
     .container {
-        padding: 40px 30px;
-        border-radius: 20px 20px 20px 60px;
+        padding: 30px 20px;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .container::before,
+    .container::after {
+        display: none; /* 移除装饰元素 */
     }
 
     .logo {
-        font-size: 48px;
+        font-size: 36px;
+        margin-bottom: 20px;
     }
 
     .logo::before {
-        font-size: 54px;
+        font-size: 40px;
+        margin-right: 10px;
     }
 
     .auth-toggle {
         width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .auth-toggle button {
+        padding: 10px 20px;
+        font-size: 16px;
+    }
+
+    .auth-container h2 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .auth-container form {
+        gap: 15px;
+    }
+
+    .auth-container input {
+        padding: 12px;
+        font-size: 16px;
+    }
+
+    .auth-container button[type="submit"] {
+        padding: 14px;
+        font-size: 18px;
+        margin-top: 5px;
+    }
+
+    .error {
+        margin-top: 15px;
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    #registerForm {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+    }
+
+    #registerForm::after {
+        font-size: 12px;
+    }
+}
+
+/* 添加更小屏幕的样式 */
+@media (max-width: 400px) {
+    .container {
+        padding: 20px 15px;
+    }
+
+    .logo {
+        font-size: 30px;
+    }
+
+    .logo::before {
+        font-size: 34px;
+    }
+
+    .auth-toggle button {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .auth-container h2 {
+        font-size: 18px;
     }
 
     .auth-container input,
     .auth-container button[type="submit"] {
-        padding: 16px;
-        font-size: 18px;
+        padding: 10px;
+        font-size: 14px;
     }
-}
-
-/* 添加这个新的样式来增加注册按钮和登录标题之间的间距，并添加虚线分隔符 */
-#registerForm {
-    margin-bottom: 30px;  /* 减少底部边距，为分隔符腾出空间 */
-    padding-bottom: 30px; /* 添加内边距，使分隔符不会紧贴按钮 */
-    border-bottom: 2px dashed var(--border-color); /* 添加虚线边框 */
-    position: relative; /* 为伪元素定位做准备 */
-}
-
-#registerForm::after {
-    position: absolute;
-    bottom: -10px; /* 调整位置使其位于虚线上 */
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #fff; /* 与背景色相同 */
-    padding: 0 10px; /* 文字左右留白 */
-    color: var(--text-color);
-    font-size: 14px;
 }
