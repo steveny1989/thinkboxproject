@@ -54,9 +54,16 @@ export const MessageType = {
           break;
       }
 
-      messageElement.textContent = message;
-
       if (type === MessageType.LOADING) {
+        const textContent = message.replace(/\.+$/, '').trim();
+        const textSpan = document.createElement('span');
+        textSpan.textContent = textContent + ' ';
+        const dotsSpan = document.createElement('span');
+        dotsSpan.className = 'loading-dots';
+        messageElement.appendChild(textSpan);
+        messageElement.appendChild(dotsSpan);
+      } else {
+        messageElement.textContent = message;
       }
 
       this.container.appendChild(messageElement);
@@ -82,7 +89,7 @@ export const MessageType = {
       }, 300); // 等待淡出动画完成
     }
 
-    showLoading(message = 'Loading...') {
+    showLoading(message = 'Loading') {
       return this.show(message, MessageType.LOADING);
     }
 
@@ -129,6 +136,24 @@ export const MessageType = {
     messageManager.showSuccess(message);
   }
   
-  // 添加到全局样式
+  // 修改全局样式
   const style = document.createElement('style');
+  style.textContent = `
+    @keyframes loadingDots {
+      0%, 33% {
+        content: '.';
+      }
+      34%, 66% {
+        content: '..';
+      }
+      67%, 100% {
+        content: '...';
+      }
+    }
+
+    .loading-dots::after {
+      content: '';
+      animation: loadingDots 1.5s infinite;
+    }
+  `;
   document.head.appendChild(style);
