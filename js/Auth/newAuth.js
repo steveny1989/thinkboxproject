@@ -1,4 +1,6 @@
 import { auth, registerUser, loginUser } from './authService.js';
+import { messageManager, MessageType } from '../messageManager.js';
+
 
 console.log('newAuth.js loaded');
 
@@ -37,9 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('registerForm');
     const loginForm = document.getElementById('loginForm');
 
-    registerForm.addEventListener('submit', async (event) => {
-        console.log('Register form submitted');
-        event.preventDefault();
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const email = document.getElementById('registerEmail').value.trim();
         const password = document.getElementById('registerPassword').value;
         const errorDiv = document.getElementById('registerError');
@@ -57,37 +58,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            console.log('Attempting to register with:', { email, password });
-            const data = await registerUser({ email, password });
-            localStorage.setItem('authToken', data.token);
+            const loadingMessage = messageManager.showLoading('Registering...');
+            const result = await registerUser({ email, password });
+            messageManager.hide(loadingMessage);
+            messageManager.showSuccess('Registration successful!');
+            localStorage.setItem('authToken', result.token);
             window.location.href = '../index.html'; // 注册成功后跳转
         } catch (error) {
-            console.error('Registration error:', error);
-            errorDiv.textContent = error.message;
-            errorDiv.classList.remove('hidden');
+            messageManager.showError(`Registration failed: ${error.message}`);
+            document.getElementById('registerError').textContent = error.message;
+            document.getElementById('registerError').classList.remove('hidden');
         }
     });
 
-    loginForm.addEventListener('submit', async (event) => {
-        console.log('Login form submitted');
-        event.preventDefault();
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
         const errorDiv = document.getElementById('loginError');
 
         try {
-            const data = await loginUser(email, password);
-            localStorage.setItem('authToken', data.token);
+            const loadingMessage = messageManager.showLoading('Logging in...');
+            const result = await loginUser(email, password);
+            messageManager.hide(loadingMessage);
+            messageManager.showSuccess('Login successful!');
+            localStorage.setItem('authToken', result.token);
             window.location.href = '../index.html'; // 登录成功后跳转
         } catch (error) {
-            console.error('Login error:', error);
-            errorDiv.textContent = error.message;
-            errorDiv.classList.remove('hidden');
+            messageManager.showError(`Login failed: ${error.message}`);
+            document.getElementById('loginError').textContent = error.message;
+            document.getElementById('loginError').classList.remove('hidden');
         }
     });
 
     // 可以在这里添加自动 token 刷新的逻辑
-    setInterval(refreshToken, 15 * 60 * 1000); // 每15分钟刷新一次 token
+    setInterval(refreshToken, 60 * 60 * 1000); // 每60分钟刷新一次 token
 });
 
 export { auth };

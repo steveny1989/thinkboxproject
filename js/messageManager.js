@@ -40,7 +40,8 @@ export const MessageType = {
 
       switch (type) {
         case MessageType.LOADING:
-          messageElement.style.backgroundColor = '#f8f9fa'; // 
+          messageElement.style.backgroundColor = '#007bff'; // 
+          messageElement.style.color = '#ffffff'; // 确保文字颜色为白色，以提高可读性
           break;
         case MessageType.ERROR:
           messageElement.style.backgroundColor = '#dc3545';
