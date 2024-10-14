@@ -69,8 +69,7 @@ body {
   text-align: right;
 }
 .header h1 {
-  flex: 1;
-  text-align: left;
+  font-size: 24px;
   margin: 0;
   color: var(--primary-color);
 }
@@ -974,4 +973,100 @@ mark {
 
 #trending-tags-analysis {
   animation: fadeIn 0.5s ease-in-out;
+}
+
+/* 在文件末尾添加或更新以下样式 */
+
+/* 头部样式优化 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: var(--background-color);
+  box-shadow: 0 2px 4px var(--shadow-color);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 24px;
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-name {
+  display: flex;
+  align-items: center;
+  background-color: #e8f0fe;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 14px;
+  color: #1a73e8;
+  transition: all 0.3s ease;
+}
+
+.logout-button {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* 响应式设计优化 */
+@media (max-width: 768px) {
+  .header {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .user-info {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .user-name {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+
+  .logout-button {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header h1 {
+    font-size: 18px;
+  }
+
+  .user-name {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .logout-button {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
 }
