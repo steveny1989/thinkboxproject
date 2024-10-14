@@ -39,33 +39,6 @@ async function checkAuthStatus() {
   return { token };
 }
 
-async function handleAuthStateChange(authStatus) {
-  if (isInitialized) return;
-  
-  try {
-    if (authStatus && authStatus.token) {
-      console.log('User is signed in');
-      try {
-        await Promise.all([
-          noteOperations.initializePaginatedNotes(),
-          initializeUI(),
-          updateTrendingTagsAnalysis()
-        ]);
-        setupEventListeners();
-        isInitialized = true;
-      } catch (error) {
-        handleInitializationError(error);
-      }
-    } else {
-      console.log('User is signed out');
-      window.location.href = AUTH_PAGE_URL;
-    }
-  } catch (error) {
-    console.error('Error in handleAuthStateChange:', error);
-    showErrorMessage('An unexpected error occurred. Please try again later.');
-  }
-}
-
 function handleInitializationError(error) {
   if (error.message.includes('401') || error.message.includes('Unauthorized')) {
     console.error('Authentication error:', error);
@@ -77,12 +50,22 @@ function handleInitializationError(error) {
   }
 }
 
-function initializeApp() {
+async function initializeApp() {
   console.log('Initializing app...');
-  
-  checkAuthStatus().then(handleAuthStateChange);
-
-  document.getElementById('logoutButton').addEventListener('click', logoutUser);
+  const authStatus = await checkAuthStatus();
+  if (authStatus && authStatus.token) {
+    console.log('User is signed in');
+    try {
+      await noteOperations.initializePaginatedNotes();
+      await initializeUI();
+      isInitialized = true;
+    } catch (error) {
+      handleInitializationError(error);
+    }
+  } else {
+    console.log('User is signed out');
+    window.location.href = AUTH_PAGE_URL;
+  }
 }
 
 // 使用防抖函数来避免多次快速的状态变化

@@ -6,7 +6,6 @@ import { debounce } from './utils.js';
 import renderHelpers from './renderHelpers.js';
 import { isValidUrl } from './utils.js';
 import api from './api.js';
-import aiAPI from './AIAPI.js';
 import { messageManager, showLoadingIndicator, hideLoadingIndicator, showAllNotesLoadedMessage, showErrorMessage } from './messageManager.js';
 import { AUTH_PAGE_URL } from './main.js';
 import { auth } from './Auth/authService.js'; // 或者你的认证模块的正确路径
@@ -508,41 +507,45 @@ async function handleAddNote(event) {
   }
   const noteInput = document.getElementById('noteInput');
   let noteText = noteInput.value.trim();
-  clearNoteInput();
   if (!noteText) return;
 
-  const tempNoteId = 'temp-' + Date.now();
+  let tempNoteId = null;
+  let loadingIndicator = null;
 
   try {
     if (isValidUrl(noteText)) {
-      showLoadingIndicator('Fetching web content...');
+      loadingIndicator = showLoadingIndicator('Fetching web content');
       try {
         const content = await fetchWebContent(noteText);
         if (content) {
           noteText = content;
+          noteInput.value = noteText;
         }
       } catch (error) {
         console.error('Error fetching web content:', error);
-        // 即使获取网页内容失败，我们也继续处理原始的 noteText
+        showErrorMessage('Failed to fetch web content. Please try again.');
       } finally {
-        hideLoadingIndicator();
+        hideLoadingIndicator(loadingIndicator);
       }
     }
 
-    if (noteText.length > 500 && !noteInput.dataset.rewritten) {
-      showLoadingIndicator("Rewriting content...");
+    if (noteText.length > 1000 && !noteInput.dataset.rewritten) {
+      loadingIndicator = showLoadingIndicator('Rewriting content');
       console.log('Content too long, rewriting...');
-      const rewrittenText = await aiAPI.rewriteContent(noteText);
+      const rewrittenText = await api.ai.rewriteContent(noteText);
       console.log('Rewritten content:', rewrittenText);
       
-      noteText = rewrittenText;
+      noteInput.value = rewrittenText;
+      noteInput.dataset.rewritten = 'true';
       
-      showNotification('Content has been rewritten by AI for brevity.');
+      messageManager.showInfo('Content has been rewritten by AI for brevity. Please review and submit.');
       
-      hideLoadingIndicator();
+      hideLoadingIndicator(loadingIndicator);
       return; // 结束函数执行，等待用户确认改写后的内容
     }
 
+    // 如果内容已经被重写或不需要重写，则继续添加笔记
+    tempNoteId = 'temp-' + Date.now();
     const tempNote = {
       note_id: tempNoteId,
       content: noteText,
@@ -566,13 +569,21 @@ async function handleAddNote(event) {
 
     await updateTagsDisplay(newNote);
 
+    clearNoteInput();
+    delete noteInput.dataset.rewritten;
+
+
+
   } catch (error) {
     console.error('Error adding note or fetching web content:', error);
     showErrorMessage('An error occurred. Please try again.');
-    document.querySelector(`.note-item[data-note-id="${tempNoteId}"]`)?.remove();
+    if (tempNoteId) {
+      document.querySelector(`.note-item[data-note-id="${tempNoteId}"]`)?.remove();
+    }
   } finally {
-    hideLoadingIndicator();
-    delete noteInput.dataset.rewritten;
+    if (loadingIndicator) {
+      hideLoadingIndicator(loadingIndicator);
+    }
   }
 }
 
