@@ -133,11 +133,11 @@ export const localStorageService = {
 
   getTempToServerNoteMap() {
     const mapString = localStorage.getItem(TEMP_TO_SERVER_NOTE_MAP_KEY);
-    console.log('Raw localStorage tempToServerNoteMap:', mapString);
+    // console.log('Raw localStorage tempToServerNoteMap:', mapString);
     if (!mapString) return null;
     try {
       const parsed = JSON.parse(mapString);
-      console.log('Parsed tempToServerNoteMap:', parsed);
+      // console.log('Parsed tempToServerNoteMap:', parsed);
       return parsed;
     } catch (error) {
       console.error('Error parsing tempToServerNoteMap from localStorage:', error);

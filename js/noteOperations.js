@@ -10,13 +10,13 @@ class NoteOperations {
     // 处理 generatedTagsMap
     this.generatedTagsMap = new Map();
     const tagsFromStorage = localStorageService.getTags();
-    console.log('Raw tagsFromStorage:', tagsFromStorage);
+    // console.log('Raw tagsFromStorage:', tagsFromStorage);
     if (tagsFromStorage && typeof tagsFromStorage === 'object') {
       Object.entries(tagsFromStorage).forEach(([key, value]) => {
         this.generatedTagsMap.set(key, value);
       });
     }
-    console.log('Initialized generatedTagsMap:', this.generatedTagsMap);
+    // console.log('Initialized generatedTagsMap:', this.generatedTagsMap);
     
     this.api = api;
     this.helper = helper;
@@ -29,7 +29,7 @@ class NoteOperations {
     // 处理 tempToServerNoteMap
     this.tempToServerNoteMap = new Map();
     const tempToServerNoteMapFromStorage = localStorageService.getTempToServerNoteMap();
-    console.log('Raw tempToServerNoteMapFromStorage:', tempToServerNoteMapFromStorage);
+    // console.log('Raw tempToServerNoteMapFromStorage:', tempToServerNoteMapFromStorage);
 
     if (tempToServerNoteMapFromStorage && typeof tempToServerNoteMapFromStorage === 'object') {
       Object.entries(tempToServerNoteMapFromStorage).forEach(([key, value]) => {
@@ -37,7 +37,7 @@ class NoteOperations {
       });
     }
 
-    console.log('Initialized tempToServerNoteMap:', this.tempToServerNoteMap);
+    // console.log('Initialized tempToServerNoteMap:', this.tempToServerNoteMap);
 
     this.cachedTrendingTags = null;
     this.lastFetchTime = 0;
@@ -63,13 +63,13 @@ class NoteOperations {
       localStorageService.saveNotes(this.notes);
       return this.notes;
     } catch (error) {
-      console.error('Error loading notes from API:', error);
+      // console.error('Error loading notes from API:', error);
       return this.notes; // 返回本地存储的笔记
     }
   }
 
   async addNote(noteText) {
-    console.log('addNote called with:', noteText);
+    // console.log('addNote called with:', noteText);
     if (!this.helper.validateNoteText(noteText)) {
       console.error('Invalid note text');
       throw new Error('Invalid note text');
@@ -80,7 +80,7 @@ class NoteOperations {
       this.notes.unshift(tempNote);
       this.tempToServerNoteMap.set(tempId, null); // 初始时，服务器ID为null
 
-      console.log('Calling API to add note');
+      // console.log('Calling API to add note');
       const newNote = await this.api.notes.addNote({ content: noteText });
       console.log('New note added:', newNote);
       
@@ -99,11 +99,11 @@ class NoteOperations {
       localStorageService.saveNotes(this.notes);
       localStorageService.saveTempToServerNoteMap(this.tempToServerNoteMap);
 
-      console.log('Calling generateAndSaveTagsForNote');
+      // console.log('Calling generateAndSaveTagsForNote');
       const tags = await this.generateAndSaveTagsForNote(newNote);
       newNote.tags = tags;
       
-      // 更新本地存���
+      // 更新本地
       this.updateNoteWithTags(newNote.note_id, tags);
 
       // 触发事件来更新UI中的标签
@@ -120,7 +120,7 @@ class NoteOperations {
 
   initializeNoteCompletion() {
     // 移除这个方法中的 DOM 操作
-    console.log('Note completion initialized');
+    // console.log('Note completion initialized');
   }
 
   async completeUserInput(partialInput) {
@@ -324,14 +324,14 @@ class NoteOperations {
     console.log('Attempting to fetch notes with:', { page, limit });
     try {
       const notes = await this.api.notes.getPaginatedNotes(page, limit);
-      console.log('Received notes:', notes);
+      // console.log('Received notes:', notes);
 
       if (!Array.isArray(notes)) {
         console.warn('Received invalid notes data:', notes);
         return [];
       }
 
-      // 更��本地缓存
+      // 更新本地缓存
       if (page === 0) {
         this.notes = notes;
       } else {
@@ -389,7 +389,7 @@ class NoteOperations {
 
     try {
       const allTags = await this.api.tags.getAllTags();
-      console.log('All tags received:', allTags);
+      // console.log('All tags received:', allTags);
 
       if (!Array.isArray(allTags) || allTags.length === 0) {
         console.log('No tags found');
@@ -410,14 +410,14 @@ class NoteOperations {
         }
       });
 
-      console.log('Tag count map:', Object.fromEntries(tagCountMap));
+      // console.log('Tag count map:', Object.fromEntries(tagCountMap));
 
       const sortedTags = Array.from(tagCountMap.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, limit)
         .map(([name, count]) => ({ name, count }));
 
-      console.log('Sorted and limited tags:', sortedTags);
+      // console.log('Sorted and limited tags:', sortedTags);
 
       this.cachedTrendingTags = sortedTags;
       this.lastFetchTime = now;
@@ -431,17 +431,17 @@ class NoteOperations {
   async analyzeTrendingTags(trendingTags) {
     const now = Date.now();
     if (this.analysisReportCache && now - this.analysisReportCacheTime < this.CACHE_DURATION) {
-      console.log('Returning cached analysis report');
+      // console.log('Returning cached analysis report');
       return this.analysisReportCache;
     }
 
-    console.log('Generating new analysis report');
+    // console.log('Generating new analysis report');
     const tagsString = trendingTags.map(tag => `#${tag.name} (${tag.count})`).join(', ');
-    console.log('Tags string for analysis:', tagsString);
+    // console.log('Tags string for analysis:', tagsString);
 
     try {
       const analysisReport = await this.api.ai.tagsCommentor([tagsString]);
-      console.log('Analysis report received:', analysisReport);
+      // console.log('Analysis report received:', analysisReport);
 
       this.analysisReportCache = analysisReport;
       this.analysisReportCacheTime = now;
@@ -464,5 +464,5 @@ class NoteOperations {
 }
 
 const noteOperations = new NoteOperations();
-console.log('Exporting noteOperations:', noteOperations); // 添加这行日志
+// console.log('Exporting noteOperations:', noteOperations); // 添加这行日志
 export default noteOperations;

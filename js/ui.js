@@ -306,7 +306,7 @@ async function updateTagsDisplay(notesOrNote) {
       continue;
     }
 
-    console.log(`渲染笔记 ${noteId} 的标签数组：`, tags);
+    // console.log(`渲染笔记 ${noteId} 的标签数组：`, tags);
 
     // 渲染标签
     tagContainer.innerHTML = renderHelpers.renderTags(tags);
@@ -656,7 +656,7 @@ async function initializeTrendingTags() {
     const topTagsList = document.getElementById('topTagsList');
     if (topTagsList) {
       topTagsList.innerHTML = tags.map(tag => {
-        console.log('Processing tag:', tag); // 添加这行日志
+        // console.log('Processing tag:', tag); // 添加这行日志
         return `
           <li class="trending-tag-item">
             <span class="tag-name">#${tag.name || 'Unknown'}</span>
@@ -671,7 +671,7 @@ async function initializeTrendingTags() {
 
   async function fetchAndUpdateTrendingTags() {
     const trendingTags = await noteOperations.getTrendingTags();
-    console.log('Fetched trending tags:', trendingTags);
+    // console.log('Fetched trending tags:', trendingTags);
     updateTopTagsList(trendingTags);
   }
 
@@ -728,7 +728,7 @@ export function setupEventListeners() {
   }
 
   document.addEventListener('tagsGenerated', (event) => {
-    console.log('tagsGenerated event received', event.detail);
+    // console.log('tagsGenerated event received', event.detail);
     const { note_id, tags } = event.detail;
     if (note_id && tags) {
       updateTagsDisplay(note_id, tags);
@@ -768,7 +768,7 @@ export function setupEventListeners() {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM fully loaded and parsed');
   document.addEventListener('tagsGenerated', (event) => {
-    console.log('tagsGenerated event received', event.detail);
+    // console.log('tagsGenerated event received', event.detail);
     const { note_id, tags } = event.detail;
     if (note_id && tags) {
       updateTagsDisplay({ note_id, tags });
@@ -820,12 +820,12 @@ function handleHeart(noteId, button) {
 
 async function handleGenerateComments(noteId) {
   if (isGeneratingComment) {
-    console.log('Comment generation already in progress');
+    // console.log('Comment generation already in progress');
     return;
   }
 
   isGeneratingComment = true;
-  console.log(`Generating comment for note ${noteId}`);
+  // console.log(`Generating comment for note ${noteId}`);
   const commentsContainer = document.getElementById(`comments-${noteId}`);
   if (!commentsContainer) {
     console.error(`Comments container not found for note ${noteId}`);

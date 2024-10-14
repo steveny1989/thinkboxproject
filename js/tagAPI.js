@@ -11,7 +11,7 @@ class TagAPI {
       console.error('No auth token found in localStorage');
       throw new Error('No auth token found');
     }
-    console.log('Current auth token:', token);
+    // console.log('Current auth token:', token);
     return token;
   }
 

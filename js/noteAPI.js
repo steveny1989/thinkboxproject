@@ -11,7 +11,7 @@ class NoteAPI {
       console.error('No auth token found in localStorage');
       throw new Error('No auth token found');
     }
-    console.log('Current auth token:', token); // 添加这行来检查令牌
+    // console.log('Current auth token:', token); // 添加这行来检查令牌
     return token;
   }
 
