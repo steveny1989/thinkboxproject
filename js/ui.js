@@ -8,7 +8,7 @@ import { isValidUrl } from './utils.js';
 import api from './api.js';
 import { messageManager, showLoadingIndicator, hideLoadingIndicator, showAllNotesLoadedMessage, showErrorMessage } from './messageManager.js';
 import { AUTH_PAGE_URL } from './main.js';
-import { auth } from './Auth/authService.js'; // 或者你的认证模块的正确路径
+import { auth, logoutUser } from './Auth/authService.js'; // 确保正确导入 auth 和 logoutUser
 
 // UI 初始化
 export function initializeUI() {
@@ -19,25 +19,34 @@ export function initializeUI() {
 }
 
 // 更新用户信息显示
-function updateUserInfo() {
+async function updateUserInfo() {
+  console.log('Updating user info...');
   const usernameElement = document.getElementById('username');
-  const userEmailElement = document.getElementById('userEmail');
-  if (auth && auth.currentUser) {
-      const email = auth.currentUser.email;
+  
+  if (!usernameElement) {
+    console.warn('Username element not found in the DOM');
+    return;
+  }
+
+  try {
+    console.log('Calling auth.getCurrentUser()');
+    const currentUser = await auth.getCurrentUser();
+    console.log('Current user:', currentUser);
+
+    if (currentUser && currentUser.email) {
+      const email = currentUser.email;
       const username = email.split('@')[0];
-      if (usernameElement) {
-          usernameElement.textContent = ` - ${username}`;
-      }
-      if (userEmailElement) {
-          userEmailElement.textContent = email;
-      }
-  } else {
-      if (usernameElement) {
-          usernameElement.textContent = '';
-      }
-      if (userEmailElement) {
-          userEmailElement.textContent = '';
-      }
+      console.log('User logged in:', username, email);
+      usernameElement.textContent = `  ${username}`;
+    } else {
+      console.log('No user logged in or email not available');
+      console.log('localStorage authToken:', localStorage.getItem('authToken'));
+      console.log('localStorage userEmail:', localStorage.getItem('userEmail'));
+      usernameElement.textContent = '';
+    }
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    usernameElement.textContent = '';
   }
 }
 
@@ -280,7 +289,7 @@ async function handleDeleteNote(noteId) {
     console.log(`UI: Note ${noteId} deletion process completed`);
   } catch (error) {
     console.error(`UI: Error occurred while deleting note ${noteId}:`, error);
-    // 可以在这里添加用户通知逻辑，如显示错误息
+    // 可以在这里添加用户通逻辑，如显示错误息
   }
 }
 
@@ -500,7 +509,7 @@ function showLoadedNotesCountMessage(count) {
   messageManager.showInfo(`Loaded ${count} more notes. Scroll for more!`);
 }
 
-// 修改 handleAddNote 函数
+// 修 handleAddNote 数
 async function handleAddNote(event) {
   if (event && event.preventDefault) {
     event.preventDefault();
@@ -931,14 +940,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function handleLogout() {
-  try {
-      await auth.signOut();
-      localStorage.removeItem('authToken');
-      window.location.href = AUTH_PAGE_URL;
-  } catch (error) {
-      console.error('Error during logout:', error);
-      showErrorMessage('Failed to logout. Please try again.');
-  }
+    try {
+        await logoutUser(); // 使用我们自定义的 logoutUser 函数
+        console.log('Logout successful');
+        // 更新 UI 以反映用户已登出
+        updateUserInfo();
+        // 重定向到登录页面或首页
+        window.location.href = './html/newAuth.html';
+    } catch (error) {
+        console.error('Error during logout:', error);
+        // 显示错误消息给用户
+        alert('Failed to log out. Please try again.');
+    }
 }
 
 // 确保导出 handleAddNote 函数

@@ -1,10 +1,24 @@
 // authService.js
 const NEW_AUTH_API_URL = 'https://api.thinkboxs.com'; // 新系统的 API URL
-console.log('API URL:', NEW_AUTH_API_URL);
+// console.log('API URL:', NEW_AUTH_API_URL);
 
 export const auth = {
   currentUser: null,
-  // 其他需要的属性和方法
+
+  getCurrentUser: () => {
+    if (auth.currentUser) {
+      return Promise.resolve(auth.currentUser);
+    }
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      // 如果有 token，我们假设用户已登录
+      // 这里可以从 localStorage 获取更多用户信息
+      const email = localStorage.getItem('userEmail');
+      auth.currentUser = { email };
+      return Promise.resolve(auth.currentUser);
+    }
+    return Promise.resolve(null);
+  }
 };
 
 export async function registerUser(userData) {
@@ -72,6 +86,12 @@ export async function loginUser(email, password) {
         try {
             const data = JSON.parse(responseText);
             console.log('Login successful, received data:', data);
+            
+            // 设置 auth.currentUser 和 localStorage
+            auth.currentUser = { email: email };
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('userEmail', email);
+            
             return data;
         } catch (jsonError) {
             console.error('Error parsing JSON:', jsonError);
