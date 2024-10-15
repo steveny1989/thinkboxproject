@@ -78,10 +78,12 @@ function handleVoiceInput() {
   
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     mediaRecorder.stop();
-    voiceButton.textContent = '开始录音';
+    voiceButton.classList.remove('recording');
+    voiceButton.setAttribute('aria-label', 'Start voice input');
   } else {
     startRecording();
-    voiceButton.textContent = '停止录音';
+    voiceButton.classList.add('recording');
+    voiceButton.setAttribute('aria-label', 'Stop voice input');
   }
 }
 
