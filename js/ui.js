@@ -9,6 +9,7 @@ import api from './api.js';
 import { messageManager, showLoadingIndicator, hideLoadingIndicator, showAllNotesLoadedMessage, showErrorMessage } from './messageManager.js';
 import { AUTH_PAGE_URL } from './main.js';
 import { auth, logoutUser } from './Auth/authService.js'; // 确保正确导入 auth 和 logoutUser
+import { transcribeAudio, polishText } from './audioTextProcessing.js';
 
 // UI 初始化
 export function initializeUI() {
@@ -67,68 +68,104 @@ async function loadInitialNotes() {
   }
 }
 
-//语音识别
-let recognition;
 
-if ('webkitSpeechRecognition' in window) {
-  recognition = new webkitSpeechRecognition();
-} else if ('SpeechRecognition' in window) {
-  recognition = new SpeechRecognition();
-} else {
-  console.warn('Speech recognition is not supported in this browser.');
-}
-function initializeSpeechRecognition() {
-  if (!recognition) {
-    console.warn('Speech recognition is not supported in this browser.');
-    return;
-  }
+// 添加新的处理函数
+let mediaRecorder;
+let audioChunks = [];
 
-  recognition.continuous = true;
-  recognition.interimResults = true;
-
-  recognition.onresult = (event) => {
-    const result = event.results[event.results.length - 1];
-    const transcript = result[0].transcript;
-    
-    if (result.isFinal) {
-      const noteInput = document.getElementById('noteInput');
-      noteInput.value += transcript + ' ';
-    }
-  };
-
-  recognition.onerror = (event) => {
-    console.error('Speech recognition error:', event.error);
-  };
-}
-
-function toggleSpeechRecognition() {
-  if (!recognition) {
-    console.warn('Speech recognition is not supported in this browser.');
-    return;
-  }
-
-  if (isListening) {
-    recognition.stop();
-    isListening = false;
+function handleVoiceInput() {
+  const voiceButton = document.getElementById('voiceInputButton');
+  
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    voiceButton.textContent = '开始录音';
   } else {
-    recognition.start();
-    isListening = true;
+    startRecording();
+    voiceButton.textContent = '停止录音';
   }
-  updateButtonState();
 }
 
-function updateButtonState() {
-  const button = document.getElementById('voiceInputButton');
-  if (button) {
-    if (isListening) {
-      button.classList.add('active');
-      button.setAttribute('aria-label', 'Stop voice input');
-    } else {
-      button.classList.remove('active');
-      button.setAttribute('aria-label', 'Start voice input');
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+      audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      const wavBlob = await convertToWAV(audioBlob);
+      console.log('WAV blob created:', wavBlob);
+      console.log('WAV blob size:', wavBlob.size, 'bytes');
+
+      try {
+        const transcription = await transcribeAudio(wavBlob);
+        console.log('Transcription:', transcription);
+        const polishedText = await polishText(transcription);
+        document.getElementById('noteInput').value = polishedText;
+      } catch (error) {
+        console.error('Error processing audio:', error);
+        alert('处理音频时出错，请重试。');
+      }
+    };
+
+    mediaRecorder.start();
+  } catch (error) {
+    console.error('Error starting recording:', error);
+    alert('无法启动录音。请确保您的浏览器支持录音功能，并且您已授予录音权限。');
+  }
+}
+
+async function convertToWAV(audioBlob) {
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const arrayBuffer = await audioBlob.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+  
+  const numberOfChannels = audioBuffer.numberOfChannels;
+  const length = audioBuffer.length * numberOfChannels;
+  const sampleRate = audioBuffer.sampleRate;
+  const buffer = new ArrayBuffer(44 + length * 2);
+  const view = new DataView(buffer);
+
+  // WAV 文件头
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + length * 2, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numberOfChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numberOfChannels * 2, true);
+  view.setUint16(32, numberOfChannels * 2, true);
+  view.setUint16(34, 16, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, length * 2, true);
+
+  // 写入音频数据
+  const channelData = [];
+  for (let i = 0; i < numberOfChannels; i++) {
+    channelData.push(audioBuffer.getChannelData(i));
+  }
+
+  let offset = 44;
+  for (let i = 0; i < audioBuffer.length; i++) {
+    for (let channel = 0; channel < numberOfChannels; channel++) {
+      const sample = Math.max(-1, Math.min(1, channelData[channel][i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
     }
-  } else {
-    console.warn('Voice input button not found');
+  }
+
+  return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function writeString(view, offset, string) {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
   }
 }
 
@@ -692,12 +729,21 @@ async function initializeTrendingTags() {
 }
 
 export function setupEventListeners() {
+  //语音输入
+  const voiceButton = document.getElementById('voiceInputButton');
+  if (voiceButton) {
+    voiceButton.addEventListener('click', handleVoiceInput);
+  } else {
+    console.error('Voice input button not found');
+  }
 
     // 添笔记的事件监听器
     const addNoteButton = document.getElementById('addNoteButton');
     if (addNoteButton) {
       addNoteButton.addEventListener('click', handleAddNote);
     }
+
+
   
     // 注销按钮的事件监听器
     const logoutButton = document.getElementById('logoutButton');
@@ -899,7 +945,7 @@ async function handleGenerateComments(noteId) {
     errorMessage.textContent = 'Failed to generate comment';
     commentsContainer.appendChild(errorMessage);
   } finally {
-    // 重新启用评论按钮
+    // 重新启用评按钮
     if (commentButton) {
       commentButton.disabled = false;
     }
@@ -930,10 +976,9 @@ function renderSingleComment(comment) {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
-  initializeSpeechRecognition();
   const voiceButton = document.getElementById('voiceInputButton');
   if (voiceButton) {
-    voiceButton.addEventListener('click', toggleSpeechRecognition);
+    voiceButton.addEventListener('click', handleVoiceInput);
   } else {
     console.warn('Voice input button not found');
   }

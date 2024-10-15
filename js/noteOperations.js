@@ -1,6 +1,7 @@
 import api from './api.js';
 import * as helper from './noteHelper.js';
 import { localStorageService } from './localStorage.js';
+import { transcribeAudio, polishText } from './audioTextProcessing.js';
 
 class NoteOperations {
   constructor() {
@@ -459,6 +460,17 @@ class NoteOperations {
   
   refreshCache() {
     localStorageService.clearTrendingTagsCache();
+  }
+
+  async addVoiceNote(audioBlob) {
+    try {
+      const transcription = await transcribeAudio(audioBlob);
+      const polishedText = await polishText(transcription);
+      return this.addNote(polishedText);
+    } catch (error) {
+      console.error('Error adding voice note:', error);
+      throw error;
+    }
   }
 
 }

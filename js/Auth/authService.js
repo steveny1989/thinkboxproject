@@ -5,19 +5,25 @@ const NEW_AUTH_API_URL = 'https://api.thinkboxs.com'; // 新系统的 API URL
 export const auth = {
   currentUser: null,
 
-  getCurrentUser: () => {
-    if (auth.currentUser) {
-      return Promise.resolve(auth.currentUser);
+  getCurrentUser: async () => {
+    console.log('getCurrentUser called');
+    console.log('Current auth.currentUser:', auth.currentUser);
+    if (auth.currentUser && auth.currentUser.email) {
+      console.log('Returning existing currentUser');
+      return auth.currentUser;
     }
     const token = localStorage.getItem('authToken');
-    if (token) {
-      // 如果有 token，我们假设用户已登录
-      // 这里可以从 localStorage 获取更多用户信息
-      const email = localStorage.getItem('userEmail');
+    const email = localStorage.getItem('userEmail');
+    console.log('Token from localStorage:', token);
+    console.log('Email from localStorage:', email);
+    if (token && email) {
+      console.log('Creating new currentUser object');
       auth.currentUser = { email };
-      return Promise.resolve(auth.currentUser);
+      return auth.currentUser;
     }
-    return Promise.resolve(null);
+    console.log('No user information found');
+    auth.currentUser = null;
+    return null;
   }
 };
 
@@ -87,10 +93,12 @@ export async function loginUser(email, password) {
             const data = JSON.parse(responseText);
             console.log('Login successful, received data:', data);
             
-            // 设置 auth.currentUser 和 localStorage
-            auth.currentUser = { email: email };
+            // 设置 localStorage 和 auth.currentUser
             localStorage.setItem('authToken', data.token);
             localStorage.setItem('userEmail', email);
+            auth.currentUser = { email: email };
+            
+            console.log('Updated auth.currentUser:', auth.currentUser);
             
             return data;
         } catch (jsonError) {
@@ -103,10 +111,24 @@ export async function loginUser(email, password) {
     }
 }
 
-export function logoutUser() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userId');
-    // 可能还需要清除其他与用户相关的本地存储数据
-    window.location.href = './html/newAuth.html';
-    auth.currentUser = null; // 清除当前用户
+export async function logoutUser() {
+    try {
+        // 清除本地存储
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userId');
+
+        // 重置 auth.currentUser
+        auth.currentUser = null;
+
+        console.log('User logged out, auth.currentUser:', auth.currentUser);
+
+        // 如果需要，这里可以添加向服务器发送登出请求的逻辑
+
+        // 返回成功状态
+        return { success: true };
+    } catch (error) {
+        console.error('Logout error:', error);
+        throw error;
+    }
 }
