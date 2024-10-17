@@ -68,20 +68,44 @@ async function loadInitialNotes() {
   }
 }
 
-
-// 添加新的处理函数
 let mediaRecorder;
 let audioChunks = [];
+let recognition;
+
+function setupSpeechRecognition() {
+  window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new window.SpeechRecognition();
+  recognition.interimResults = true;
+  recognition.continuous = true;
+  recognition.lang = 'zh-CN'; // 设置为中文，可以根据需要更改
+
+  recognition.addEventListener('result', (e) => {
+    const transcript = Array.from(e.results)
+      .map(result => result[0])
+      .map(result => result.transcript)
+      .join('');
+
+    document.getElementById('noteInput').value = transcript;
+  });
+
+  recognition.addEventListener('end', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      recognition.start();
+    }
+  });
+}
 
 function handleVoiceInput() {
   const voiceButton = document.getElementById('voiceInputButton');
   
   if (mediaRecorder && mediaRecorder.state === 'recording') {
-    mediaRecorder.stop();
+    stopRecording();
+    recognition.stop();
     voiceButton.classList.remove('recording');
     voiceButton.setAttribute('aria-label', 'Start voice input');
   } else {
     startRecording();
+    recognition.start();
     voiceButton.classList.add('recording');
     voiceButton.setAttribute('aria-label', 'Stop voice input');
   }
@@ -97,6 +121,15 @@ async function startRecording() {
       audioChunks.push(event.data);
     };
 
+    mediaRecorder.start();
+  } catch (error) {
+    console.error('Error starting recording:', error);
+    alert('无法启动录音。请确保您的浏览器支持录音功能，并且您已授予录音权限。');
+  }
+}
+
+async function stopRecording() {
+  return new Promise((resolve) => {
     mediaRecorder.onstop = async () => {
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
       const wavBlob = await convertToWAV(audioBlob);
@@ -112,13 +145,10 @@ async function startRecording() {
         console.error('Error processing audio:', error);
         alert('处理音频时出错，请重试。');
       }
+      resolve();
     };
-
-    mediaRecorder.start();
-  } catch (error) {
-    console.error('Error starting recording:', error);
-    alert('无法启动录音。请确保您的浏览器支持录音功能，并且您已授予录音权限。');
-  }
+    mediaRecorder.stop();
+  });
 }
 
 async function convertToWAV(audioBlob) {
@@ -731,6 +761,7 @@ async function initializeTrendingTags() {
 }
 
 export function setupEventListeners() {
+  setupSpeechRecognition();
   //语音输入
   const voiceButton = document.getElementById('voiceInputButton');
   if (voiceButton) {
