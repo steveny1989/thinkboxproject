@@ -136,12 +136,12 @@ body {
   min-height: 100px;
   padding: 20px;
   padding-bottom: 60px;
-  border: 2px solid var(--border-color);
+  border: 3px solid var(--border-color);
   border-radius: 8px;
   font-size: 18px;
   box-shadow: 0 4px 8px var(--shadow-color);
   box-sizing: border-box;
-  transition: background-color 0.3s, box-shadow 0.3s;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
   background-color: var(--background-color); /* 使用与整体背景相同的颜色 */
   border-top: 4px solid var(--border-color);
   font-family: 'Noto Sans SC', sans-serif;
@@ -388,7 +388,7 @@ li {
   background-color: #f8f9fa;  /* 略微浅一点的背景色 */
   border: 1px solid #e0e0e0;  /* 与笔记卡片相同的边框 */
   border-top: none;  /* 移除顶部边框，使其看起来像卡片的延续 */
-  border-radius: 0 0 8px 8px;  /* 只在底部添加圆角 */
+  border-radius: 0 0 8px 8px;  /* 只在底部添 */
   padding: 8px 16px;  /* 内边距 */
   display: flex;
   justify-content: flex-start;  /* 将按钮靠左对齐 */
@@ -1069,4 +1069,51 @@ mark {
     font-size: 11px;
     padding: 5px 10px;
   }
+}
+
+
+
+@keyframes flowing-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+#noteInput {
+  border: 3px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+#noteInput.processing {
+  border: double 3px transparent;
+  border-radius: 8px;
+  background-image: linear-gradient(white, white), 
+                    linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--border-color), var(--secondary-color), var(--primary-color));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  animation: flowing-border 3s ease infinite;
+  background-size: 300% 300%;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+  }
+}
+
+#noteInput.processing {
+  animation: flowing-border 3s ease infinite, pulse 2s infinite;
 }

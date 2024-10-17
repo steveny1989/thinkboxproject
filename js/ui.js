@@ -72,6 +72,17 @@ let mediaRecorder;
 let audioChunks = [];
 let recognition;
 
+function updateVisualFeedback(isRecording) {
+  const voiceButton = document.getElementById('voiceInputButton');
+  if (isRecording) {
+    voiceButton.classList.add('recording');
+    voiceButton.setAttribute('aria-label', 'Stop voice input');
+  } else {
+    voiceButton.classList.remove('recording');
+    voiceButton.setAttribute('aria-label', 'Start voice input');
+  }
+}
+
 function setupSpeechRecognition() {
   window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new window.SpeechRecognition();
@@ -96,18 +107,12 @@ function setupSpeechRecognition() {
 }
 
 function handleVoiceInput() {
-  const voiceButton = document.getElementById('voiceInputButton');
-  
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     stopRecording();
-    recognition.stop();
-    voiceButton.classList.remove('recording');
-    voiceButton.setAttribute('aria-label', 'Start voice input');
+    if (recognition) recognition.stop();
   } else {
     startRecording();
-    recognition.start();
-    voiceButton.classList.add('recording');
-    voiceButton.setAttribute('aria-label', 'Stop voice input');
+    if (recognition) recognition.start();
   }
 }
 
@@ -122,6 +127,7 @@ async function startRecording() {
     };
 
     mediaRecorder.start();
+    updateVisualFeedback(true);
   } catch (error) {
     console.error('Error starting recording:', error);
     alert('无法启动录音。请确保您的浏览器支持录音功能，并且您已授予录音权限。');
@@ -129,6 +135,9 @@ async function startRecording() {
 }
 
 async function stopRecording() {
+  updateVisualFeedback(false);
+  startProcessingAnimation(); // 开始处理动画
+
   return new Promise((resolve) => {
     mediaRecorder.onstop = async () => {
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
@@ -144,6 +153,8 @@ async function stopRecording() {
       } catch (error) {
         console.error('Error processing audio:', error);
         alert('处理音频时出错，请重试。');
+      } finally {
+        stopProcessingAnimation(); // 停止处理动画
       }
       resolve();
     };
@@ -593,6 +604,7 @@ async function handleAddNote(event) {
   try {
     if (isValidUrl(noteText)) {
       loadingIndicator = showLoadingIndicator('Fetching web content');
+      startProcessingAnimation();
       try {
         const content = await fetchWebContent(noteText);
         if (content) {
@@ -604,11 +616,13 @@ async function handleAddNote(event) {
         showErrorMessage('Failed to fetch web content. Please try again.');
       } finally {
         hideLoadingIndicator(loadingIndicator);
+        stopProcessingAnimation();
       }
     }
 
     if (noteText.length > 1000 && !noteInput.dataset.rewritten) {
       loadingIndicator = showLoadingIndicator('Rewriting content');
+      startProcessingAnimation();
       console.log('Content too long, rewriting...');
       const rewrittenText = await api.ai.rewriteContent(noteText);
       console.log('Rewritten content:', rewrittenText);
@@ -619,6 +633,7 @@ async function handleAddNote(event) {
       messageManager.showInfo('Content has been rewritten by AI for brevity. Please review and submit.');
       
       hideLoadingIndicator(loadingIndicator);
+      stopProcessingAnimation
       return; // 结束函数执行，等待用户确认改写后的内容
     }
 
@@ -672,6 +687,7 @@ async function handleNoteInputChange(event) {
   if (isValidUrl(url)) {
     try {
       showLoadingIndicator();
+      startProcessingAnimation();
       const content = await fetchWebContent(url);
       input.value = content;
     } catch (error) {
@@ -679,6 +695,7 @@ async function handleNoteInputChange(event) {
       showErrorMessage('Failed to fetch web content. Please try again.');
     } finally {
       hideLoadingIndicator();
+      stopProcessingAnimation();
     }
   }
 }
@@ -710,6 +727,7 @@ async function handleCompleteUserInput() {
 
   try {
     showLoadingIndicator('Completing input...');
+    startProcessingAnimation();
     const completion = await noteOperations.completeUserInput(partialInput);
     noteInput.value = partialInput + ' ' + completion;
     noteInput.setSelectionRange(noteInput.value.length, noteInput.value.length);
@@ -719,6 +737,7 @@ async function handleCompleteUserInput() {
     showErrorMessage('Failed to complete input. Please try again.');
   } finally {
     hideLoadingIndicator();
+    stopProcessingAnimation();
   }
 }
 
@@ -770,7 +789,7 @@ export function setupEventListeners() {
     console.error('Voice input button not found');
   }
 
-    // 添笔记的事件监听器
+    // 添笔记的事件监听��
     const addNoteButton = document.getElementById('addNoteButton');
     if (addNoteButton) {
       addNoteButton.addEventListener('click', handleAddNote);
@@ -1030,6 +1049,18 @@ async function handleLogout() {
         // 显示错误消息给用户
         alert('Failed to log out. Please try again.');
     }
+}
+
+//处理动画
+
+export function startProcessingAnimation() {
+  const noteInput = document.getElementById('noteInput');
+  noteInput.classList.add('processing');
+}
+
+export function stopProcessingAnimation() {
+  const noteInput = document.getElementById('noteInput');
+  noteInput.classList.remove('processing');
 }
 
 // 确保导出 handleAddNote 函数
