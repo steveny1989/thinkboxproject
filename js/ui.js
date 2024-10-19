@@ -17,6 +17,8 @@ export function initializeUI() {
   updateUserInfo();
   loadInitialNotes();
   setupEventListeners();
+  initializeTrendingTags();
+  initializeTrendingTagsAnalysis(); // 添加这一行
 }
 
 // 更新用户信息显示
@@ -188,7 +190,7 @@ async function convertToWAV(audioBlob) {
   writeString(view, 36, 'data');
   view.setUint32(40, length * 2, true);
 
-  // 写入音频数据
+  // 写入音频数���
   const channelData = [];
   for (let i = 0; i < numberOfChannels; i++) {
     channelData.push(audioBuffer.getChannelData(i));
@@ -234,7 +236,7 @@ function updateNoteList(notesToDisplay, append = false) {
 
   // 显示 "You've reached the end of your notes" 消息
   const allNotesLoadedElement = document.getElementById('allNotesLoaded');
-  if (allNotesLoadedElement && notesToDisplay.length < 24) { // 假设每页加载24条笔记
+  if (allNotesLoadedElement && notesToDisplay.length < 24) { // 假设每页加载24条笔
     allNotesLoadedElement.classList.remove('hidden');
   }
 }
@@ -259,7 +261,7 @@ function createNoteElement(note) {
         </div>
       </div>
       <div class="note-tags-container">
-        <div id="tags-${note.note_id}" class="note-tags">${renderHelpers.renderTags(note.tags || [])}</div>
+<div id="tags-${note.note_id}" class="note-tags">${renderHelpers.renderTags(note.tags || [])}</div>
       </div>
       <div class="note-actions-container">
         <div class="note-actions">
@@ -495,16 +497,17 @@ function highlightText(text, searchTerm) {
 }
 
 
-// 新增：延迟加载热门标签分析
+
+// 新增：延迟加载热标签分析
 async function initializeTrendingTagsAnalysis() {
   if (state.isAnalyzing) return; // 使用 state.isAnalyzing 而不是 isAnalyzing
   
   state.isAnalyzing = true;
   console.log('Initializing trending tags analysis');
   try {
-    const trendingTags = await noteOperations.getTrendingTags(10);
+    const { trendingTags } = await noteOperations.getTrendingTags(10);
     console.log('Trending tags for analysis:', trendingTags);
-    if (trendingTags.length > 0) {
+    if (trendingTags && trendingTags.length > 0) {
       const analysisReport = await noteOperations.analyzeTrendingTags(trendingTags);
       updateTrendingTagsAnalysis(trendingTags, analysisReport);
     } else {
@@ -518,27 +521,42 @@ async function initializeTrendingTagsAnalysis() {
   }
 }
 
-async function updateTrendingTagsAnalysis() {
+async function updateTrendingTagsAnalysis(trendingTags, analysisReport) {
   try {
-    const trendingTags = await noteOperations.getTrendingTags();
-    if (trendingTags.length === 0) {
-      console.log('No trending tags available');
-      return;
-    }
-
-    const analysisReport = await noteOperations.analyzeTrendingTags(trendingTags);
+    console.log('Updating trending tags analysis:', trendingTags, analysisReport);
     
-    const trendingTagsAnalysisElement = document.getElementById('trending-tags-analysis');
-    if (trendingTagsAnalysisElement) {
-      const tagsHtml = trendingTags.map(tag => `<span class="tag">#${tag.name} (${tag.count})</span>`).join(' ');
-      trendingTagsAnalysisElement.innerHTML = `
-        <h3>Analysis</h3>
-        <div class="analysis-report">
-          <p>${analysisReport}</p>
-        </div>
-      `;
+    const trendingTagsContainer = document.getElementById('trending-tags-container');
+    console.log('Trending tags container:', trendingTagsContainer);
+    
+    if (trendingTagsContainer) {
+      const trendingTagsDiv = trendingTagsContainer.querySelector('.trending-tags');
+      if (trendingTagsDiv) {
+        const topTagsList = trendingTagsDiv.querySelector('#topTagsList');
+        const trendingTagsAnalysisElement = trendingTagsDiv.querySelector('#trending-tags-analysis');
+        
+        if (topTagsList && trendingTagsAnalysisElement) {
+          // 更新热门标签列表
+          // const tagsHtml = trendingTags.map(tag => `<li><span class="tag">#${tag.name} (${tag.count})</span></li>`).join('');
+          // topTagsList.innerHTML = tagsHtml;
+          
+          // 更新分析报告
+          trendingTagsAnalysisElement.innerHTML = `
+            <h3>Analysis</h3>
+            <div class="analysis-report">
+              <p>${analysisReport}</p>
+            </div>
+          `;
+          console.log('Trending tags analysis updated');
+        } else {
+          console.warn('Top tags list or trending tags analysis element not found');
+          console.log('topTagsList:', topTagsList);
+          console.log('trendingTagsAnalysisElement:', trendingTagsAnalysisElement);
+        }
+      } else {
+        console.warn('Trending tags div not found');
+      }
     } else {
-      console.warn('Trending tags analysis element not found');
+      console.warn('Trending tags container not found. DOM structure:', document.body.innerHTML);
     }
   } catch (error) {
     console.error('Error updating trending tags analysis:', error);
@@ -748,28 +766,52 @@ function clearNoteInput() {
 }
 
 async function initializeTrendingTags() {
-  function updateTopTagsList(tags) {
-    console.log('Updating top tags list with:', tags); // 添加这行日志
-    const topTagsList = document.getElementById('topTagsList');
-    if (topTagsList) {
-      topTagsList.innerHTML = tags.map(tag => {
-        // console.log('Processing tag:', tag); // 添加这行日志
-        return `
-          <li class="trending-tag-item">
-            <span class="tag-name">#${tag.name || 'Unknown'}</span>
-            <span class="tag-count">${tag.count || 0}</span>
-          </li>
-        `;
-      }).join('');
-    } else {
-      console.error('topTagsList element not found');
-    }
+  const trendingTagsContainer = document.getElementById('trending-tags-container');
+  if (!trendingTagsContainer) {
+    console.warn('Trending tags container not found in the DOM');
+    return;
+  }
+
+  const trendingTagsDiv = trendingTagsContainer.querySelector('.trending-tags');
+  if (!trendingTagsDiv) {
+    console.warn('Trending tags div not found in the DOM');
+    return;
   }
 
   async function fetchAndUpdateTrendingTags() {
-    const trendingTags = await noteOperations.getTrendingTags();
-    // console.log('Fetched trending tags:', trendingTags);
-    updateTopTagsList(trendingTags);
+    try {
+      const { trendingTags } = await noteOperations.getTrendingTags();
+      updateTrendingTagsList(trendingTags);
+    } catch (error) {
+      console.error('Error fetching trending tags:', error);
+      updateTrendingTagsList([]); // 显示错误消息
+    }
+  }
+
+  function updateTrendingTagsList(tags) {
+    const topTagsList = trendingTagsDiv.querySelector('#topTagsList');
+    if (!topTagsList) {
+      console.warn('Top tags list not found in the DOM');
+      return;
+    }
+
+    topTagsList.innerHTML = '';
+
+    if (Array.isArray(tags) && tags.length > 0) {
+      tags.forEach(tag => {
+        const li = document.createElement('li');
+        li.className = 'trending-tag-item';
+        li.innerHTML = `
+          <span class="tag-name">#${tag.name}</span>
+          <span class="tag-count">${tag.count}</span>
+        `;
+        topTagsList.appendChild(li);
+      });
+    } else {
+      const li = document.createElement('li');
+      li.textContent = 'No trending tags available';
+      topTagsList.appendChild(li);
+    }
   }
 
   // 初始加载
@@ -789,10 +831,15 @@ export function setupEventListeners() {
     console.error('Voice input button not found');
   }
 
-    // 添笔记的事件监听��
+    // 添笔记的事件监听
     const addNoteButton = document.getElementById('addNoteButton');
     if (addNoteButton) {
       addNoteButton.addEventListener('click', handleAddNote);
+    }
+
+    const clusterTagsButton = document.getElementById('clusterTagsButton');
+    if (clusterTagsButton) {
+      clusterTagsButton.addEventListener('click', handleClusterTags);
     }
 
 
@@ -1051,6 +1098,57 @@ async function handleLogout() {
     }
 }
 
+async function handleClusterTags() {
+  try {
+    const clusteredTagsText = await noteOperations.clusterTags();
+    console.log('Clustered tags:', clusteredTagsText);
+    displayClusteredTags(clusteredTagsText);
+  } catch (error) {
+    console.error('Error clustering tags:', error);
+    showErrorMessage('Failed to cluster tags. Please try again.');
+  }
+}
+
+function displayClusteredTags(clusteredTagsText) {
+  const clusteredTagsContainer = document.getElementById('clusteredTagsContainer');
+  if (!clusteredTagsContainer) {
+    console.error('Clustered tags container not found');
+    return;
+  }
+  
+  clusteredTagsContainer.innerHTML = '';
+
+  if (!clusteredTagsText || typeof clusteredTagsText !== 'string' || clusteredTagsText.trim() === '') {
+    clusteredTagsContainer.innerHTML = '<p class="no-clusters">No clusters found.</p>';
+    return;
+  }
+
+  try {
+    const clusteredTags = JSON.parse(clusteredTagsText);
+    
+    Object.entries(clusteredTags).forEach(([cluster, tags]) => {
+      if (typeof tags !== 'string') {
+        console.error(`Invalid tags format for cluster "${cluster}"`);
+        return;
+      }
+
+      const clusterDiv = document.createElement('div');
+      clusterDiv.className = 'cluster';
+      clusterDiv.innerHTML = `
+        <h3 class="cluster-title">${cluster}</h3>
+        <div class="cluster-tags">
+          ${tags.split(',').map(tag => `<span class="cluster-tag">${tag.trim()}</span>`).join('')}
+        </div>
+      `;
+      clusteredTagsContainer.appendChild(clusterDiv);
+    });
+  } catch (error) {
+    console.error('Error parsing clustered tags:', error);
+    clusteredTagsContainer.innerHTML = '<p class="no-clusters">Error displaying clusters.</p>';
+  }
+}
+
+
 //处理动画
 
 export function startProcessingAnimation() {
@@ -1076,5 +1174,8 @@ export {
   initializeTrendingTagsAnalysis,
   updateTrendingTagsAnalysis,
   handleCompleteUserInput,
-  handleLogout
+  handleLogout,
+  initializeTrendingTags,
+  handleClusterTags,
+  displayClusteredTags
 };

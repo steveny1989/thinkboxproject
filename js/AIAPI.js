@@ -53,7 +53,7 @@ class AIAPI {
       const conversationId = feedbackData.data.conversation_id; // 获取 conversation_id
       let status = "in_progress";
     
-      // 轮询反馈��态
+      // 轮询反馈
       while (status === "in_progress") {
         await new Promise(resolve => setTimeout(resolve, 1000)); // 等待 1 秒
         const statusResponse = await fetch(`${COZE_API_URL}/retrieve?chat_id=${chatId}&conversation_id=${conversationId}`, {
@@ -237,7 +237,7 @@ class AIAPI {
         // 解析响应数据
         const commentsData = await commentsResponse.json();
         if (commentsData.code !== 0) {
-          // ��果响应码不为0，表示请求失败
+          // 果响应码不为0，表示请求失败
           throw new Error(`Comments generation failed: ${commentsData.msg}`);
         }
     
@@ -306,7 +306,7 @@ class AIAPI {
     
     try {
       const tagsCommentRequest = {
-        bot_id: "7422507897416417331", // 请替换为专门用于标签分析的机器人ID
+        bot_id: "7422507897416417331", // 请替换为专用于标签分析的机器人ID
         user_id: "123",
         stream: false,
         auto_save_history: true,
@@ -582,6 +582,84 @@ class AIAPI {
       throw error;
     }
   }
-}
 
+  async clusterTags(tags) {
+    const token = await this.getAuthToken();
+    if (!token) {
+      console.error('No user logged in');
+      throw new Error('No user logged in');
+    }
+    
+    //console.log('AIAPI.clusterTags called with:', tags);
+    
+    try {
+      const tagsClusterRequest = {
+        bot_id: "7427310689368227851", // 使用与 tagsCommentor 相同的机器人 ID，或者替换为专门用于标签聚类的机器人 ID
+        user_id: "123",
+        stream: false,
+        auto_save_history: true,
+        additional_messages: [{
+          role: "user",
+          content: `Please cluster the following tags into groups of similar meanings. For each group, provide a parent tag that represents the group. Format the output as JSON. Tags: ${tags.join(', ')}`,
+          content_type: "text"
+        }]
+      };
+    
+      const clusterResponse = await fetch(`${COZE_API_URL}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${COZE_API_KEY}`
+        },
+        body: JSON.stringify(tagsClusterRequest)
+      });
+    
+      const clusterData = await clusterResponse.json();
+      if (clusterData.code !== 0) {
+        throw new Error(`Tags clustering failed: ${clusterData.msg}`);
+      }
+    
+      const chatId = clusterData.data.id;
+      const conversationId = clusterData.data.conversation_id;
+      let status = "in_progress";
+    
+      while (status === "in_progress") {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const statusResponse = await fetch(`${COZE_API_URL}/retrieve?chat_id=${chatId}&conversation_id=${conversationId}`, {
+          headers: {
+            'Authorization': `Bearer ${COZE_API_KEY}`
+          }
+        });
+    
+        const statusData = await statusResponse.json();
+        if (statusData.code !== 0) {
+          throw new Error(`Failed to retrieve tags clustering status: ${statusData.msg}`);
+        }
+        status = statusData.data.status;
+      }
+    
+      const finalResponse = await fetch(`${COZE_API_URL}/message/list?chat_id=${chatId}&conversation_id=${conversationId}`, {
+        headers: {
+          'Authorization': `Bearer ${COZE_API_KEY}`
+        }
+      });
+    
+      const finalData = await finalResponse.json();
+      if (finalData.code !== 0) {
+        throw new Error(`Failed to retrieve final tags clusters: ${finalData.msg}`);
+      }
+    
+      if (finalData.data.length > 0) {
+        const clusterContent = finalData.data[0].content;
+        console.log('Raw cluster content:', clusterContent);
+        return clusterContent; // 直接返回原始内容，不进行 JSON 解析
+      } else {
+        throw new Error("No tags cluster content found");
+      }
+    } catch (error) {
+      console.error('Error in clusterTags:', error);
+      throw error;
+    }
+  }
+}
 export default new AIAPI();

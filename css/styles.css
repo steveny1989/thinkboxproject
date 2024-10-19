@@ -1024,7 +1024,7 @@ mark {
   transition: background-color 0.3s ease;
 }
 
-/* 响应式设计优化 */
+/* 响应式设���优化 */
 @media (max-width: 768px) {
   .header {
     flex-wrap: wrap;
@@ -1092,28 +1092,147 @@ mark {
 }
 
 #noteInput.processing {
-  border: double 3px transparent;
+  border: double 4px transparent; /* 增加边框宽度 */
   border-radius: 8px;
   background-image: linear-gradient(white, white), 
                     linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--border-color), var(--secondary-color), var(--primary-color));
   background-origin: border-box;
   background-clip: padding-box, border-box;
-  animation: flowing-border 3s ease infinite;
+  animation: flowing-border 2s linear infinite, /* 加快动画速度 */
+             pulse 1.5s infinite, /* 加快脉冲速度 */
+             glow 2s ease-in-out infinite alternate; /* 添加发光效果 */
   background-size: 300% 300%;
+  box-shadow: 0 0 15px rgba(var(--primary-color-rgb), 0.5); /* 添加阴影 */
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+    transform: scale(1);
   }
-  70% {
-    box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+  50% {
+    transform: scale(1.02); /* 轻微放大效果 */
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+    transform: scale(1);
   }
 }
 
-#noteInput.processing {
-  animation: flowing-border 3s ease infinite, pulse 2s infinite;
+@keyframes flowing-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5);
+  }
+  to {
+    box-shadow: 0 0 20px rgba(var(--primary-color-rgb), 0.8);
+  }
+}
+
+#clusteredTagsContainer {
+  background-color: var(--background-color); 
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  border-top: 4px solid var(--border-color);
+}
+
+#clusteredTagsContainer h3 {
+  font-size: 18px;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e4e6e9;
+}
+
+.cluster {
+  margin-bottom: 15px;
+  background-color: #f0f2f5;
+  border-radius: 8px;
+  padding: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.cluster:hover {
+  background-color: #e4e6e9;
+}
+
+.cluster-title {
+  font-size: 16px;
+  color: #1a1a1a;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.cluster-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cluster-tag {
+  font-size: 14px;
+  background-color: rgba(0, 123, 255, 0.1);
+  color: #0066cc;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.cluster-tag:hover {
+  background-color: #0066cc;
+  color: white;
+}
+
+#clusterTagsButton {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px auto;
+  transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+#clusterTagsButton:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#clusterTagsButton:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+#clusterTagsButton::before {
+  content: "\f0c5";
+  font-family: "Font Awesome 5 Free";
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.no-clusters {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px 0;
 }

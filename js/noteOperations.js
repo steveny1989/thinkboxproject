@@ -166,7 +166,7 @@ class NoteOperations {
       }
     }
 
-    // 从生成的签映射中删除
+    // 生成的签映射中删除
     this.generatedTagsMap.delete(noteId);
     await localStorageService.saveTags(Array.from(this.generatedTagsMap.entries()));
     await localStorageService.saveTempToServerNoteMap(this.tempToServerNoteMap);
@@ -183,7 +183,7 @@ class NoteOperations {
     }
     try {
       const generatedTags = await this.api.ai.generateTags(note.content);
-      console.log('生成的标签：', generatedTags);
+      // console.log('生成的标签：', generatedTags);
 
       if (generatedTags.length > 0) {
         await this.api.tags.addTags(note.note_id, generatedTags);
@@ -220,7 +220,7 @@ class NoteOperations {
       const existingComments = note.comments || [];
       const existingCommentsContext = existingComments.map(c => `${c.author}: ${c.content}`).join('\n');
 
-      // 准备发送给 AI 的内容，包括笔记内容和现有评论
+      // 备发送给 AI 的内，括笔记内容和现有评论
       const contextForAI = `
         Note: ${note.content}
         
@@ -394,7 +394,7 @@ class NoteOperations {
 
       if (!Array.isArray(allTags) || allTags.length === 0) {
         console.log('No tags found');
-        return [];
+        return { trendingTags: [], allTags: [] };
       }
 
       const tagCountMap = new Map();
@@ -406,26 +406,32 @@ class NoteOperations {
           tags.forEach(tag => {
             // 移除 # 符号和可能的尾随逗号
             const cleanTag = tag.slice(1).replace(/,+$/, '');
-            tagCountMap.set(cleanTag, (tagCountMap.get(cleanTag) || 0) + 1);
+            const newCount = (tagCountMap.get(cleanTag) || 0) + 1;
+            tagCountMap.set(cleanTag, newCount);
+            // console.log(`Clean tag: "${cleanTag}", Count: ${newCount}`);
           });
         }
       });
 
-      // console.log('Tag count map:', Object.fromEntries(tagCountMap));
+      // console.log('All clean tags with their counts:');
+      // tagCountMap.forEach((count, tag) => {
+      //   console.log(`"${tag}": ${count}`);
+      // });
 
       const sortedTags = Array.from(tagCountMap.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, limit)
         .map(([name, count]) => ({ name, count }));
 
-      // console.log('Sorted and limited tags:', sortedTags);
+      console.log('Sorted and limited trending tags:', sortedTags);
 
       this.cachedTrendingTags = sortedTags;
+      this.cachedAllTags = allTags;
       this.lastFetchTime = now;
-      return sortedTags;
+      return { trendingTags: sortedTags, allTags: allTags };
     } catch (error) {
       console.error('Error fetching trending tags:', error);
-      return [];
+      return { trendingTags: [], allTags: [] };
     }
   }
 
@@ -470,6 +476,45 @@ class NoteOperations {
     } catch (error) {
       console.error('Error adding voice note:', error);
       throw error;
+    }
+  }
+
+  async clusterTags() {
+    try {
+      console.log('Starting tag clustering...');
+      console.log('this.api:', this.api);
+      console.log('this.api.ai:', this.api.ai);
+      console.log('typeof this.api.ai:', typeof this.api.ai);
+      console.log('this.api.ai.clusterTags:', this.api.ai.clusterTags);
+      console.log('typeof this.api.ai.clusterTags:', typeof this.api.ai.clusterTags);
+  
+
+      const allTags = await this.api.tags.getAllTags();
+      console.log('All tags received:', allTags);
+
+      if (!Array.isArray(allTags) || allTags.length === 0) {
+        console.log('No tags found');
+        return [];
+      }
+
+      // 直接使用从 API 获取的标签，不进行额外处理
+      const tagNames = allTags.map(tag => tag.name);
+      console.log('Tag names for clustering:', tagNames);
+
+      if (tagNames.length === 0) {
+        console.log('No tags available for clustering');
+        return [];
+      }
+
+      console.log('Calling AI API for tag clustering...');
+      const clusteredTags = await this.api.ai.clusterTags(tagNames);
+      
+      console.log('Clustered tags:', clusteredTags);
+      
+      return clusteredTags;
+    } catch (error) {
+      console.error('Error clustering tags:', error);
+      return []; // 返回空数组而不是抛出错误
     }
   }
 

@@ -113,6 +113,30 @@ export async function loginUser(email, password) {
 
 export async function logoutUser() {
     try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            console.log('No token found, user already logged out');
+            return { success: true };
+        }
+
+        // 向服务器发送登出请求
+        try {
+            const response = await fetch(`${NEW_AUTH_API_URL}/users/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                console.warn('Server-side logout failed:', response.statusText);
+            }
+        } catch (serverError) {
+            console.error('Error during server-side logout:', serverError);
+            // 即使服务器端登出失败，我们仍然继续客户端的登出过程
+        }
+
         // 清除本地存储
         localStorage.removeItem('authToken');
         localStorage.removeItem('userEmail');
@@ -124,6 +148,9 @@ export async function logoutUser() {
         console.log('User logged out, auth.currentUser:', auth.currentUser);
 
         // 如果需要，这里可以添加向服务器发送登出请求的逻辑
+
+        window.location.href = '/html/newAuth.html';
+
 
         // 返回成功状态
         return { success: true };
