@@ -499,14 +499,14 @@ class NoteOperations {
 
       // 直接使用从 API 获取的标签，不进行额外处理
       const tagNames = allTags.map(tag => tag.name);
-      console.log('Tag names for clustering:', tagNames);
+      // console.log('Tag names for clustering:', tagNames);
 
       if (tagNames.length === 0) {
         console.log('No tags available for clustering');
         return [];
       }
 
-      console.log('Calling AI API for tag clustering...');
+      // console.log('Calling AI API for tag clustering...');
       const clusteredTags = await this.api.ai.clusterTags(tagNames);
       
       console.log('Clustered tags:', clusteredTags);

@@ -413,7 +413,7 @@ async function handleSearch(event) {
 
   if (searchTerm.length === 0) {
     state.isShowingSearchResults = false;
-    updateNoteList(originalNotes);
+    updateNoteList(state.originalNotes);
     hideSearchResultsInfo();
   } else {
     try {
@@ -470,7 +470,7 @@ function clearSearch() {
   const searchInput = document.getElementById('searchInput');
   searchInput.value = '';
   state.isShowingSearchResults = false;
-  updateNoteList(originalNotes);
+  updateNoteList(state.originalNotes);
   hideSearchResultsInfo();
 }
 
