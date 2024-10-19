@@ -190,7 +190,7 @@ async function convertToWAV(audioBlob) {
   writeString(view, 36, 'data');
   view.setUint32(40, length * 2, true);
 
-  // 写入音频数���
+  // 写入音频数
   const channelData = [];
   for (let i = 0; i < numberOfChannels; i++) {
     channelData.push(audioBuffer.getChannelData(i));
@@ -1109,7 +1109,7 @@ async function handleClusterTags() {
   }
 }
 
-function displayClusteredTags(clusteredTagsText) {
+function displayClusteredTags(clusteredTags) {
   const clusteredTagsContainer = document.getElementById('clusteredTagsContainer');
   if (!clusteredTagsContainer) {
     console.error('Clustered tags container not found');
@@ -1118,34 +1118,61 @@ function displayClusteredTags(clusteredTagsText) {
   
   clusteredTagsContainer.innerHTML = '';
 
-  if (!clusteredTagsText || typeof clusteredTagsText !== 'string' || clusteredTagsText.trim() === '') {
+  if (!clusteredTags || (typeof clusteredTags !== 'object' && typeof clusteredTags !== 'string') || Object.keys(clusteredTags).length === 0) {
     clusteredTagsContainer.innerHTML = '<p class="no-clusters">No clusters found.</p>';
     return;
   }
 
-  try {
-    const clusteredTags = JSON.parse(clusteredTagsText);
-    
-    Object.entries(clusteredTags).forEach(([cluster, tags]) => {
-      if (typeof tags !== 'string') {
-        console.error(`Invalid tags format for cluster "${cluster}"`);
-        return;
-      }
+  let parsedTags = clusteredTags;
 
-      const clusterDiv = document.createElement('div');
-      clusterDiv.className = 'cluster';
-      clusterDiv.innerHTML = `
-        <h3 class="cluster-title">${cluster}</h3>
-        <div class="cluster-tags">
-          ${tags.split(',').map(tag => `<span class="cluster-tag">${tag.trim()}</span>`).join('')}
-        </div>
-      `;
-      clusteredTagsContainer.appendChild(clusterDiv);
-    });
-  } catch (error) {
-    console.error('Error parsing clustered tags:', error);
-    clusteredTagsContainer.innerHTML = '<p class="no-clusters">Error displaying clusters.</p>';
+  // 如果输入是字符串，尝试解析为JSON
+  if (typeof clusteredTags === 'string') {
+    try {
+      parsedTags = JSON.parse(clusteredTags);
+    } catch (error) {
+      console.error('Error parsing clustered tags:', error);
+      clusteredTagsContainer.innerHTML = '<p class="no-clusters">Error parsing clusters.</p>';
+      return;
+    }
   }
+
+  Object.entries(parsedTags).forEach(([cluster, tags]) => {
+    const clusterDiv = document.createElement('div');
+    clusterDiv.className = 'cluster';
+    
+    let tagsHtml = '';
+
+    if (Array.isArray(tags)) {
+      // 如果标签是数组
+      tagsHtml = tags.map(tag => `<span class="cluster-tag">${tag}</span>`).join('');
+    } else if (typeof tags === 'string') {
+      // 如果标签是字符串
+      tagsHtml = tags.split(',').map(tag => `<span class="cluster-tag">${tag.trim()}</span>`).join('');
+    } else if (typeof tags === 'object' && tags !== null) {
+      // 如果标签是对象（可能是嵌套的聚类）
+      tagsHtml = Object.entries(tags).map(([subCluster, subTags]) => 
+        `<div class="sub-cluster">
+           <h4 class="sub-cluster-title">${subCluster}</h4>
+           <div class="sub-cluster-tags">
+             ${Array.isArray(subTags) 
+               ? subTags.map(tag => `<span class="cluster-tag">${tag}</span>`).join('')
+               : `<span class="cluster-tag">${subTags}</span>`}
+           </div>
+         </div>`
+      ).join('');
+    } else {
+      console.error(`Invalid tags format for cluster "${cluster}"`);
+      return;
+    }
+
+    clusterDiv.innerHTML = `
+      <h3 class="cluster-title">${cluster}</h3>
+      <div class="cluster-tags">
+        ${tagsHtml}
+      </div>
+    `;
+    clusteredTagsContainer.appendChild(clusterDiv);
+  });
 }
 
 
