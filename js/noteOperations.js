@@ -220,7 +220,7 @@ class NoteOperations {
       const existingComments = note.comments || [];
       const existingCommentsContext = existingComments.map(c => `${c.author}: ${c.content}`).join('\n');
 
-      // 备发送给 AI 的内，括笔记内容和现有评论
+      // 送给 AI 的内，括笔记内容和现有评论
       const contextForAI = `
         Note: ${note.content}
         
@@ -363,7 +363,7 @@ class NoteOperations {
     try {
       const searchResults = await this.api.notes.searchNotes(searchTerm);
       
-      // 获取搜索结果中每个笔记的标签
+      // ��取搜索结果中每个笔记的标签
       const tagsPromises = searchResults.map(note => this.api.tags.getTags(note.note_id));
       const tagsResults = await Promise.all(tagsPromises);
       
@@ -479,47 +479,65 @@ class NoteOperations {
     }
   }
 
-  async clusterTags() {
+
+  async preprocessTags(maxTags = 200) {
     try {
-      console.log('Starting tag clustering...');
-      console.log('this.api:', this.api);
-      console.log('this.api.ai:', this.api.ai);
-      console.log('typeof this.api.ai:', typeof this.api.ai);
-      console.log('this.api.ai.clusterTags:', this.api.ai.clusterTags);
-      console.log('typeof this.api.ai.clusterTags:', typeof this.api.ai.clusterTags);
-  
+      console.log('Fetching recent notes...');
+      const recentNotes = await this.api.notes.getPaginatedNotes(0, 48);
+      console.log('Recent notes received:', recentNotes);
 
-      const allTags = await this.api.tags.getAllTags();
-      console.log('All tags received:', allTags);
-
-      if (!Array.isArray(allTags) || allTags.length === 0) {
-        console.log('No tags found');
+      if (!Array.isArray(recentNotes)) {
+        console.error('Invalid response from getPaginatedNotes:', recentNotes);
         return [];
       }
 
-      // 直接使用从 API 获取的标签，不进行额外处理
-      const tagNames = allTags.map(tag => tag.name);
-      // console.log('Tag names for clustering:', tagNames);
+      // 收集所有标签
+      const allTags = new Set();
+      recentNotes.forEach(note => {
+        if (Array.isArray(note.tags)) {
+          note.tags.forEach(tagObj => {
+            // 假设每个标签对象有一个 'name' 属性
+            if (tagObj && typeof tagObj.name === 'string') {
+              allTags.add(tagObj.name);
+            }
+          });
+        }
+      });
 
-      if (tagNames.length === 0) {
-        console.log('No tags available for clustering');
-        return [];
-      }
+      // 转换为数组并限制数量
+      const selectedTags = Array.from(allTags).slice(0, maxTags);
 
-      // console.log('Calling AI API for tag clustering...');
-      const clusteredTags = await this.api.ai.clusterTags(tagNames);
-      
-      console.log('Clustered tags:', clusteredTags);
-      
-      return clusteredTags;
+      console.log('Processed tags:', selectedTags);
+      return selectedTags;
     } catch (error) {
-      console.error('Error clustering tags:', error);
-      return []; // 返回空数组而不是抛出错误
+      console.error('Error in preprocessTags:', error);
+      return [];
     }
   }
+  
+  async clusterTags() {
+    try {
+      const processedTags = await this.preprocessTags();
+      console.log('Processed tags for clustering:', processedTags);
+
+      if (processedTags.length === 0) {
+        console.log('No tags available for clustering after preprocessing');
+        return 'No tags available for clustering';
+      }
+
+      // 使用处理后的标签进行聚类
+      const clusteredContent = await this.api.ai.siliconflow_clusterTags(processedTags);
+      return clusteredContent;
+    } catch (error) {
+      console.error('Error in clusterTags:', error);
+      throw error;
+    }
+  }
+
 
 }
 
 const noteOperations = new NoteOperations();
 // console.log('Exporting noteOperations:', noteOperations); // 添加这行日志
 export default noteOperations;
+

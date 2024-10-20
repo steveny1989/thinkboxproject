@@ -1100,16 +1100,23 @@ async function handleLogout() {
 
 async function handleClusterTags() {
   try {
-    const clusteredTagsText = await noteOperations.clusterTags();
-    console.log('Clustered tags:', clusteredTagsText);
-    displayClusteredTags(clusteredTagsText);
+    showLoadingIndicator('Clustering tags...');
+    const clusteredContent = await noteOperations.clusterTags();
+    console.log('Clustered content:', clusteredContent);
+    if (typeof clusteredContent !== 'string' || clusteredContent.trim() === '') {
+      throw new Error('Invalid clustered content received');
+    }
+    displayClusteredTags(clusteredContent);
   } catch (error) {
     console.error('Error clustering tags:', error);
     showErrorMessage('Failed to cluster tags. Please try again.');
+  } finally {
+    hideLoadingIndicator();
   }
 }
 
-function displayClusteredTags(clusteredTags) {
+function displayClusteredTags(clusteredContent) {
+  console.log('Entering displayClusteredTags');
   const clusteredTagsContainer = document.getElementById('clusteredTagsContainer');
   if (!clusteredTagsContainer) {
     console.error('Clustered tags container not found');
@@ -1118,61 +1125,112 @@ function displayClusteredTags(clusteredTags) {
   
   clusteredTagsContainer.innerHTML = '';
 
-  if (!clusteredTags || (typeof clusteredTags !== 'object' && typeof clusteredTags !== 'string') || Object.keys(clusteredTags).length === 0) {
-    clusteredTagsContainer.innerHTML = '<p class="no-clusters">No clusters found.</p>';
+  if (!clusteredContent || typeof clusteredContent !== 'string') {
+    console.warn('Invalid clustered content provided');
+    clusteredTagsContainer.innerHTML = '<p class="no-clusters">No valid clustered content found.</p>';
     return;
   }
 
-  let parsedTags = clusteredTags;
+  const clusters = parseClusteredContent(clusteredContent);
 
-  // 如果输入是字符串，尝试解析为JSON
-  if (typeof clusteredTags === 'string') {
-    try {
-      parsedTags = JSON.parse(clusteredTags);
-    } catch (error) {
-      console.error('Error parsing clustered tags:', error);
-      clusteredTagsContainer.innerHTML = '<p class="no-clusters">Error parsing clusters.</p>';
-      return;
-    }
+  if (Object.keys(clusters).length === 0) {
+    console.log('No clusters parsed, displaying original content');
+    // 直接显示原始内容，使用 pre 标签保留格式
+    clusteredTagsContainer.innerHTML = `<pre class="original-content">${escapeHtml(clusteredContent)}</pre>`;
+    return;
   }
 
-  Object.entries(parsedTags).forEach(([cluster, tags]) => {
+  let hasDisplayedContent = false;
+
+  Object.entries(clusters).forEach(([cluster, tags]) => {
+    if (tags.length === 0) {
+      console.warn(`Cluster "${cluster}" has no tags, skipping`);
+      return;
+    }
+
+    console.log(`Creating cluster: ${cluster}, Tags: ${tags.join(', ')}`);
     const clusterDiv = document.createElement('div');
     clusterDiv.className = 'cluster';
     
-    let tagsHtml = '';
-
-    if (Array.isArray(tags)) {
-      // 如果标签是数组
-      tagsHtml = tags.map(tag => `<span class="cluster-tag">${tag}</span>`).join('');
-    } else if (typeof tags === 'string') {
-      // 如果标签是字符串
-      tagsHtml = tags.split(',').map(tag => `<span class="cluster-tag">${tag.trim()}</span>`).join('');
-    } else if (typeof tags === 'object' && tags !== null) {
-      // 如果标签是对象（可能是嵌套的聚类）
-      tagsHtml = Object.entries(tags).map(([subCluster, subTags]) => 
-        `<div class="sub-cluster">
-           <h4 class="sub-cluster-title">${subCluster}</h4>
-           <div class="sub-cluster-tags">
-             ${Array.isArray(subTags) 
-               ? subTags.map(tag => `<span class="cluster-tag">${tag}</span>`).join('')
-               : `<span class="cluster-tag">${subTags}</span>`}
-           </div>
-         </div>`
-      ).join('');
-    } else {
-      console.error(`Invalid tags format for cluster "${cluster}"`);
-      return;
-    }
-
     clusterDiv.innerHTML = `
-      <h3 class="cluster-title">${cluster}</h3>
+      <h3 class="cluster-title">${escapeHtml(cluster)}</h3>
       <div class="cluster-tags">
-        ${tagsHtml}
+        ${tags.map(tag => `<span class="cluster-tag">#${escapeHtml(tag)}</span>`).join('')}
       </div>
     `;
     clusteredTagsContainer.appendChild(clusterDiv);
+    hasDisplayedContent = true;
   });
+
+  if (!hasDisplayedContent) {
+    console.log('No content displayed, showing original content');
+    clusteredTagsContainer.innerHTML = `<pre class="original-content">${escapeHtml(clusteredContent)}</pre>`;
+  }
+
+  console.log('Finished displaying clustered tags');
+}
+
+// 辅助函数：转义 HTML 特殊字符
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function parseClusteredContent(content) {
+  console.log('Starting to parse clustered content');
+  if (typeof content !== 'string' || content.trim() === '') {
+    console.warn('Invalid or empty content provided');
+    return {};
+  }
+
+  const clusters = {};
+  let currentCluster = null;
+  const lines = content.split('\n').map(line => line.trim());
+
+  try {
+    lines.forEach((line, index) => {
+      if (line === '') return; // Skip empty lines
+
+      // 尝试识别聚类名称
+      if (!line.startsWith(' ') && !line.startsWith('#')) {
+        currentCluster = line.replace(/^[\d.]*\s*/, '').trim(); // 移除可能的序号
+        clusters[currentCluster] = [];
+        console.log(`Found cluster: "${currentCluster}" at line ${index + 1}`);
+        return;
+      }
+
+      // 处理标签行
+      if (currentCluster) {
+        const tags = line.split(/[,，]/).map(tag => {
+          return tag.trim().replace(/^[#\s]*/, '').replace(/[#\s]*$/, '');
+        }).filter(tag => tag !== '');
+
+        if (tags.length > 0) {
+          clusters[currentCluster].push(...tags);
+          console.log(`Added ${tags.length} tags to cluster "${currentCluster}" at line ${index + 1}`);
+        } else {
+          console.warn(`No valid tags found at line ${index + 1}: "${line}"`);
+        }
+      } else {
+        console.warn(`Found tags before any cluster at line ${index + 1}: "${line}"`);
+      }
+    });
+
+    if (Object.keys(clusters).length === 0) {
+      console.warn('No valid clusters found in the content');
+    } else {
+      console.log(`Successfully parsed ${Object.keys(clusters).length} clusters`);
+    }
+
+    return clusters;
+  } catch (error) {
+    console.error('Error parsing clustered content:', error);
+    return {};
+  }
 }
 
 
@@ -1206,3 +1264,9 @@ export {
   handleClusterTags,
   displayClusteredTags
 };
+
+
+
+
+
+

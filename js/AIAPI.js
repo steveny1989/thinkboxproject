@@ -1,6 +1,7 @@
 const COZE_API_URL = 'https://api.coze.cn/v3/chat';
 const COZE_API_KEY = 'pat_LLh4Cpir313co8AQjZDOy1w4vvk8rsDyuEfBXmHsg3EHnveaixwUyV5uXmJQwOlM';
 const JINA_API_KEY = 'jina_7d693e7cf3f3489a882cae33f1a957cc-CE2ZEhuNGJR1y2_I80ybPjDiiRC';
+const siliconflow_API_KEY = 'sk-hlkffvnubygbratltvgicdiyypehpnusglwivijlpsewykho';
 
 class AIAPI {
   async getAuthToken() {
@@ -197,7 +198,7 @@ class AIAPI {
       }
     } catch (error) {
       console.error('Error in generateTags:', error);
-      // 不使用handleApiError，而是直接处理错误
+      // 不使用handleApiError，而是直���处理错误
       return []; // 返回空数组而不是抛出错误
     }
   }
@@ -652,7 +653,7 @@ class AIAPI {
       if (finalData.data.length > 0) {
         const clusterContent = finalData.data[0].content;
         console.log('Raw cluster content:', clusterContent);
-        return clusterContent; // 直接返回原始内容，不进行 JSON 解析
+        return clusterContent; // 直接��回原始内容，不进行 JSON 解析
       } else {
         throw new Error("No tags cluster content found");
       }
@@ -661,5 +662,78 @@ class AIAPI {
       throw error;
     }
   }
+
+  async siliconflow_clusterTags(tags) {
+    console.log('Original tags for clustering:', tags);
+  
+    if (!Array.isArray(tags) || tags.length === 0) {
+      console.error('Invalid tags input:', tags);
+      throw new Error('Invalid tags data');
+    }
+  
+    const options = {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${siliconflow_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        //model:"01-ai/Yi-1.5-9B-Chat-16K",
+        messages: [
+          {
+            role: "system",
+            content: "你是一个标签聚类专家。你的任务是将给定的标签分组到合适的类别中。每个类别应该有一个描述性的名称。"
+          },
+          {
+            role: "user",
+            content: `请按以下步骤处理这些标签：
+  1. 只给结论，不要太多介绍。仔细分析所有标签。
+  2. 根据标签的语义相似性将它们分组。
+  3. 为每个组创建一个描述性的类别名称。
+  4. 返回一个结构化的结果，其中包含类别名称和属于该类别的标签。数量庞大的情况下，可以考虑减少重复的标签。
+  5. 给出每个大类的名称和包含的主要 tags。回复示例：
+
+    category
+    tag1, tag2, tag3...
+  
+  标签：${tags.join(', ')}`
+          }
+        ],
+        stream: false,
+        max_tokens: 2048,
+        temperature: 0.3,
+        top_p: 0.9,
+        frequency_penalty: 0.0,
+        presence_penalty: 0.0,
+        n: 1
+      })
+    };
+  
+    try {
+      const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', options);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Full API response:', JSON.stringify(data, null, 2));
+      
+      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+        let content = data.choices[0].message.content.trim();
+        console.log('Raw clustered content:', content);
+        
+        // 直接返回原始内容，不进行解析
+        return content;
+      } else {
+        throw new Error('Unexpected response format');
+      }
+    } catch (error) {
+      console.error('Error in clusterTags:', error);
+      throw error;
+    }
+  }
+
 }
+
+
 export default new AIAPI();
