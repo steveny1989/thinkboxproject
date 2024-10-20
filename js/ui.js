@@ -1135,8 +1135,7 @@ function displayClusteredTags(clusteredContent) {
 
   if (Object.keys(clusters).length === 0) {
     console.log('No clusters parsed, displaying original content');
-    // 直接显示原始内容，使用 pre 标签保留格式
-    clusteredTagsContainer.innerHTML = `<pre class="original-content">${escapeHtml(clusteredContent)}</pre>`;
+    clusteredTagsContainer.innerHTML = formatOriginalContent(clusteredContent);
     return;
   }
 
@@ -1164,10 +1163,28 @@ function displayClusteredTags(clusteredContent) {
 
   if (!hasDisplayedContent) {
     console.log('No content displayed, showing original content');
-    clusteredTagsContainer.innerHTML = `<pre class="original-content">${escapeHtml(clusteredContent)}</pre>`;
+    clusteredTagsContainer.innerHTML = formatOriginalContent(clusteredContent);
   }
 
   console.log('Finished displaying clustered tags');
+}
+
+function formatOriginalContent(content) {
+  const lines = content.split('\n');
+  const formattedLines = lines.map(line => {
+    line = line.trim();
+    if (line.startsWith('**') && line.endsWith('**')) {
+      return `<h2 class="original-title">${escapeHtml(line.slice(2, -2))}</h2>`;
+    } else if (line.startsWith('*')) {
+      return `<h3 class="original-subtitle">${escapeHtml(line.slice(1).trim())}</h3>`;
+    } else if (line.startsWith('#')) {
+      const tags = line.split(',').map(tag => tag.trim());
+      return `<div class="original-tags">${tags.map(tag => `<span class="cluster-tag">${escapeHtml(tag)}</span>`).join('')}</div>`;
+    }
+    return `<p>${escapeHtml(line)}</p>`;
+  });
+
+  return `<div class="original-content">${formattedLines.join('')}</div>`;
 }
 
 // 辅助函数：转义 HTML 特殊字符
@@ -1233,7 +1250,6 @@ function parseClusteredContent(content) {
   }
 }
 
-
 //处理动画
 
 export function startProcessingAnimation() {
@@ -1264,6 +1280,7 @@ export {
   handleClusterTags,
   displayClusteredTags
 };
+
 
 
 
