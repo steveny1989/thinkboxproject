@@ -1114,6 +1114,9 @@ async function handleLogout() {
 async function handleClusterTags() {
   try {
     showLoadingIndicator('Clustering tags...');
+        // 显示容器
+        clusteredTagsContainer.style.display = 'block';
+
     const clusteredContent = await noteOperations.clusterTags();
     console.log('Clustered content:', clusteredContent);
     if (typeof clusteredContent !== 'string' || clusteredContent.trim() === '') {
