@@ -616,7 +616,6 @@ async function handleAddNote(event) {
   let noteText = noteInput.value.trim();
   if (!noteText) return;
 
-  let tempNoteId = null;
   let loadingIndicator = null;
 
   try {
@@ -626,18 +625,34 @@ async function handleAddNote(event) {
       try {
         const content = await fetchWebContent(noteText);
         if (content) {
-          noteText = content;
-          noteInput.value = noteText;
+          // 更新输入框内容
+          noteInput.value = content;
+          
+          // 通知用户内容已准备好
+          messageManager.showInfo('Web content has been fetched and processed. Please review and click Post to save.');
+          
+          // 标记输入框状态
+          noteInput.dataset.webContentFetched = 'true';
+          
+          // 结束当前函数执行，等待用户确认
+          return;
         }
       } catch (error) {
         console.error('Error fetching web content:', error);
         showErrorMessage('Failed to fetch web content. Please try again.');
+        return;
       } finally {
         hideLoadingIndicator(loadingIndicator);
         stopProcessingAnimation();
       }
     }
 
+    // 检查是否是已获取的网页内容
+    if (noteInput.dataset.webContentFetched === 'true') {
+      delete noteInput.dataset.webContentFetched;
+    }
+
+    // 继续处理笔记添加逻辑
     if (noteText.length > 1000 && !noteInput.dataset.rewritten) {
       loadingIndicator = showLoadingIndicator('Rewriting content');
       startProcessingAnimation();
@@ -651,12 +666,12 @@ async function handleAddNote(event) {
       messageManager.showInfo('Content has been rewritten by AI for brevity. Please review and submit.');
       
       hideLoadingIndicator(loadingIndicator);
-      stopProcessingAnimation
+      stopProcessingAnimation();
       return; // 结束函数执行，等待用户确认改写后的内容
     }
 
     // 如果内容已经被重写或不需要重写，则继续添加笔记
-    tempNoteId = 'temp-' + Date.now();
+    const tempNoteId = 'temp-' + Date.now();
     const tempNote = {
       note_id: tempNoteId,
       content: noteText,
@@ -669,6 +684,11 @@ async function handleAddNote(event) {
     const noteList = document.getElementById('noteList');
     noteList.insertBefore(tempNoteElement, noteList.firstChild);
 
+    // 在这里清空输入框
+    clearNoteInput();
+    delete noteInput.dataset.rewritten;
+
+    // 异步添加笔记
     const newNote = await noteOperations.addNote(noteText);
     console.log('Note added successfully:', newNote);
 
@@ -680,17 +700,10 @@ async function handleAddNote(event) {
 
     await updateTagsDisplay(newNote);
 
-    clearNoteInput();
-    delete noteInput.dataset.rewritten;
-
-
-
   } catch (error) {
-    console.error('Error adding note or fetching web content:', error);
+    console.error('Error adding note:', error);
     showErrorMessage('An error occurred. Please try again.');
-    if (tempNoteId) {
-      document.querySelector(`.note-item[data-note-id="${tempNoteId}"]`)?.remove();
-    }
+    noteInput.value = noteText;
   } finally {
     if (loadingIndicator) {
       hideLoadingIndicator(loadingIndicator);
@@ -1280,7 +1293,6 @@ export {
   handleClusterTags,
   displayClusteredTags
 };
-
 
 
 
