@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkBox - Authentication</title>
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-container">
+                <h1 class="logo">ThinkBox</h1>
+            </div>
+        </header>
+        <div class="auth-container">
+            <div class="auth-toggle">
+                <button id="loginToggle" class="active">登录</button>
+                <button id="registerToggle">注册</button>
+            </div>
+            <form id="authForm">
+                <input type="email" id="email" name="email" placeholder="邮箱" required>
+                <input type="password" id="password" name="password" placeholder="密码" required>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="确认密码" required style="display:none;">
+                <button type="submit" id="submitButton">提交</button>
+            </form>
+            <div id="errorMessage" class="error hidden"></div>
+        </div>
+    </div>
+    <script type="module" src="../js/Auth/authService.js"></script>
+    <script type="module" src="../js/Auth/newAuth.js"></script>
+    <script type="module" src="../js/messageManager.js"></script>
+    <script>
+        console.log('HTML file loaded');
+      </script>
+</body>
+</html>
