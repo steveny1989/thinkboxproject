@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活动列表</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .activity-list {
+      margin-top: 20px;
+    }
+    .activity-item {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
+    .activity-item h3 {
+      margin: 0;
+      font-size: 1.2em;
+    }
+    .activity-item p {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>活动列表</h1>
+  <div class="activity-list" id="activity-list">
+    <!-- 活动项将通过 JavaScript 动态加载 -->
+  </div>
+
+  <script>
+    // 发送 GET 请求获取活动数据
+    fetch('https://api.thinkboxs.com/activity')  // 修改为你的后端服务器地址
+      .then(response => response.json())
+      .then(data => {
+        const activityList = document.getElementById('activity-list');
+        
+        // 如果返回的数据有活动，遍历并显示
+        if (data.length > 0) {
+          data.forEach(activity => {
+            const activityItem = document.createElement('div');
+            activityItem.classList.add('activity-item');
+            
+            // 在这里定义活动的显示内容，可以根据实际的数据字段进行调整
+            activityItem.innerHTML = `
+              <h3>${activity.name}</h3>
+              <p>${activity.description}</p>
+              <p><strong>开始时间:</strong> ${activity.start_time}</p>
+              <p><strong>结束时间:</strong> ${activity.end_time}</p>
+            `;
+            
+            // 将活动项添加到页面中
+            activityList.appendChild(activityItem);
+          });
+        } else {
+          // 如果没有活动数据，显示提示信息
+          activityList.innerHTML = '<p>没有活动数据</p>';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching activities:', error);
+        document.getElementById('activity-list').innerHTML = '<p>加载活动数据失败，请稍后再试。</p>';
+      });
+  </script>
+
+</body>
+</html>
