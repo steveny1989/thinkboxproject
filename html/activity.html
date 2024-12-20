@@ -37,7 +37,7 @@
 
   <script>
     // 发送 GET 请求获取活动数据
-    fetch('https://api.thinkboxs.com/activity')  // 修改为你的后端服务器地址
+    fetch('https://api.thinkboxs.com/activity/activity-stats')  // 修改为你的后端服务器地址
       .then(response => response.json())
       .then(data => {
         const activityList = document.getElementById('activity-list');
