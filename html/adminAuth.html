@@ -41,7 +41,7 @@
       .then(data => {
         // 登录成功，获取 token 并存储
         localStorage.setItem('jwtToken', data.token);
-        window.location.href = 'activity.html'; // 登录后跳转到 activity.html
+        window.location.href = 'users.html'; // 登录后跳转到 activity.html
       })
       .catch(error => {
         alert('登录失败，请检查用户名和密码');
