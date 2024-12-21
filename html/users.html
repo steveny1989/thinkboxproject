@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户数据管理</title>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+    <link rel="stylesheet" href="../css/users.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>用户数据管理</h1>
+        </div>
+        
+        <div class="stats-cards">
+            <div class="stats-card">
+                <h3>总用户数</h3>
+                <p id="totalUsers">-</p>
+            </div>
+            <div class="stats-card">
+                <h3>今日活跃用户</h3>
+                <p id="activeUsers">-</p>
+            </div>
+            <div class="stats-card">
+                <h3>本月新增用户</h3>
+                <p id="newUsers">-</p>
+            </div>
+        </div>
+
+        <div class="charts-container">
+            <canvas id="loginTrendChart"></canvas>
+        </div>
+
+        <table id="usersTable" class="display responsive nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>邮箱</th>
+                    <th>注册时间</th>
+                    <th>最后登录</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 数据将通过JavaScript动态加载 -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 引入必要的JS库 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script type="module" src="../js/users.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html> 
